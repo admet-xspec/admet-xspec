@@ -1,2 +1,2 @@
 # admet-prediction
-ADMET prediction module
+ADMET prediction module for GenProSyn
