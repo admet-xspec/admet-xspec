@@ -1,5 +1,7 @@
-from PredictorBase import PredictorBase
+from src.predictor.PredictorBase import PredictorBase
 from chemprop import data, featurizers, models, nn
+import chemprop.nn.metrics as metrics
+from typing import List, Dict, Tuple
 import abc
 import numpy as np
 from lightning import pytorch as pl
@@ -15,6 +17,7 @@ class ChempropPredictor(PredictorBase):
         :param agg: ChemProp aggregation
         :param batch_norm: ChemProp batch normalization
         """
+        super(ChempropPredictor, self).__init__()
         self.mp = mp
         self.agg = agg
         self.batch_norm = batch_norm
@@ -26,8 +29,6 @@ class ChempropPredictor(PredictorBase):
         self.model = models.MPNN(
             self.mp, self.agg, self.ffn, self.batch_norm, self.metric_list
         )
-
-        super(ChempropPredictor, self).__init__()
 
     @abc.abstractmethod
     def init_ffn(self):
@@ -43,10 +44,10 @@ class ChempropPredictor(PredictorBase):
         """
         pass
 
-    def name(self):
-        return "chemprop"
+    def train(self, smiles_list, target_list, num_workers=4) -> dict:
 
-    def train(self, smiles_list, target_list, num_workers=4):
+        # convert to numpy array of shape (n, 1)
+        target_list = np.array(target_list).reshape(-1, 1)
 
         # get molecule datapoint
         all_data = [
@@ -86,11 +87,12 @@ class ChempropPredictor(PredictorBase):
             logger=False,
             enable_checkpointing=True,
             # Use `True` if you want to save model checkpoints. The checkpoints will be saved in the `checkpoints` folder.
-            enable_progress_bar=True,
+            enable_progress_bar=self.verbose,
             accelerator="auto",
             devices=1,
             max_epochs=20,  # number of epochs to train for
             callbacks=[checkpointing],  # Use the configured checkpoint callback
+
         )
 
         train_loader = data.build_dataloader(train_dset, num_workers=num_workers)
@@ -105,18 +107,17 @@ class ChempropPredictor(PredictorBase):
         results = trainer.test(dataloaders=test_loader)
         return results
 
-    def predict(self, smiles_list):
+    def predict(self, smiles_list: List[str]) -> Tuple[List[float], Dict]:
         datapoints = [data.MoleculeDatapoint.from_smi(smi) for smi in smiles_list]
         dataset = data.MoleculeDataset(datapoints, self.featurizer)
         loader = data.build_dataloader(dataset, num_workers=4, shuffle=False)
 
         with torch.inference_mode():
             trainer = pl.Trainer(
-                logger=None, enable_progress_bar=True, devices=1
+                logger=None, enable_progress_bar=self.verbose, devices=1
             )
             preds = trainer.predict(self.model, loader)
-
-        return np.concatenate(preds, axis=0)
+            return preds
 
     def save(self, path):
         torch.save(self.model.state_dict(), path)
@@ -124,13 +125,12 @@ class ChempropPredictor(PredictorBase):
     def load(self, path):
         self.model.load_state_dict(torch.load(path))
 
-
 class ChempropRegressor(ChempropPredictor):
     def __init__(self):
         super(ChempropRegressor, self).__init__(
             mp=nn.AtomMessagePassing(),
             agg=nn.MeanAggregation(),
-            metric_list=[models.RMSE(), models.MAE()],
+            metric_list=self.init_metrics(),
             batch_norm=True,
         )
 
@@ -138,7 +138,7 @@ class ChempropRegressor(ChempropPredictor):
         return nn.RegressionFFN()
 
     def init_metrics(self):
-        return [models.RMSE(), models.MAE()]
+        return [metrics.MSE(), metrics.RMSE()]
 
 
 class ChempropBinaryClassifier(ChempropPredictor):
@@ -146,7 +146,7 @@ class ChempropBinaryClassifier(ChempropPredictor):
         super(ChempropBinaryClassifier, self).__init__(
             mp=nn.AtomMessagePassing(),
             agg=nn.MeanAggregation(),
-            metric_list=[nn.metrics.BinaryAUROC(), nn.metrics.BinaryAccuracy()],
+            metric_list=self.init_metrics(),
             batch_norm=True,
         )
 

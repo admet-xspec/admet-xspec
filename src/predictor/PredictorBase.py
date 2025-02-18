@@ -1,22 +1,13 @@
 import abc
 
 class PredictorBase(abc.ABC):
-    def __init__(self):
-        model = self.init_model()
-
-    @abc.abstractmethod
-    def init_model(self):
-        """Initialize the model"""
-        pass
+    def __init__(self, verbose: bool = False):
+        self.model = None
+        self.verbose = False
 
     @abc.abstractmethod
     def train(self, smiles_list, target_list):
         """Train the model with the given smiles and target list."""
-        pass
-
-    @abc.abstractmethod
-    def name(self):
-        """Return the name of the model"""
         pass
 
     @abc.abstractmethod
@@ -34,3 +25,8 @@ class PredictorBase(abc.ABC):
         """Load the model from the given path"""
         pass
 
+    def set_verbose(self, verbose: bool):
+        # Set the verbose flag
+        if not isinstance(verbose, bool):
+            raise ValueError("You must provide a boolean value")
+        self.verbose = verbose
