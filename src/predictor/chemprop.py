@@ -10,7 +10,7 @@ import torch
 
 
 class ChempropPredictor(PredictorBase):
-    def __init__(self, mp, agg, metric_list, batch_norm):
+    def __init__(self, mp, agg, metric_list, batch_norm, split="scaffold_balanced"):
         """
         Represents a ChemProp message passing neural network model
         :param mp: ChemProp message passing neural network model
@@ -25,6 +25,7 @@ class ChempropPredictor(PredictorBase):
         self.ffn = self.init_ffn()
         self.metrics = self.init_metrics()
         self.featurizer = featurizers.SimpleMoleculeMolGraphFeaturizer()
+        self.split = split
 
         self.model = models.MPNN(
             self.mp, self.agg, self.ffn, self.batch_norm, self.metric_list
@@ -46,7 +47,6 @@ class ChempropPredictor(PredictorBase):
 
     def train(self, smiles_list, target_list, num_workers=4) -> dict:
 
-        # convert to numpy array of shape (n, 1)
         target_list = np.array(target_list).reshape(-1, 1)
 
         # get molecule datapoint
@@ -59,20 +59,16 @@ class ChempropPredictor(PredictorBase):
             d.mol for d in all_data
         ]  # RDkit Mol objects are use for structure based splits
         train_indices, val_indices, test_indices = data.make_split_indices(
-            mols, "random", (0.8, 0.1, 0.1)
+            mols, self.split
         )
-        # unpack the tuple into three separate lists
+
+        # Split the data into train, val, and test sets
         train_data, val_data, test_data = data.split_data_by_indices(
             all_data, train_indices, val_indices, test_indices
         )
 
-        # initialize a featurizer
         train_dset = data.MoleculeDataset(train_data[0], self.featurizer)
-        scaler = train_dset.normalize_targets()
-
         val_dset = data.MoleculeDataset(val_data[0], self.featurizer)
-        val_dset.normalize_targets(scaler)
-
         test_dset = data.MoleculeDataset(test_data[0], self.featurizer)
 
         checkpointing = ModelCheckpoint(
@@ -90,7 +86,7 @@ class ChempropPredictor(PredictorBase):
             enable_progress_bar=self.verbose,
             accelerator="auto",
             devices=1,
-            max_epochs=20,  # number of epochs to train for
+            max_epochs=40,  # number of epochs to train for
             callbacks=[checkpointing],  # Use the configured checkpoint callback
 
         )

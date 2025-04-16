@@ -1,5 +1,3 @@
-from tabnanny import verbose
-
 import numpy as np
 
 from src.predictor.PredictorBase import PredictorBase
