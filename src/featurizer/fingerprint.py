@@ -5,6 +5,7 @@ from typing import List
 import numpy as np
 import gin
 
+
 @gin.configurable
 class EcfpFeaturizer(FeaturizerBase):
     def __init__(self, radius: int = 2, n_bits: int = 2048, count: bool = False):
@@ -14,7 +15,10 @@ class EcfpFeaturizer(FeaturizerBase):
         # If count is True, the fingerprint will be a count fingerprint
         self.count = count
 
-    def featurize(self, smiles_list: List[str],):
+    def featurize(
+        self,
+        smiles_list: List[str],
+    ):
         """
         Featurize the given SMILES string
         """
@@ -23,7 +27,9 @@ class EcfpFeaturizer(FeaturizerBase):
         for smi in smiles_list:
             mol = Chem.MolFromSmiles(smi)
             if mol is None:
-                raise ValueError(f"SMILES string {smi} could not be converted to RDKit mol object")
+                raise ValueError(
+                    f"SMILES string {smi} could not be converted to RDKit mol object"
+                )
 
             if self.count:
                 fp = self.generator.GetCountFingerprintAsNumPy(mol)

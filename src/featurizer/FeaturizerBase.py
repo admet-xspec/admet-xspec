@@ -1,5 +1,6 @@
 import abc
 
+
 class FeaturizerBase(abc.ABC):
     def __init__(self):
         pass

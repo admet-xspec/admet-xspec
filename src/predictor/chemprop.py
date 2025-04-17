@@ -1,7 +1,8 @@
 from src.predictor.PredictorBase import PredictorBase
 from chemprop import data, featurizers, models, nn
 import chemprop.nn.metrics as metrics
-from typing import List, Dict, Tuple
+from typing import List
+from pathlib import Path
 import abc
 import numpy as np
 from lightning import pytorch as pl
@@ -9,8 +10,19 @@ from lightning.pytorch.callbacks import ModelCheckpoint
 import torch
 import gin
 
+
 class ChempropPredictor(PredictorBase):
-    def __init__(self, mp, agg, featurizer, metric_list, batch_norm, split="scaffold_balanced", epochs=10, verbose=True):
+    def __init__(
+        self,
+        mp,
+        agg,
+        featurizer,
+        metric_list,
+        batch_norm,
+        split="scaffold_balanced",
+        epochs=10,
+        verbose=True,
+    ):
         """
         Represents a ChemProp message passing neural network model
         :param mp: ChemProp message passing neural network model
@@ -96,7 +108,6 @@ class ChempropPredictor(PredictorBase):
             devices=1,
             max_epochs=self.epochs,  # number of epochs to train for
             callbacks=[checkpointing],  # Use the configured checkpoint callback
-
         )
 
         train_loader = data.build_dataloader(train_dset, num_workers=num_workers)
@@ -119,20 +130,30 @@ class ChempropPredictor(PredictorBase):
             preds = torch.cat(preds, dim=0).cpu().numpy()
             return np.array(preds).reshape(-1, 1)
 
-    def save(self, path):
-        torch.save(self.model.state_dict(), path)
+    def save(self, out_dir: str):
 
-    def load(self, path):
+        # Check if the output directory exists
+        if not Path(out_dir).exists():
+            raise FileNotFoundError(f"Directory {Path(out_dir)} does not exist")
+
+        torch.save(self.model.state_dict(), out_dir + "/model.pt")
+
+    def load(self, path: str):
+
+        if not path.endswith(".pt"):
+            raise ValueError("State dict file must end with .pt")
         self.model.load_state_dict(torch.load(path))
+
 
 @gin.configurable()
 class ChempropRegressor(ChempropPredictor):
-    def __init__(self,
-                 mp=nn.AtomMessagePassing(),
-                 agg=nn.MeanAggregation(),
-                 featurizer=featurizers.SimpleMoleculeMolGraphFeaturizer(),
-                 batch_norm=True
-                 ):
+    def __init__(
+        self,
+        mp=nn.AtomMessagePassing(),
+        agg=nn.MeanAggregation(),
+        featurizer=featurizers.SimpleMoleculeMolGraphFeaturizer(),
+        batch_norm=True,
+    ):
         super(ChempropRegressor, self).__init__(
             mp,
             agg,
@@ -150,14 +171,16 @@ class ChempropRegressor(ChempropPredictor):
     def init_metrics(self):
         return [metrics.MSE(), metrics.RMSE()]
 
+
 @gin.configurable()
 class ChempropBinaryClassifier(ChempropPredictor):
-    def __init__(self,
-                 mp=nn.AtomMessagePassing(),
-                 agg=nn.MeanAggregation(),
-                 featurizer=featurizers.SimpleMoleculeMolGraphFeaturizer(),
-                 batch_norm=True,
-                 ):
+    def __init__(
+        self,
+        mp=nn.AtomMessagePassing(),
+        agg=nn.MeanAggregation(),
+        featurizer=featurizers.SimpleMoleculeMolGraphFeaturizer(),
+        batch_norm=True,
+    ):
         super(ChempropBinaryClassifier, self).__init__(
             mp,
             agg,

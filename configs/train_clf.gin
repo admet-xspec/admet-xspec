@@ -1,5 +1,5 @@
 include 'configs/featurizers/ecfp.gin'
-include 'configs/classifiers/chemprop.gin'
+include 'configs/classifiers/svm.gin'
 
 train.featurizer = @featurizer/gin.singleton()
 train.predictor = @predictor/gin.singleton()

@@ -10,6 +10,7 @@ import sklearn
 import pickle as pkl
 import gin
 
+
 class ScikitPredictorBase(PredictorBase):
     """
     Represents a Scikit-learn predictive model
@@ -21,7 +22,10 @@ class ScikitPredictorBase(PredictorBase):
     :param optimize_hyperparameters: Wether to optimize hyperparameters using CV random search strategy
 
     """
-    def __init__(self, model, params: dict, metric: str, optimize_hyperparameters: bool):
+
+    def __init__(
+        self, model, params: dict, metric: str, optimize_hyperparameters: bool
+    ):
 
         super(ScikitPredictorBase, self).__init__()
 
@@ -37,7 +41,8 @@ class ScikitPredictorBase(PredictorBase):
             "mean_squared_error": sklearn.metrics.mean_squared_error,
             "roc_auc_score": sklearn.metrics.roc_auc_score,
             "accuracy_score": sklearn.metrics.accuracy_score,
-            "f1_score": sklearn.metrics.f1_score        }
+            "f1_score": sklearn.metrics.f1_score,
+        }
 
         # Set primary metric
         self.primary_metric = metrics[metric]
@@ -71,7 +76,9 @@ class ScikitPredictorBase(PredictorBase):
 
         return self.primary_metric(y, y_pred)
 
-    def train_CV(self, smiles_list: List[str], target_list: List[float], cv: int = 5) -> List[float]:
+    def train_CV(
+        self, smiles_list: List[str], target_list: List[float], cv: int = 5
+    ) -> List[float]:
 
         # Featurize the smiles
         X = np.array(self.featurizer.featurize(smiles_list))
@@ -83,7 +90,7 @@ class ScikitPredictorBase(PredictorBase):
 
         metrics = []
         for i, (train_index, val_index) in enumerate(kf.split(X)):
-            logging.debug(f'Fitting fold {i} of {cv}')
+            logging.debug(f"Fitting fold {i} of {cv}")
             X_train, X_val = X[train_index], X[val_index]
             y_train, y_val = y[train_index], y[val_index]
             self.model.fit(X_train, y_train)
@@ -110,20 +117,26 @@ class ScikitPredictorBase(PredictorBase):
             print("Values:", round(metric, 3))
         return metric
 
-    def save(self, path: str):
+    def save(self, out_dir: str):
 
-        # Check if the parent directory exists
-        if not Path(path).parent.exists():
-            raise FileNotFoundError(f"Directory {Path(path).parent} does not exist")
+        # Check if the output directory exists
+        if not Path(out_dir).exists():
+            raise FileNotFoundError(f"Directory {out_dir} does not exist")
 
         # Save the model
-        pkl.dump(self.model, path)
+        with open(out_dir + "/model.pkl", "wb") as fileout:
+            pkl.dump(obj=self.model, file=fileout)
+        logging.info(f"Model saved to {out_dir}/model.pkl")
 
     def load(self, path: str):
 
         # Check if the file exists
         if not Path(path).exists():
             raise FileNotFoundError(f"File {path} does not exist")
+
+        # Check if the file is a pickle file
+        if not path.endswith(".pkl"):
+            raise ValueError(f"File {path} is not a pickle file")
 
         # Load the model
         self.model = pkl.load(path)
@@ -133,33 +146,47 @@ class ScikitPredictorBase(PredictorBase):
         model_params = model.get_params()
         for key in params:
             if key not in model_params:
-                raise ValueError(f"Model {type(model).__name__} does not accept hyperparameter {key}")
+                raise ValueError(
+                    f"Model {type(model).__name__} does not accept hyperparameter {key}"
+                )
+
 
 @gin.configurable()
 class RandomForestRegressor(ScikitPredictorBase):
-    def __init__(self, metric: str, optimize_hyperparameters: bool, params:dict):
+    def __init__(self, metric: str, optimize_hyperparameters: bool, params: dict):
 
         model = sklearn.ensemble.RandomForestRegressor
-        super(RandomForestRegressor, self).__init__(model, params, metric, optimize_hyperparameters)
+        super(RandomForestRegressor, self).__init__(
+            model, params, metric, optimize_hyperparameters
+        )
+
 
 @gin.configurable()
 class RandomForestClassifier(ScikitPredictorBase):
-    def __init__(self, metric: str, optimize_hyperparameters: bool, params:dict):
+    def __init__(self, metric: str, optimize_hyperparameters: bool, params: dict):
 
         model = sklearn.ensemble.RandomForestClassifier
-        super(RandomForestClassifier, self).__init__(model, params, metric, optimize_hyperparameters)
+        super(RandomForestClassifier, self).__init__(
+            model, params, metric, optimize_hyperparameters
+        )
+
 
 @gin.configurable()
 class SvrRegressor(ScikitPredictorBase):
-    def __init__(self, metric: str, optimize_hyperparameters: bool, params:dict):
+    def __init__(self, metric: str, optimize_hyperparameters: bool, params: dict):
 
         model = sklearn.svm.SVR
-        super(SvrRegressor, self).__init__(model, params, metric, optimize_hyperparameters)
+        super(SvrRegressor, self).__init__(
+            model, params, metric, optimize_hyperparameters
+        )
+
 
 @gin.configurable()
 class SvrClassifier(ScikitPredictorBase):
-    def __init__(self, metric: str, optimize_hyperparameters: bool, params:dict):
+    def __init__(self, metric: str, optimize_hyperparameters: bool, params: dict):
 
         model = sklearn.svm.SVC
         metric = metric
-        super(SvrClassifier, self).__init__(model, params, metric, optimize_hyperparameters)
+        super(SvrClassifier, self).__init__(
+            model, params, metric, optimize_hyperparameters
+        )

@@ -2,6 +2,7 @@ import abc
 import logging
 from rdkit import Chem
 
+
 class PredictorBase(abc.ABC):
     def __init__(self, verbose: bool = False):
         self.model = None
