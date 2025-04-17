@@ -1,10 +1,14 @@
+import logging
+
 import numpy as np
 
 from src.predictor.PredictorBase import PredictorBase
-from typing import List, Dict, Any
+from src.featurizer.FeaturizerBase import FeaturizerBase
+from typing import List
 from pathlib import Path
 import sklearn
 import pickle as pkl
+import gin
 
 class ScikitPredictorBase(PredictorBase):
     """
@@ -14,17 +18,15 @@ class ScikitPredictorBase(PredictorBase):
     :param params: Hyperparameters for the model as a dictionary
     :param metric: Primary metric for the model as a string
         ("mean_squared_error", "roc_auc_score", "accuracy_score", "f1_score")
+    :param optimize_hyperparameters: Wether to optimize hyperparameters using CV random search strategy
 
     """
-    def __init__(self, model, params: dict, metric: str, featurizer=None):
+    def __init__(self, model, params: dict, metric: str, optimize_hyperparameters: bool):
 
         super(ScikitPredictorBase, self).__init__()
 
         # Initialize the model
         self.model = model()
-
-        # Initialize the featurizer
-        self.featurizer = featurizer
 
         # Set the hyperparameters
         if params is not None:
@@ -40,48 +42,53 @@ class ScikitPredictorBase(PredictorBase):
         # Set primary metric
         self.primary_metric = metrics[metric]
 
+    def name(self):
+        """
+        Returns the name of the model
+        """
+        return type(self.model).__name__
+
+    def inject_featurizer(self, featurizer):
+        """
+        Inject a featurizer into the model
+        :param featurizer: Featurizer object
+        """
+        if not isinstance(featurizer, FeaturizerBase):
+            raise ValueError("Featurizer must be an instance of FeaturizerBase!")
+        self.featurizer = featurizer
+
     def train(self, smiles_list: List[str], target_list: List[float]):
 
         # Featurize the smiles
-        print("Featurizing the smiles...") if self.verbose else None
         X = self.featurizer.featurize(smiles_list)
         y = target_list
 
         # Train the model
-        print("Training the model...") if self.verbose else None
         self.model.fit(X, y)
 
         # Return the primary metric
         y_pred = self.model.predict(X)
-
-        if self.verbose:
-            print(f"Primary metric: {self.primary_metric.__name__}")
-            print(f"Value: {self.primary_metric(y, y_pred)}")
 
         return self.primary_metric(y, y_pred)
 
     def train_CV(self, smiles_list: List[str], target_list: List[float], cv: int = 5) -> List[float]:
 
         # Featurize the smiles
-        print("Featurizing the smiles...") if self.verbose else None
-        X = self.featurizer.featurize(smiles_list)
-        y = target_list
+        X = np.array(self.featurizer.featurize(smiles_list))
+        y = np.array(target_list)
 
         # Train the model
-        print(f"Training {self.get_name()} model...") if self.verbose else None
-        cv = sklearn.model_selection.KFold(n_splits=cv)
+        kf = sklearn.model_selection.KFold(n_splits=cv)
+        kf.get_n_splits(X)
 
         metrics = []
-        for train_index, val_index in cv.split(X):
+        for i, (train_index, val_index) in enumerate(kf.split(X)):
+            logging.debug(f'Fitting fold {i} of {cv}')
             X_train, X_val = X[train_index], X[val_index]
             y_train, y_val = y[train_index], y[val_index]
             self.model.fit(X_train, y_train)
             y_pred = self.model.predict(X_val)
             metrics.append(self.primary_metric(y_val, y_pred))
-
-        # Choose the best hyperparameters
-        best_params = self.model.best_params_
-        self.model.set_params(**best_params)
 
         print("Primary metric:", self.primary_metric)
         print("Values:", [round(x, 3) for x in metrics])
@@ -128,30 +135,31 @@ class ScikitPredictorBase(PredictorBase):
             if key not in model_params:
                 raise ValueError(f"Model {type(model).__name__} does not accept hyperparameter {key}")
 
+@gin.configurable()
 class RandomForestRegressor(ScikitPredictorBase):
-    def __init__(self, params=None):
+    def __init__(self, metric: str, optimize_hyperparameters: bool, params:dict):
 
         model = sklearn.ensemble.RandomForestRegressor
-        metric = "mean_squared_error"
-        super(RandomForestRegressor, self).__init__(model, params, metric)
+        super(RandomForestRegressor, self).__init__(model, params, metric, optimize_hyperparameters)
 
+@gin.configurable()
 class RandomForestClassifier(ScikitPredictorBase):
-    def __init__(self, params=None):
+    def __init__(self, metric: str, optimize_hyperparameters: bool, params:dict):
 
         model = sklearn.ensemble.RandomForestClassifier
-        metric = "roc_auc_score"
-        super(RandomForestClassifier, self).__init__(model, params, metric)
+        super(RandomForestClassifier, self).__init__(model, params, metric, optimize_hyperparameters)
 
+@gin.configurable()
 class SvrRegressor(ScikitPredictorBase):
-    def __init__(self, params=None):
+    def __init__(self, metric: str, optimize_hyperparameters: bool, params:dict):
 
         model = sklearn.svm.SVR
-        metric = "mean_squared_error"
-        super(SvrRegressor, self).__init__(model, params, metric)
+        super(SvrRegressor, self).__init__(model, params, metric, optimize_hyperparameters)
 
+@gin.configurable()
 class SvrClassifier(ScikitPredictorBase):
-    def __init__(self, params=None):
+    def __init__(self, metric: str, optimize_hyperparameters: bool, params:dict):
 
         model = sklearn.svm.SVC
-        metric = "roc_auc_score"
-        super(SvrClassifier, self).__init__(model, params, metric)
+        metric = metric
+        super(SvrClassifier, self).__init__(model, params, metric, optimize_hyperparameters)

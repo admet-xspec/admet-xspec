@@ -1,0 +1,2 @@
+predictor/gin.singleton.constructor = @SvrRegressor
+predictor = @predictor/gin.singleton()

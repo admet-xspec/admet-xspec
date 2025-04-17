@@ -1,0 +1,12 @@
+predictor/gin.singleton.constructor = @SvrClassifier
+predictor = @predictor/gin.singleton()
+
+SvrClassifier.metric = 'roc_auc_score'
+SvrClassifier.params = {
+    'C': 1,
+    'kernel': 'rbf',
+    'gamma': 'scale',
+    'verbose': True
+    }
+
+SvrClassifier.optimize_hyperparameters = False

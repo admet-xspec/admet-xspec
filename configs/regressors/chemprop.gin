@@ -1,0 +1,2 @@
+predictor/gin.singleton.constructor = @ChempropRegressor
+predictor = @predictor/gin.singleton()

@@ -8,6 +8,11 @@ class PredictorBase(abc.ABC):
         self.verbose = False
 
     @abc.abstractmethod
+    def name(self):
+        """Return the name of the model"""
+        pass
+
+    @abc.abstractmethod
     def train(self, smiles_list, target_list):
         """Train the model with the given smiles and target list."""
         pass

@@ -3,7 +3,9 @@ from rdkit.Chem.rdFingerprintGenerator import GetMorganGenerator
 from rdkit import Chem
 from typing import List
 import numpy as np
+import gin
 
+@gin.configurable
 class EcfpFeaturizer(FeaturizerBase):
     def __init__(self, radius: int = 2, n_bits: int = 2048, count: bool = False):
         super(EcfpFeaturizer, self).__init__()

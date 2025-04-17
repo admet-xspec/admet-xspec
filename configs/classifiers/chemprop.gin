@@ -1,0 +1,7 @@
+predictor/gin.singleton.constructor = @ChempropBinaryClassifier
+predictor = @predictor/gin.singleton()
+
+ChempropBinaryClassifier.mp = @nn.AtomMessagePassing()
+ChempropBinaryClassifier.agg = @nn.MeanAggregation()
+ChempropBinaryClassifier.featurizer = @featurizers.SimpleMoleculeMolGraphFeaturizer()
+ChempropBinaryClassifier.batch_norm = True
