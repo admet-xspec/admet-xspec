@@ -10,7 +10,7 @@ import sklearn
 import pickle as pkl
 import gin
 
-
+@gin.configurable()
 class ScikitPredictorBase(PredictorBase):
     """
     Represents a Scikit-learn predictive model
@@ -32,7 +32,7 @@ class ScikitPredictorBase(PredictorBase):
         params_distribution: dict | None = None,
         optimization_iterations: int | None = None,
         n_folds: int | None = None,
-        n_jobs: int | None = None,
+        n_jobs: int | None = None
     ):
 
         super(ScikitPredictorBase, self).__init__()
@@ -105,23 +105,20 @@ class ScikitPredictorBase(PredictorBase):
             param_distributions=self.params_distribution,
             n_iter=self.optimization_iterations,
             cv=self.n_folds,
-            verbose=2,
+            verbose=1,
             n_jobs=self.n_jobs,
         )
 
         # Fit the model
         logging.info("Fitting model with random search CV")
-        logging.info(f"Hyperparameter distribution: {self.params_distribution}")
+        logging.info(f"Hyperparameter distribution:")
+        for key, value in self.params_distribution.items():
+            logging.info(f"{key}: {str(value)}")
+
         random_search.fit(X, y)
 
         # Get the best model
         self.model = random_search.best_estimator_
-
-        # Get the best hyperparameters
-        best_params = random_search.best_params_
-        logging.info(f"Loading best parameters: {best_params}")
-        self.model = self.model.set_params(**best_params)
-        self.model.fit(X, y)  # Train the model with the best hyperparameters
 
     def predict(self, smiles_list: List[str]) -> np.array:
 
@@ -141,7 +138,7 @@ class ScikitPredictorBase(PredictorBase):
     def save(self, out_dir: str):
 
         # Check if the output directory exists
-        if not Path(out_dir).exists():
+        if not Path.is_dir(Path(out_dir)):
             raise FileNotFoundError(f"Directory {out_dir} does not exist")
 
         # Save the model
@@ -174,32 +171,31 @@ class ScikitPredictorBase(PredictorBase):
 
 @gin.configurable()
 class RandomForestRegressor(ScikitPredictorBase):
-    def __init__(self):
+    def __init__(self, params: dict|None=None):
 
         model = sklearn.ensemble.RandomForestRegressor
-        super(RandomForestRegressor, self).__init__(model)
+        super(RandomForestRegressor, self).__init__(model=model, params=parmas)
 
 
 @gin.configurable()
 class RandomForestClassifier(ScikitPredictorBase):
-    def __init__(self):
+    def __init__(self, params: dict|None=None):
 
         model = sklearn.ensemble.RandomForestClassifier
-        super(RandomForestClassifier, self).__init__(model)
+        super(RandomForestClassifier, self).__init__(model=model, params=params)
 
 
 @gin.configurable()
-class SvrRegressor(ScikitPredictorBase):
-    def __init__(self):
+class SvmRegressor(ScikitPredictorBase):
+    def __init__(self, params: dict|None=None):
 
-        model = sklearn.svm.SVR
-        super(SvrRegressor, self).__init__(model=model)
+        model = sklearn.svm.Svm
+        super(SvmRegressor, self).__init__(model=model, params=params)
 
 
 @gin.configurable()
-class SvrClassifier(ScikitPredictorBase):
-    def __init__(self, metric: str):
+class SvmClassifier(ScikitPredictorBase):
+    def __init__(self, params: dict|None=None):
 
         model = sklearn.svm.SVC
-        metric = metric
-        super(SvrClassifier, self).__init__(model=model)
+        super(SvmClassifier, self).__init__(model=model, params=params)

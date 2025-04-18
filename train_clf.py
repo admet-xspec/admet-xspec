@@ -1,10 +1,12 @@
+import os
+
 import pandas as pd
 from src.utils import clean_smiles
 import logging
 from src.predictor.chemprop import ChempropBinaryClassifier, ChempropRegressor
 from src.predictor.scikit import (
-    SvrClassifier,
-    SvrRegressor,
+    SvmClassifier,
+    SvmRegressor,
     RandomForestClassifier,
     RandomForestRegressor,
     PredictorBase,
@@ -43,13 +45,7 @@ def train(
     logging.info(f"Dataset size: {new_length}")
     logging.info(f"Predictor: {predictor.name()}")
 
-    if hasattr(predictor, "inject_featurizer"):
-        # If the predictor has an inject_featurizer method, use it
-        logging.info(
-            f"Injecting {featurizer.name()} featurizer into {predictor.name()}"
-        )
-        predictor.inject_featurizer(featurizer)
-
+    # Perform a train-test split
     X, y = df["SMILES"], df["Y"]
     X_train, X_test, y_train, y_test = train_test_split(
         X,
@@ -59,8 +55,8 @@ def train(
         stratify=y if strafity_test else None,
     )
 
-    # If the predictor has an inject_featurizer method, use it
     if hasattr(predictor, "inject_featurizer"):
+        # If the predictor has an inject_featurizer method, use it
         logging.info(
             f"Injecting {featurizer.name()} featurizer into {predictor.name()}"
         )
@@ -90,17 +86,18 @@ def train(
 
     # save the model
     out_dir = f"models/{predictor.name()}_" + time.strftime("%Y%m%d-%H%M%S")
+    os.mkdir(out_dir)
     predictor.save(out_dir)
     logging.info(f"Model saved to {out_dir}")
 
     # dump operative config
-    gin_path = f"models/{out_dir}/operative_config.gin"
+    gin_path = f"{out_dir}/operative_config.gin"
     with open(gin_path, "w") as f:
         f.write(gin.operative_config_str())
     logging.info(f"Config saved to {gin_path}")
 
     # save metrics
-    metrics_path = f"models/{out_dir}/metrics.json"
+    metrics_path = f"{out_dir}/metrics.json"
     with open(metrics_path, "w") as f:
         json.dump(
             {
@@ -129,4 +126,5 @@ if __name__ == "__main__":
     # Load the gin configuration
     gin.parse_config_file(args.config)
 
+    # Train the model
     train()
