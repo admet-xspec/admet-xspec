@@ -1,5 +1,6 @@
-predictor/gin.singleton.constructor = @SvmClassifier
-predictor = @predictor/gin.singleton()
+MODEL = @SvmClassifier
+predictor/gin.singleton.constructor = %MODEL
+model/get_str.obj = %MODEL
 
 # Metric can be any of the following:
 # 'accuracy_score', 'f1_score', 'roc_auc_score'
