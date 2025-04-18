@@ -1,3 +1,4 @@
-from src.predictor.PredictorBase import *
-from src.predictor.chemprop import *
-from src.predictor.scikit import *
+from .PredictorBase import *
+from .chemprop import *
+from .scikit import *
+from .param_distributions import *

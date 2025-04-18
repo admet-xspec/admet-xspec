@@ -16,7 +16,7 @@ SvrClassifier.optimize_hyperparameters = False
 SvrClassifier.optimization_iterations = 20
 SvrClassifier.n_jobs = 8
 SvrClassifier.params_distribution = {
-    'C': @scipy.stats.loguniform(5, 1.5),
+    'C': @LogUniformDistribution(5, 1.5),
     'kernel': ['rbf'],
     'gamma': ['scale', 'auto']
 }
