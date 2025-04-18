@@ -9,3 +9,5 @@ train.cv = 1
 train.test_size = 0.2
 train.strafity_test=True
 
+MODELS_DIR = 'models'
+
