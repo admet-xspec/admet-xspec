@@ -26,13 +26,13 @@ class ScikitPredictorBase(PredictorBase):
     def __init__(
         self,
         model,
-        params: dict,
-        metric: str,
-        optimize_hyperparameters: bool,
-        params_distribution: dict,
-        optimization_iterations: int,
-        n_folds: int,
-        n_jobs: int = -1,
+        params: dict | None = None,
+        metric: str | None = None,
+        optimize_hyperparameters: bool = False,
+        params_distribution: dict | None = None,
+        optimization_iterations: int | None = None,
+        n_folds: int | None = None,
+        n_jobs: int | None = None,
     ):
 
         super(ScikitPredictorBase, self).__init__()
@@ -177,9 +177,7 @@ class RandomForestRegressor(ScikitPredictorBase):
     def __init__(self, metric: str, optimize_hyperparameters: bool, params: dict):
 
         model = sklearn.ensemble.RandomForestRegressor
-        super(RandomForestRegressor, self).__init__(
-            model, params, metric, optimize_hyperparameters
-        )
+        super(RandomForestRegressor, self).__init__(model)
 
 
 @gin.configurable()
@@ -187,27 +185,21 @@ class RandomForestClassifier(ScikitPredictorBase):
     def __init__(self, metric: str, optimize_hyperparameters: bool, params: dict):
 
         model = sklearn.ensemble.RandomForestClassifier
-        super(RandomForestClassifier, self).__init__(
-            model, params, metric, optimize_hyperparameters
-        )
+        super(RandomForestClassifier, self).__init__(model)
 
 
 @gin.configurable()
 class SvrRegressor(ScikitPredictorBase):
-    def __init__(self, metric: str, optimize_hyperparameters: bool, params: dict):
+    def __init__(self):
 
         model = sklearn.svm.SVR
-        super(SvrRegressor, self).__init__(
-            model, params, metric, optimize_hyperparameters
-        )
+        super(SvrRegressor, self).__init__(model=model)
 
 
 @gin.configurable()
 class SvrClassifier(ScikitPredictorBase):
-    def __init__(self, metric: str, optimize_hyperparameters: bool, params: dict):
+    def __init__(self, metric: str):
 
         model = sklearn.svm.SVC
         metric = metric
-        super(SvrClassifier, self).__init__(
-            model, params, metric, optimize_hyperparameters
-        )
+        super(SvrClassifier, self).__init__(model=model)
