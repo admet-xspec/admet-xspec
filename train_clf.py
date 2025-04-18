@@ -28,6 +28,8 @@ def train(
     cv: int = 1,
     test_size: float = 0.2,
     strafity_test: bool = False,
+    model_name = 'model',
+    out_dir = 'models'
 ):
     logging.basicConfig(level=logging.DEBUG)
 
@@ -85,8 +87,6 @@ def train(
     logging.info(f"Recall: {round(recall, 3)}")
 
     # save the model
-    out_dir = f"models/{predictor.name()}_" + time.strftime("%Y%m%d-%H%M%S")
-    os.mkdir(out_dir)
     predictor.save(out_dir)
     logging.info(f"Model saved to {out_dir}")
 
@@ -113,6 +113,7 @@ def train(
 if __name__ == "__main__":
     import argparse
     import gin
+    import os
 
     parser = argparse.ArgumentParser(description="Train a predictor")
     parser.add_argument(
@@ -126,5 +127,18 @@ if __name__ == "__main__":
     # Load the gin configuration
     gin.parse_config_file(args.config)
 
+    # Get model name
+    models_dir = gin.query_parameter("%MODELS_DIR")
+    model_name = gin.query_parameter("%MODEL").wrapped
+
+    # Create a directory for the outputs (model_name + timestamp)
+    out_dir = f'{models_dir}/{model_name}_{time.strftime("%Y%m%d-%H%M%S")}'
+    os.mkdir(out_dir)
+
+    # Save logs to a file
+    logger = logging.getLogger(__name__)
+    FileOutputHandler = logging.FileHandler('console.log')
+    logger.addHandler(FileOutputHandler)
+
     # Train the model
-    train()
+    train(out_dir=out_dir)
