@@ -174,7 +174,7 @@ class ScikitPredictorBase(PredictorBase):
 
 @gin.configurable()
 class RandomForestRegressor(ScikitPredictorBase):
-    def __init__(self, metric: str, optimize_hyperparameters: bool, params: dict):
+    def __init__(self):
 
         model = sklearn.ensemble.RandomForestRegressor
         super(RandomForestRegressor, self).__init__(model)
@@ -182,7 +182,7 @@ class RandomForestRegressor(ScikitPredictorBase):
 
 @gin.configurable()
 class RandomForestClassifier(ScikitPredictorBase):
-    def __init__(self, metric: str, optimize_hyperparameters: bool, params: dict):
+    def __init__(self):
 
         model = sklearn.ensemble.RandomForestClassifier
         super(RandomForestClassifier, self).__init__(model)
