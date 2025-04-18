@@ -1,8 +1,9 @@
-predictor/gin.singleton.constructor = @SvrClassifier
+predictor/gin.singleton.constructor = @SvmClassifier
 predictor = @predictor/gin.singleton()
 
 # Metric can be any of the following:
 # 'accuracy_score', 'f1_score', 'roc_auc_score'
+ScikitPredictorBase.metric = 'roc_auc_score'
 
 ScikitPredictorBase.params = {
     'C': 1,
@@ -10,13 +11,16 @@ ScikitPredictorBase.params = {
     'gamma': 'scale',
     'verbose': True
     }
-ScikitPredictorBase.metric = 'roc_auc_score'
 
 ScikitPredictorBase.optimize_hyperparameters = False
 ScikitPredictorBase.optimization_iterations = 20
 ScikitPredictorBase.n_jobs = 8
+
 ScikitPredictorBase.params_distribution = {
-    'C': @LogUniformDistribution(5, 1.5),
+    'C': @param_C/LogUniformDistribution(),
     'kernel': ['rbf'],
     'gamma': ['scale', 'auto']
 }
+
+param_C/LogUniformDistribution.min = 0.1
+param_C/LogUniformDistribution.max = 1000
