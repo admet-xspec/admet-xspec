@@ -5,3 +5,4 @@ checkpoints
 /figures
 /src/__pycache__
 *.pyc
+/src/predictor/__pycache__
