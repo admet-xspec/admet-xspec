@@ -1,6 +1,9 @@
 predictor/gin.singleton.constructor = @SvrClassifier
 predictor = @predictor/gin.singleton()
 
+# Metric can be any of the following:
+# 'accuracy_score', 'f1_score', 'roc_auc_score'
+
 SvrClassifier.metric = 'roc_auc_score'
 SvrClassifier.params = {
     'C': 1,
@@ -10,3 +13,10 @@ SvrClassifier.params = {
     }
 
 SvrClassifier.optimize_hyperparameters = False
+SvrClassifier.optimization_iterations = 20
+SvrClassifier.n_jobs = 8
+SvrClassifier.params_distribution = {
+    'C': @scipy.stats.loguniform(5, 1.5),
+    'kernel': ['rbf'],
+    'gamma': ['scale', 'auto']
+}

@@ -24,7 +24,8 @@ def train(
     featurizer: FeaturizerBase | None,
     random_state: int = 42,
     cv: int = 1,
-    strafity_train_test: bool = False,
+    test_size: float = 0.2,
+    strafity_test: bool = False,
 ):
     logging.basicConfig(level=logging.DEBUG)
 
@@ -55,11 +56,11 @@ def train(
         y,
         test_size=0.2,
         random_state=random_state,
-        stratify=y if strafity_train_test else None,
+        stratify=y if strafity_test else None,
     )
 
+    # If the predictor has an inject_featurizer method, use it
     if hasattr(predictor, "inject_featurizer"):
-        # If the predictor has an inject_featurizer method, use it
         logging.info(
             f"Injecting {featurizer.name()} featurizer into {predictor.name()}"
         )
@@ -67,7 +68,7 @@ def train(
     else:
         # ingore the featurizer
         logging.info(
-            f"Model {predictor.name()} uses its own featurizer - ignoring {featurizer.name()}"
+            f"Model {predictor.name()} uses internal featurizer - ignoring {featurizer.name()}."
         )
 
     # training

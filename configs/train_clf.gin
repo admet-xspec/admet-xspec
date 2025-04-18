@@ -6,5 +6,6 @@ train.predictor = @predictor/gin.singleton()
 
 train.data_path = 'data/permeability/bbbp_pampa.csv'
 train.cv = 1
-train.strafity_train_test=True
+train.test_size = 0.2
+train.strafity_test=True
 

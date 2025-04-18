@@ -19,12 +19,20 @@ class ScikitPredictorBase(PredictorBase):
     :param params: Hyperparameters for the model as a dictionary
     :param metric: Primary metric for the model as a string
         ("mean_squared_error", "roc_auc_score", "accuracy_score", "f1_score")
-    :param optimize_hyperparameters: Wether to optimize hyperparameters using CV random search strategy
+    :param optimize_hyperparameters: Whether to optimize hyperparameters using CV random search strategy
 
     """
 
     def __init__(
-        self, model, params: dict, metric: str, optimize_hyperparameters: bool
+        self,
+        model,
+        params: dict,
+        metric: str,
+        optimize_hyperparameters: bool,
+        params_distribution: dict,
+        optimization_iterations: int,
+        n_folds: int,
+        n_jobs: int = -1,
     ):
 
         super(ScikitPredictorBase, self).__init__()
@@ -36,6 +44,14 @@ class ScikitPredictorBase(PredictorBase):
         if params is not None:
             self._check_params(self.model, params)
             self.model.set_params(**params)
+
+        # Set the hyperparameter distribution for random search CV
+        self.optimize_hyperparameters = optimize_hyperparameters
+        self.optimization_iterations = optimization_iterations
+        self.n_folds = n_folds
+        self.n_jobs = n_jobs
+        if params_distribution is not None:
+            self.params_distribution = params_distribution
 
         metrics = {
             "mean_squared_error": sklearn.metrics.mean_squared_error,
@@ -69,45 +85,50 @@ class ScikitPredictorBase(PredictorBase):
         y = target_list
 
         # Train the model
-        self.model.fit(X, y)
+        if self.optimize_hyperparameters:
+            # Use random search to optimize hyperparameters
+            self.train_CV(X, y)
+        else:
+            # Use pre-defined hyperparameters
+            self.model.fit(X, y)
 
         # Return the primary metric
         y_pred = self.model.predict(X)
 
         return self.primary_metric(y, y_pred)
 
-    def train_CV(
-        self, smiles_list: List[str], target_list: List[float], cv: int = 5
-    ) -> List[float]:
+    def train_CV(self, X, y):
 
-        # Featurize the smiles
-        X = np.array(self.featurizer.featurize(smiles_list))
-        y = np.array(target_list)
+        # Use random search to optimize hyperparameters
+        random_search = sklearn.model_selection.RandomizedSearchCV(
+            estimator=self.model,
+            param_distributions=self.params_distribution,
+            n_iter=self.optimization_iterations,
+            cv=self.n_folds,
+            verbose=2,
+            n_jobs=self.n_jobs,
+        )
 
-        # Train the model
-        kf = sklearn.model_selection.KFold(n_splits=cv)
-        kf.get_n_splits(X)
+        # Fit the model
+        logging.info("Fitting model with random search CV")
+        logging.info(f"Hyperparameter distribution: {self.params_distribution}")
+        random_search.fit(X, y)
 
-        metrics = []
-        for i, (train_index, val_index) in enumerate(kf.split(X)):
-            logging.debug(f"Fitting fold {i} of {cv}")
-            X_train, X_val = X[train_index], X[val_index]
-            y_train, y_val = y[train_index], y[val_index]
-            self.model.fit(X_train, y_train)
-            y_pred = self.model.predict(X_val)
-            metrics.append(self.primary_metric(y_val, y_pred))
+        # Get the best model
+        self.model = random_search.best_estimator_
 
-        print("Primary metric:", self.primary_metric)
-        print("Values:", [round(x, 3) for x in metrics])
-
-        return metrics
+        # Get the best hyperparameters
+        best_params = random_search.best_params_
+        logging.info(f"Loading best parameters: {best_params}")
+        self.model = self.model.set_params(**best_params)
+        self.model.fit(X, y)  # Train the model with the best hyperparameters
 
     def predict(self, smiles_list: List[str]) -> np.array:
 
         # Featurize the smiles
         X = self.featurizer.featurize(smiles_list)
 
-        # Predict the target value
+        # Predict the target values
         return self.model.predict(X)
 
     def score(self, y_true, y_pred):
