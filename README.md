@@ -3,13 +3,15 @@ ADMET prediction module for GenProSyn
   
 Author: Hubert Rybka
 
-1. ##Training
+## Training
 
-Before working with this repository, please get accustomed with with [gin-config docs](https://github.com/google/gin-config). 
-All of the configuration in this project is done with this package.
+Before working with this repository, please get a look at [gin-config docs](https://github.com/google/gin-config). 
+All of the configuration in this project is done exclusively with this package.
 
-To train a simple regressor or classifier, first identify the `configs/config.gin` file.
-I hope the reader would find this file self-explainatory to a dregree.
+If you want to train your own predictive model, identify the `configs/config.gin` file first.
+This is the main configuration file for the training script. Take a look below - It is an example of one such file. It includes
+settings and parameters used by the training script. The config file is well documented, and before we move on, I encourage
+you to read and try to understand this short config file:
 
 ### config.gin
 
@@ -38,6 +40,8 @@ I hope the reader would find this file self-explainatory to a dregree.
 #   to store output files, metrics and trained weights in. Default: 'models'.
     MODELS_DIR = 'models'
 ```
+
+### Workflow
 
 Now, let's discuss the general strategy. Each of the classifiers, regressors and featurizers are implemented as classes
 and have their own .gin config files in different `configs` subdirectories. The `configs/config.gin` file is designed in
