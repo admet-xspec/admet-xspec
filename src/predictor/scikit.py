@@ -1,7 +1,7 @@
 import logging
 
 import numpy as np
-
+from src.utils import get_nice_class_name
 from src.predictor.PredictorBase import PredictorBase
 from src.featurizer.FeaturizerBase import FeaturizerBase
 from typing import List
@@ -9,6 +9,8 @@ from pathlib import Path
 import sklearn
 import pickle as pkl
 import gin
+from typing import List, Dict
+
 
 @gin.configurable()
 class ScikitPredictorBase(PredictorBase):
@@ -18,7 +20,7 @@ class ScikitPredictorBase(PredictorBase):
     :param model: Scikit-learn model
     :param params: Hyperparameters for the model as a dictionary
     :param metric: Primary metric for the model as a string
-        ("mean_squared_error", "roc_auc_score", "accuracy_score", "f1_score")
+        ("mean_squared_error", "r2_score", "roc_auc_score", "accuracy_score", "f1_score", "precission_score", "recall_score")
     :param optimize_hyperparameters: Whether to optimize hyperparameters using CV random search strategy
 
     """
@@ -27,47 +29,39 @@ class ScikitPredictorBase(PredictorBase):
         self,
         model,
         params: dict | None = None,
-        metric: str | None = None,
+        metrics: List[str] | None = None,
+        primary_metric: str | None = None,
         optimize_hyperparameters: bool = False,
         params_distribution: dict | None = None,
         optimization_iterations: int | None = None,
         n_folds: int | None = None,
-        n_jobs: int | None = None
+        n_jobs: int | None = None,
     ):
 
-        super(ScikitPredictorBase, self).__init__()
-
         # Initialize the model
-        self.model = model()
+        super(ScikitPredictorBase, self).__init__(
+            model=model, metrics=metrics, primary_metric=primary_metric
+        )
 
         # Set the hyperparameters
         if params is not None:
-            self._check_params(self.model, params)
+            self._check_params(
+                self.model, params
+            )  # Check if params will be recognized by the model
             self.model.set_params(**params)
 
-        # Set the hyperparameter distribution for random search CV
-        self.optimize_hyperparameters = optimize_hyperparameters
-        self.optimization_iterations = optimization_iterations
-        self.n_folds = n_folds
-        self.n_jobs = n_jobs
-        if params_distribution is not None:
-            self.params_distribution = params_distribution
-
-        metrics = {
-            "mean_squared_error": sklearn.metrics.mean_squared_error,
-            "roc_auc_score": sklearn.metrics.roc_auc_score,
-            "accuracy_score": sklearn.metrics.accuracy_score,
-            "f1_score": sklearn.metrics.f1_score,
+        # Params for hyperparameter optimalization with randomised search CV
+        self.optimize = optimize_hyperparameters
+        self.hyper_opt = {
+            "n_iter": optimization_iterations,
+            "n_folds": n_folds,
+            "n_jobs": n_jobs,
+            "params_distribution": params_distribution,
         }
 
-        # Set primary metric
-        self.primary_metric = metrics[metric]
-
-    def name(self):
-        """
-        Returns the name of the model
-        """
-        return type(self.model).__name__
+        # Prepare sklearn metrics to use in model evaluation
+        self.metrics = [self.supported_metrics[metric_name] for metric_name in metrics]
+        self.primary_metric = primary_metric
 
     def inject_featurizer(self, featurizer):
         """
@@ -76,6 +70,7 @@ class ScikitPredictorBase(PredictorBase):
         """
         if not isinstance(featurizer, FeaturizerBase):
             raise ValueError("Featurizer must be an instance of FeaturizerBase!")
+        logging.info(f"Using {get_nice_class_name(featurizer)} for featurization")
         self.featurizer = featurizer
 
     def train(self, smiles_list: List[str], target_list: List[float]):
@@ -85,79 +80,91 @@ class ScikitPredictorBase(PredictorBase):
         y = target_list
 
         # Train the model
-        if self.optimize_hyperparameters:
+        if self.optimize:
             # Use random search to optimize hyperparameters
             self.train_CV(X, y)
         else:
-            # Use pre-defined hyperparameters
+            # Use a set of fixed hyperparameters
             self.model.fit(X, y)
 
-        # Return the primary metric
-        y_pred = self.model.predict(X)
+        # Get the metrics on the training set
+        y_hat = self.model.predict(X)
+        train_primary_metric = self.calc_primary_metric(y, y_hat)
 
-        return self.primary_metric(y, y_pred)
+        # Signal that the model has been trained
+        self.ready_flag = True
+
+        logging.info(f"Fitting of {get_nice_class_name(self.model)} has converged.")
+        logging.debug(
+            f"Primary metric: {get_nice_class_name(self.primary_metric)} on the training set = {train_primary_metric}"
+        )
 
     def train_CV(self, X, y):
 
         # Use random search to optimize hyperparameters
         random_search = sklearn.model_selection.RandomizedSearchCV(
             estimator=self.model,
-            param_distributions=self.params_distribution,
-            n_iter=self.optimization_iterations,
-            cv=self.n_folds,
+            param_distributions=self.hyper_opt["params_distribution"],
+            n_iter=self.hyper_opt["n_iter"],
+            cv=self.hyper_opt["n_folds"],
             verbose=1,
-            n_jobs=self.n_jobs,
+            n_jobs=self.hyper_opt["n_jobs"],
+            refit=True,
         )
 
         # Fit the model
-        logging.info("Fitting model with random search CV")
+        logging.info(f"Optimizing hyperparams with RandomSearchCV.")
         logging.info(f"Hyperparameter distribution:")
-        for key, value in self.params_distribution.items():
-            logging.info(f"{key}: {str(value)}")
+        for key, value in self.hyper_opt["params_distribution"].items():
+            if isinstance(value, list):
+                logging.info(f"{key}: {value}")
+            else:
+                logging.info(f"{key}: {value().__str__()}")
 
         random_search.fit(X, y)
 
-        # Get the best model
-        self.model = random_search.best_estimator_
+        # Save only the best model after refitting to the whole training data
+        self.model = random_search.estimator
 
-    def predict(self, smiles_list: List[str]) -> np.array:
+        logging.info(
+            f"RandomSearchCV: Fitting converged. Keeping the best model, with params: "
+            f"{random_search.best_params}"
+        )
+        logging.debug(
+            f"{self.primary_metric.__name__()} on the training set: {self.calc_p}"
+        )
 
+    def predict(self, smiles_list: List[str], ignore_flag=False) -> np.array:
+        if not self.ready_flag:
+            raise ValueError(
+                f"The model has not been fitted to data. Train the model or load a saved "
+                f"state first. Alternatively, pass ingore_flag=True to disable this error."
+            )
         # Featurize the smiles
         X = self.featurizer.featurize(smiles_list)
-
         # Predict the target values
-        return self.model.predict(X)
-
-    def score(self, y_true, y_pred):
-        metric = self.primary_metric(y_true, y_pred)
-        if self.verbose:
-            print("Primary metric:", self.primary_metric.__name__)
-            print("Values:", round(metric, 3))
-        return metric
+        return self.model.predict(X).reshape(-1, 1)
 
     def save(self, out_dir: str):
-
         # Check if the output directory exists
         if not Path.is_dir(Path(out_dir)):
             raise FileNotFoundError(f"Directory {out_dir} does not exist")
-
         # Save the model
         with open(out_dir + "/model.pkl", "wb") as fileout:
             pkl.dump(obj=self.model, file=fileout)
         logging.info(f"Model saved to {out_dir}/model.pkl")
 
     def load(self, path: str):
-
         # Check if the file exists
         if not Path(path).exists():
             raise FileNotFoundError(f"File {path} does not exist")
-
         # Check if the file is a pickle file
         if not path.endswith(".pkl"):
             raise ValueError(f"File {path} is not a pickle file")
-
         # Load the model
         self.model = pkl.load(path)
+        # Signal that a trained model has been loaded
+        self.ready_flag = True
 
     @staticmethod
     def _check_params(model, params):
@@ -171,31 +178,27 @@ class ScikitPredictorBase(PredictorBase):
 
 @gin.configurable()
 class RandomForestRegressor(ScikitPredictorBase):
-    def __init__(self, params: dict|None=None):
-
-        model = sklearn.ensemble.RandomForestRegressor
-        super(RandomForestRegressor, self).__init__(model=model, params=parmas)
+    def __init__(self, params: dict | None = None):
+        super(RandomForestRegressor, self).__init__(
+            model=sklearn.ensemble.RandomForestRegressor, params=parmas
+        )
 
 
 @gin.configurable()
 class RandomForestClassifier(ScikitPredictorBase):
-    def __init__(self, params: dict|None=None):
-
-        model = sklearn.ensemble.RandomForestClassifier
-        super(RandomForestClassifier, self).__init__(model=model, params=params)
+    def __init__(self, params: dict | None = None):
+        super(RandomForestClassifier, self).__init__(
+            model=sklearn.ensemble.RandomForestClassifier, params=params
+        )
 
 
 @gin.configurable()
 class SvmRegressor(ScikitPredictorBase):
-    def __init__(self, params: dict|None=None):
-
-        model = sklearn.svm.Svm
-        super(SvmRegressor, self).__init__(model=model, params=params)
+    def __init__(self, params: dict | None = None):
+        super(SvmRegressor, self).__init__(model=sklearn.svm.Svm, params=params)
 
 
 @gin.configurable()
 class SvmClassifier(ScikitPredictorBase):
-    def __init__(self, params: dict|None=None):
-
-        model = sklearn.svm.SVC
-        super(SvmClassifier, self).__init__(model=model, params=params)
+    def __init__(self, params: dict | None = None):
+        super(SvmClassifier, self).__init__(model=sklearn.svm.SVC, params=params)

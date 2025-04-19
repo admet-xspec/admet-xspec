@@ -1,7 +1,7 @@
 import os
 
 import pandas as pd
-from src.utils import clean_smiles
+from src.utils import clean_smiles, get_nice_class_name
 import logging
 from src.predictor.chemprop import ChempropBinaryClassifier, ChempropRegressor
 from src.predictor.scikit import (
@@ -25,30 +25,28 @@ def train(
     predictor: PredictorBase,
     featurizer: FeaturizerBase | None,
     random_state: int = 42,
-    cv: int = 1,
     test_size: float = 0.2,
     strafity_test: bool = False,
-    model_name = 'model',
-    out_dir = 'models'
+    model_name="model",
+    out_dir="models",
 ):
     logging.basicConfig(level=logging.DEBUG)
 
+    # Load data
     df = pd.read_csv(data_path)
 
-    featurizer = EcfpFeaturizer(radius=2, n_bits=2048, count=False)
-
+    # Try to sanitize the data
     pre_cleaning_length = len(df)
-    df["SMILES"] = clean_smiles(df["SMILES"])
-    df = df.dropna(subset=["SMILES"]).reset_index(drop=True)
+    df["smiles"] = clean_smiles(df["smiles"])
+    df = df.dropna(subset=["smiles"]).reset_index(drop=True)
     new_length = len(df)
     if pre_cleaning_length != new_length:
         logging.info(f"Dropped {pre_cleaning_length - new_length} invalid SMILES")
-
     logging.info(f"Dataset size: {new_length}")
-    logging.info(f"Predictor: {predictor.name()}")
+    logging.info(f"Predictor: {get_nice_class_name(predictor.model)}")
 
     # Perform a train-test split
-    X, y = df["SMILES"], df["Y"]
+    X, y = df["smiles"], df["y"]
     X_train, X_test, y_train, y_test = train_test_split(
         X,
         y,
@@ -59,36 +57,22 @@ def train(
 
     if hasattr(predictor, "inject_featurizer"):
         # If the predictor has an inject_featurizer method, use it
-        logging.info(
-            f"Injecting {featurizer.name()} featurizer into {predictor.name()}"
-        )
         predictor.inject_featurizer(featurizer)
     else:
         # ingore the featurizer
         logging.info(
-            f"Model {predictor.name()} uses internal featurizer - ignoring {featurizer.name()}."
+            f"Model {predictor.__name__} uses internal featurizer - ignoring {featurizer().__name__}."
         )
 
-    # training
+    # train (either use hyperparameters provided in the predictor .gin config file directly, or
+    #        conduct hyperparameter optimization over distributions given in the same .gin config file)
     predictor.train(X_train, y_train)
 
-    # testing
+    # test
     y_pred = predictor.predict(X_test)
-
-    # calculate ROC_AUC and accuracy
-    roc_auc = roc_auc_score(y_test, y_pred)
-    accuracy = accuracy_score(y_test, y_pred.round())
-    precision = precision_score(y_test, y_pred.round())
-    recall = recall_score(y_test, y_pred.round())
-
-    logging.info(f"ROC AUC: {round(roc_auc, 3)}")
-    logging.info(f"Accuracy: {round(accuracy, 3)}")
-    logging.info(f"Precision: {round(precision, 3)}")
-    logging.info(f"Recall: {round(recall, 3)}")
 
     # save the model
     predictor.save(out_dir)
-    logging.info(f"Model saved to {out_dir}")
 
     # dump operative config
     gin_path = f"{out_dir}/operative_config.gin"
@@ -98,16 +82,14 @@ def train(
 
     # save metrics
     metrics_path = f"{out_dir}/metrics.json"
+    metrics_dict = predictor.calc_metrics(y_test, y_pred)
     with open(metrics_path, "w") as f:
         json.dump(
-            {
-                "roc_auc": roc_auc,
-                "accuracy": accuracy,
-                "precision": precision,
-                "recall": recall,
-            },
+            metrics_dict,
             f,
         )
+        logging.info(f"Metrics saved to {metrics_path}")
+        logging.info(metrics_dict)
 
 
 if __name__ == "__main__":
@@ -115,30 +97,43 @@ if __name__ == "__main__":
     import gin
     import os
 
-    parser = argparse.ArgumentParser(description="Train a predictor")
+    parser = argparse.ArgumentParser()
     parser.add_argument(
         "--config",
         type=str,
         help="Path to the config file",
         default="configs/train_clf.gin",
     )
+    parser.add_argument(
+        "--log-level",
+        type=str,
+        help="Can be one of: DEBUG, INFO, WARNING, ERROR, CRITICAL",
+        default="INFO",
+    )
     args = parser.parse_args()
 
     # Load the gin configuration
     gin.parse_config_file(args.config)
 
-    # Get model name
+    # Create a directory for the outputs (model_name)
     models_dir = gin.query_parameter("%MODELS_DIR")
-    model_name = gin.query_parameter("%MODEL").wrapped
+    model_name = gin.query_parameter("%NAME")
+    out_dir = f"{models_dir}/{model_name}"
 
-    # Create a directory for the outputs (model_name + timestamp)
-    out_dir = f'{models_dir}/{model_name}_{time.strftime("%Y%m%d-%H%M%S")}'
+    # If the directory already exists, add a timestamp to the name
+    if os.path.isdir(out_dir):
+        out_dir = out_dir + f'_{time.strftime("%Y%m%d-%H%M%S")}'
+
     os.mkdir(out_dir)
 
-    # Save logs to a file
-    logger = logging.getLogger(__name__)
-    FileOutputHandler = logging.FileHandler('console.log')
-    logger.addHandler(FileOutputHandler)
+    # Configure logger
+    logging.basicConfig(
+        level=args.log_level,
+        handlers=[
+            logging.FileHandler(f"{out_dir}/console.log"),
+            logging.StreamHandler(),
+        ],
+    )
 
     # Train the model
     train(out_dir=out_dir)

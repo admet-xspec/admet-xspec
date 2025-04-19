@@ -29,3 +29,12 @@ def clean_smiles(smiles_list: List[str]) -> List[str | None]:
             cleaned_smiles.append(None)
 
     return cleaned_smiles
+
+
+def get_nice_class_name(obj):
+    """
+    Takes an object of any class and returns a clean name of the class.
+    :param x: object (any)
+    :return: str
+    """
+    return type(obj).__name__

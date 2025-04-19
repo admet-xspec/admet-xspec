@@ -38,6 +38,3 @@ class EcfpFeaturizer(FeaturizerBase):
             fp_list.append(fp)
 
         return np.stack(fp_list)
-
-    def name(self):
-        return "ecfp"
