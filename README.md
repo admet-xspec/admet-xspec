@@ -18,22 +18,22 @@ you to read and try to understand this short config file:
 ```
 #   TRAINING SCRIPT GENERAL CONFIG FILE
 
-#   Add paths to the .gin config files of a featurizer and a predictor (classifier or regressor)
+#   **Add paths to the .gin config files of a featurizer and a predictor** (classifier or regressor)
     include 'configs/featurizers/ecfp.gin'
     include 'configs/classifiers/svm.gin'
 
 #==========================================================================================================#
-#   Initializing predictor and featurizer - do not modify
+#   Do not modify this short section
     train.featurizer = @featurizer/gin.singleton()
     train.predictor = @predictor/gin.singleton()
 #==========================================================================================================#
 
-#   Provide path to the dataset
+#   **Provide path to the dataset**
     train.data_path = 'data/permeability/bbbp_pampa.csv'
     train.test_size = 0.2
     train.strafity_test=True
 
-#   Provide a name for the model
+#   **Provide a name for the model**
     NAME = 'MODEL'
 
 #   Name of the directory in which every trained model will get its own subdirectory
