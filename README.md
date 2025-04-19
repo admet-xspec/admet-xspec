@@ -142,7 +142,8 @@ experiment will only return the model which performed best according to our chos
             C/LogUniform.min = 0.1
             C/LogUniform.max = 1000
     
-    #==========================================================================================================#```
+    #==========================================================================================================#
+```
 
 Some important parameters are:
 
@@ -161,7 +162,7 @@ more common
     ScikitPredictorBase.optimization_iterations = 20        # max no. sets of hyperparameter values to be drawn
     ScikitPredictorBase.n_jobs = 8                          # no. of CPUs to use
     ScikitPredictorBase.n_folds = 5                         # no. of folds to employ in cross-validation
-```
+
 ### Randomized Hyperaparameter Tuning
 
 A somewhat more in-depth explanation should be given regarding the configuration of randomized search protocol in
