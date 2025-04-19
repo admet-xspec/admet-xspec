@@ -1,0 +1,26 @@
+NAME = 'RF'
+predictor/gin.singleton.constructor = @RandomForestClassifier
+
+# Metric can be any of the following:
+# 'accuracy_score', 'f1_score', 'roc_auc_score'
+ScikitPredictorBase.metric = 'roc_auc_score'
+
+ScikitPredictorBase.params = {
+    'C': 1,
+    'kernel': 'rbf',
+    'gamma': 'scale',
+    'verbose': True
+    }
+
+ScikitPredictorBase.optimize_hyperparameters = False
+ScikitPredictorBase.optimization_iterations = 20
+ScikitPredictorBase.n_jobs = 8
+
+ScikitPredictorBase.params_distribution = {
+    'C': @param_C/LogUniformDistribution(),
+    'kernel': ['rbf'],
+    'gamma': ['scale', 'auto']
+}
+
+param_C/LogUniformDistribution.min = 0.1
+param_C/LogUniformDistribution.max = 1000

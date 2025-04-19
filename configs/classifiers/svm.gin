@@ -1,27 +1,59 @@
-MODEL = @SvmClassifier
-predictor/gin.singleton.constructor = %MODEL
-model/get_str.obj = %MODEL
+predictor/gin.singleton.constructor = @SvmClassifier
+#==========================================================================================================#
+#   Supported metrics are: "mean_squared_error", "r2_score", "roc_auc_score", "accuracy_score",
+#                          "f1_score", "precision_score", "recall_score"
+#==========================================================================================================#
+#   Define all the metrics used in final evaluation of the model:                   # list of strings
+    ScikitPredictorBase.metrics = ['roc_auc_score', 'accuracy_score', 'precision_score', 'recall_score']
 
-# Metric can be any of the following:
-# 'accuracy_score', 'f1_score', 'roc_auc_score'
-ScikitPredictorBase.metric = 'roc_auc_score'
+#   Define the primary metric, one to be optimized during hyperparameter search:    # string
+    ScikitPredictorBase.primary_metric = 'roc_auc_score'
+#==========================================================================================================#
+#   If the parameter below is set to false, the script will not execute hyperparameter optimization step.
+#   Instead, the model will be trained using fixed hyperparameters provided in params dict.
 
-ScikitPredictorBase.params = {
-    'C': 1,
-    'kernel': 'rbf',
-    'gamma': 'scale',
-    'verbose': True
-    }
+    ScikitPredictorBase.optimize_hyperparameters = False
 
-ScikitPredictorBase.optimize_hyperparameters = False
-ScikitPredictorBase.optimization_iterations = 20
-ScikitPredictorBase.n_jobs = 8
+    ScikitPredictorBase.params = {
+        'C': 1,
+        'kernel': 'rbf',
+        'gamma': 'scale',
+        }
+#==========================================================================================================#
+#   If optimize_hyperparameters is set to True, the training script will first optimize the values of
+#   hyperparameters using random search - CV strategy
 
-ScikitPredictorBase.params_distribution = {
-    'C': @param_C/LogUniformDistribution(),
-    'kernel': ['rbf'],
-    'gamma': ['scale', 'auto']
-}
+    ScikitPredictorBase.optimization_iterations = 20    # maximum times the script is alowed to draw and
+                                                        # evaluate a new set of hyperparameter values
 
-param_C/LogUniformDistribution.min = 0.1
-param_C/LogUniformDistribution.max = 1000
+    ScikitPredictorBase.n_jobs = 8                      # number of CPUs to use
+    ScikitPredictorBase.n_folds = 5                     # number of cross-validation folds
+
+#   Dictionary of distributions to sample hyperparameter values from. To each of the models' hyperparameters
+#   either a discreete list or a continous distribution may be assigned. Below is a brief demonstration on
+#   how to configure continuous probability distributions for the hyperparameters.
+
+#   There are 4 continuous distributions you can use:
+#       - Normal, parametrized by mu (mean) and var (variance),
+#       - LogNormal, parametrized by mu (mean) and var (variance),
+#       - Uniform, parametrized by min and max,
+#       - LogUniform, parametrized by min and max
+
+#   If you wanted to provide a LogNormal distribution for the parameter C, remember to put it in
+#   some scope (ex. @C/LogNormal, where C/ is the scope). That way, when setting C/LogUniform.min
+#   and C/LogUniform.max distribution parameters later on, those will only change for our C hyperparam
+#   distribution, and not for any other LogNormals used in this config. The @ is essential when passing
+#   the distribution itself (which is a class) to the dictionary, but not needed while setting attributes.
+
+    ScikitPredictorBase.params_distribution = {
+        'C': @C/LogUniform,
+        'gamma': ['scale', 'auto'],
+        'kernel': ['rbf']
+        }
+
+#   Parametrizing the distribution functions:
+
+        C/LogUniform.min = 0.1
+        C/LogUniform.max = 1000
+
+#==========================================================================================================#
