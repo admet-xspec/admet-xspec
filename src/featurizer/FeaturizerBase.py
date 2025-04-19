@@ -11,10 +11,3 @@ class FeaturizerBase(abc.ABC):
         Featurize the given SMILES string
         """
         pass
-
-    @abc.abstractmethod
-    def name(self):
-        """
-        Return the name of the featurizer
-        """
-        pass
