@@ -41,7 +41,7 @@ class ScikitPredictor(PredictorBase):
         super(ScikitPredictor, self).__init__(
             metrics=metrics, primary_metric=primary_metric
         )
-        self.model = model()
+        self.model = model(probability=True)
 
         # Set the hyperparameters
         if params is not None:
@@ -141,7 +141,7 @@ class ScikitPredictor(PredictorBase):
         # Featurize the smiles
         X = self.featurizer.featurize(smiles_list)
         # Predict the target values
-        return self.model.predict(X).reshape(-1, 1)
+        return self.model.predict_proba(X).reshape(-1, 1)
 
     def save(self, out_dir: str):
         # Check if the output directory exists
