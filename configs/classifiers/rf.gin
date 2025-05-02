@@ -15,7 +15,7 @@ predictor = @predictor/gin.singleton()
 #   If the parameter below is set to false, the script will not execute hyperparameter optimization step.
 #   Instead, the model will be trained using fixed hyperparameters provided in params dict.
 
-    ScikitPredictor.optimize_hyperparameters = False
+    ScikitPredictor.optimize_hyperparameters = True
 
     ScikitPredictor.params = {
         'n_estimators': 100,
@@ -32,7 +32,7 @@ predictor = @predictor/gin.singleton()
     ScikitPredictor.optimization_iterations = 100    # maximum times the script is allowed to draw and
                                                         # evaluate a new set of hyperparameter values
 
-    ScikitPredictor.n_jobs = 8                      # number of CPUs to use
+    ScikitPredictor.n_jobs = 32                      # number of CPUs to use
     ScikitPredictor.n_folds = 5                     # number of cross-validation folds
 
 #   Dictionary of distributions to sample hyperparameter values from. To each of the models' hyperparameters
@@ -43,7 +43,7 @@ predictor = @predictor/gin.singleton()
 #       * Uniform       (continuous)
 #       * LogUniform    (continuous)
 #       * QUniform      (discrete)
-#       * QUniform   (discrete)
+#       * QUniform      (discrete)
 
 #   If you wanted to provide a LogUniform distribution for the parameter n_estimators, remember to put it in
 #   some scope (ex. @n_estimators/LogUniform(), where n_estimators/ is the scope). That way, when setting
@@ -64,7 +64,7 @@ predictor = @predictor/gin.singleton()
 #   Parametrizing the distribution functions:
 
         n_estimators/QUniform.min = 1
-        n_estimators/QUniform.max = 50
+        n_estimators/QUniform.max = 1000
 
         max_depth/QUniform.min = 2
         max_depth/QUniform.max = 100

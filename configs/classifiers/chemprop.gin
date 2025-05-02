@@ -56,7 +56,7 @@ predictor = @predictor/gin.singleton()
 #   the distribution itself (which is a class) to the dictionary, but not needed while setting attributes.
 
     ChempropPredictor.params_distribution = {
-        'mp_type': ['atom', 'bond'],
+        'mp_type': ['atom'],
         'message_hidden_dim': @message_hidden_dim/QLogUniform(),
         'depth': @depth/QLogUniform(),
         'agg_type': ['mean', 'sum', 'norm'],
@@ -83,7 +83,7 @@ predictor = @predictor/gin.singleton()
 #   OTHER
 #==========================================================================================================#
 #   Number of epochs to train the model
-    ChempropPredictor.epochs = 100
+    ChempropPredictor.epochs = 10
 
 #   Graph featurizer to be used
     ChempropPredictor.featurizer = @featurizers.SimpleMoleculeMolGraphFeaturizer()
