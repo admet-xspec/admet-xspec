@@ -14,6 +14,8 @@ from sklearn.model_selection import train_test_split
 import time
 import json
 import gin
+import sys
+sys.setrecursionlimit(2000)
 
 
 @gin.configurable()
