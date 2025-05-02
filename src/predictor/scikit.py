@@ -41,7 +41,7 @@ class ScikitPredictor(PredictorBase):
         super(ScikitPredictor, self).__init__(
             metrics=metrics, primary_metric=primary_metric
         )
-        self.model = model(probability=True)
+        self.model = model
 
         # Set the hyperparameters
         if params is not None:
@@ -178,7 +178,7 @@ class ScikitPredictor(PredictorBase):
 class RfRegressor(ScikitPredictor):
     def __init__(self, params: dict | None = None):
         super(RfRegressor, self).__init__(
-            model=sklearn.ensemble.RandomForestRegressor, params=params
+            model=sklearn.ensemble.RandomForestRegressor(), params=params
         )
 
 
@@ -186,17 +186,17 @@ class RfRegressor(ScikitPredictor):
 class RfClassifier(ScikitPredictor):
     def __init__(self, params: dict | None = None):
         super(RfClassifier, self).__init__(
-            model=sklearn.ensemble.RandomForestClassifier, params=params
+            model=sklearn.ensemble.RandomForestClassifier(), params=params
         )
 
 
 @gin.configurable()
 class SvmRegressor(ScikitPredictor):
     def __init__(self, params: dict | None = None):
-        super(SvmRegressor, self).__init__(model=sklearn.svm.SVR, params=params)
+        super(SvmRegressor, self).__init__(model=sklearn.svm.SVR(), params=params)
 
 
 @gin.configurable()
 class SvmClassifier(ScikitPredictor):
     def __init__(self, params: dict | None = None):
-        super(SvmClassifier, self).__init__(model=sklearn.svm.SVC, params=params)
+        super(SvmClassifier, self).__init__(model=sklearn.svm.SVC(probability=True), params=params)

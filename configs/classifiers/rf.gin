@@ -29,7 +29,7 @@ predictor = @predictor/gin.singleton()
 #   If optimize_hyperparameters is set to True, the training script will first optimize the values of
 #   hyperparameters using random search - CV strategy
 
-    ScikitPredictor.optimization_iterations = 100    # maximum times the script is allowed to draw and
+    ScikitPredictor.optimization_iterations = 10    # maximum times the script is allowed to draw and
                                                         # evaluate a new set of hyperparameter values
 
     ScikitPredictor.n_jobs = 32                      # number of CPUs to use
@@ -67,7 +67,7 @@ predictor = @predictor/gin.singleton()
         n_estimators/QUniform.max = 1000
 
         max_depth/QUniform.min = 2
-        max_depth/QUniform.max = 100
+        max_depth/QUniform.max = 20
 
         min_samples_split/QUniform.min = 2
         min_samples_split/QUniform.max = 20

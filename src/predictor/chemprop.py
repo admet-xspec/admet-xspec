@@ -4,7 +4,7 @@ import chemprop as chp
 import ray
 from typing import List
 from pathlib import Path
-from ray.train import CheckpointConfig, ScalingConfig
+from ray.train import ScalingConfig
 from ray import tune
 from ray.train.torch import TorchTrainer
 from src.gin_config.distributions import Uniform, LogUniform, QUniform, QLogUniform
@@ -131,7 +131,7 @@ class ChempropPredictor(PredictorBase):
         )
 
         # Checkpoint config controls the checkpointing behavior of Ray
-        checkpoint_config = CheckpointConfig(
+        checkpoint_config = ray.tune.CheckpointConfig(
             num_to_keep=1,  # number of checkpoints to keep
             checkpoint_score_attribute="val_loss",  # Save the checkpoint based on this metric
             checkpoint_score_order="min",  # Save the checkpoint with the lowest metric value
@@ -269,6 +269,9 @@ class ChempropPredictor(PredictorBase):
         ]:
             if param not in config.keys():
                 raise ValueError(f"Missing parameter {param} in the passed config dict")
+
+        logging.info("Initializing ChemProp model with the following parameters:")
+        logging.info(config)
 
         return chp.models.MPNN(
             self._init_mp(
