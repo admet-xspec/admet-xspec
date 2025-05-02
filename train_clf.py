@@ -29,8 +29,6 @@ def train(
     model_name="model",
     out_dir="models",
 ):
-    logging.basicConfig(level=logging.DEBUG)
-
     # Load data
     df = pd.read_csv(data_path)
 
@@ -85,6 +83,8 @@ def train(
 
     # save metrics
     metrics_path = f"{out_dir}/metrics.json"
+    logging.debug(f"y_test shape: {y_test.shape}")
+    logging.debug(f"y_pred skape: {y_pred.shape}")
     metrics_dict = predictor.calc_metrics(y_test, y_pred)
     with open(metrics_path, "w") as f:
         json.dump(
@@ -111,7 +111,7 @@ if __name__ == "__main__":
         "--log-level",
         type=str,
         help="Can be one of: DEBUG, INFO, WARNING, ERROR, CRITICAL",
-        default="INFO",
+        default="DEBUG",
     )
     args = parser.parse_args()
 
