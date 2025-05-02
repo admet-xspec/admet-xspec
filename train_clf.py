@@ -1,5 +1,3 @@
-import os
-
 import pandas as pd
 from src.utils import clean_smiles, get_nice_class_name
 import logging
@@ -7,13 +5,12 @@ from src.predictor.chemprop import ChempropBinaryClassifier, ChempropRegressor
 from src.predictor.scikit import (
     SvmClassifier,
     SvmRegressor,
-    RandomForestClassifier,
-    RandomForestRegressor,
+    RfClassifier,
+    RfRegressor,
     PredictorBase,
 )
-from src.featurizer.fingerprint import *
+from src.featurizer.fingerprint import EcfpFeaturizer, FeaturizerBase
 from sklearn.model_selection import train_test_split
-from sklearn.metrics import roc_auc_score, accuracy_score, precision_score, recall_score
 import time
 import json
 import gin
@@ -37,6 +34,7 @@ def train(
 
     # Try to sanitize the data
     pre_cleaning_length = len(df)
+    df.columns = df.columns.str.lower()
     df["smiles"] = clean_smiles(df["smiles"])
     df = df.dropna(subset=["smiles"]).reset_index(drop=True)
     new_length = len(df)
@@ -50,10 +48,13 @@ def train(
     X_train, X_test, y_train, y_test = train_test_split(
         X,
         y,
-        test_size=0.2,
+        test_size=test_size,
         random_state=random_state,
         stratify=y if strafity_test else None,
     )
+
+    # set the working directory
+    predictor.set_working_dir(f"{out_dir}/{model_name}")
 
     if hasattr(predictor, "inject_featurizer"):
         # If the predictor has an inject_featurizer method, use it
@@ -61,7 +62,7 @@ def train(
     else:
         # ingore the featurizer
         logging.info(
-            f"Model {predictor.__name__} uses internal featurizer - ignoring {featurizer().__name__}."
+            f"Model {get_nice_class_name(predictor)} uses internal featurizer - ignoring {get_nice_class_name(featurizer)}."
         )
 
     # train (either use hyperparameters provided in the predictor .gin config file directly, or
@@ -69,7 +70,7 @@ def train(
     predictor.train(X_train, y_train)
 
     # test
-    y_pred = predictor.predict(X_test)
+    y_pred = predictor.infer(X_test)
 
     # save the model
     predictor.save(out_dir)
@@ -102,7 +103,7 @@ if __name__ == "__main__":
         "--config",
         type=str,
         help="Path to the config file",
-        default="configs/train_clf.gin",
+        default="configs/config.gin",
     )
     parser.add_argument(
         "--log-level",
@@ -113,6 +114,8 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     # Load the gin configuration
+    if not os.path.isfile(args.config):
+        raise FileNotFoundError(f"Config file {args.config} not found.")
     gin.parse_config_file(args.config)
 
     # Create a directory for the outputs (model_name)

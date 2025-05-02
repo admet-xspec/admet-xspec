@@ -4,16 +4,15 @@ import numpy as np
 from src.utils import get_nice_class_name
 from src.predictor.PredictorBase import PredictorBase
 from src.featurizer.FeaturizerBase import FeaturizerBase
-from typing import List
 from pathlib import Path
 import sklearn
 import pickle as pkl
 import gin
-from typing import List, Dict
+from typing import List
 
 
 @gin.configurable()
-class ScikitPredictorBase(PredictorBase):
+class ScikitPredictor(PredictorBase):
     """
     Represents a Scikit-learn predictive model
 
@@ -39,9 +38,10 @@ class ScikitPredictorBase(PredictorBase):
     ):
 
         # Initialize the model
-        super(ScikitPredictorBase, self).__init__(
-            model=model, metrics=metrics, primary_metric=primary_metric
+        super(ScikitPredictor, self).__init__(
+            metrics=metrics, primary_metric=primary_metric
         )
+        self.model = model()
 
         # Set the hyperparameters
         if params is not None:
@@ -58,10 +58,6 @@ class ScikitPredictorBase(PredictorBase):
             "n_jobs": n_jobs,
             "params_distribution": params_distribution,
         }
-
-        # Prepare sklearn metrics to use in model evaluation
-        self.metrics = [self.supported_metrics[metric_name] for metric_name in metrics]
-        self.primary_metric = primary_metric
 
     def inject_featurizer(self, featurizer):
         """
@@ -82,7 +78,7 @@ class ScikitPredictorBase(PredictorBase):
         # Train the model
         if self.optimize:
             # Use random search to optimize hyperparameters
-            self.train_CV(X, y)
+            self.train_optimize(X, y)
         else:
             # Use a set of fixed hyperparameters
             self.model.fit(X, y)
@@ -92,14 +88,14 @@ class ScikitPredictorBase(PredictorBase):
         train_primary_metric = self.calc_primary_metric(y, y_hat)
 
         # Signal that the model has been trained
-        self.ready_flag = True
+        self._ready()
 
         logging.info(f"Fitting of {get_nice_class_name(self.model)} has converged.")
         logging.debug(
             f"Primary metric: {get_nice_class_name(self.primary_metric)} on the training set = {train_primary_metric}"
         )
 
-    def train_CV(self, X, y):
+    def train_optimize(self, smiles_list: List[str], target_list: List[float]):
 
         # Use random search to optimize hyperparameters
         random_search = sklearn.model_selection.RandomizedSearchCV(
@@ -121,25 +117,27 @@ class ScikitPredictorBase(PredictorBase):
             else:
                 logging.info(f"{key}: {value().__str__()}")
 
-        random_search.fit(X, y)
+        # Fit the model
+        random_search.fit(smiles_list, target_list)
 
         # Save only the best model after refitting to the whole training data
         self.model = random_search.estimator
 
         logging.info(
             f"RandomSearchCV: Fitting converged. Keeping the best model, with params: "
-            f"{random_search.best_params}"
+            f"{random_search.best_params_}"
         )
-        logging.debug(
-            f"{self.primary_metric.__name__()} on the training set: {self.calc_p}"
+        # Get the metrics on the training set
+        pred_list = self.model.predict(smiles_list)
+        train_primary_metric = self.calc_primary_metric(target_list, pred_list)
+        logging.info(
+            f"{self.primary_metric.__name__()} on the training set: {train_primary_metric}"
         )
 
-    def predict(self, smiles_list: List[str], ignore_flag=False) -> np.array:
-        if not self.ready_flag:
-            raise ValueError(
-                f"The model has not been fitted to data. Train the model or load a saved "
-                f"state first. Alternatively, pass ingore_flag=True to disable this error."
-            )
+        # Signal that the model has been trained
+        self._ready()
+
+    def _predict(self, smiles_list: List[str]) -> np.array:
         # Featurize the smiles
         X = self.featurizer.featurize(smiles_list)
         # Predict the target values
@@ -164,7 +162,7 @@ class ScikitPredictorBase(PredictorBase):
         # Load the model
         self.model = pkl.load(path)
         # Signal that a trained model has been loaded
-        self.ready_flag = True
+        self._ready()
 
     @staticmethod
     def _check_params(model, params):
@@ -177,28 +175,28 @@ class ScikitPredictorBase(PredictorBase):
 
 
 @gin.configurable()
-class RandomForestRegressor(ScikitPredictorBase):
+class RfRegressor(ScikitPredictor):
     def __init__(self, params: dict | None = None):
-        super(RandomForestRegressor, self).__init__(
-            model=sklearn.ensemble.RandomForestRegressor, params=parmas
+        super(RfRegressor, self).__init__(
+            model=sklearn.ensemble.RandomForestRegressor, params=params
         )
 
 
 @gin.configurable()
-class RandomForestClassifier(ScikitPredictorBase):
+class RfClassifier(ScikitPredictor):
     def __init__(self, params: dict | None = None):
-        super(RandomForestClassifier, self).__init__(
+        super(RfClassifier, self).__init__(
             model=sklearn.ensemble.RandomForestClassifier, params=params
         )
 
 
 @gin.configurable()
-class SvmRegressor(ScikitPredictorBase):
+class SvmRegressor(ScikitPredictor):
     def __init__(self, params: dict | None = None):
-        super(SvmRegressor, self).__init__(model=sklearn.svm.Svm, params=params)
+        super(SvmRegressor, self).__init__(model=sklearn.svm.SVR, params=params)
 
 
 @gin.configurable()
-class SvmClassifier(ScikitPredictorBase):
+class SvmClassifier(ScikitPredictor):
     def __init__(self, params: dict | None = None):
         super(SvmClassifier, self).__init__(model=sklearn.svm.SVC, params=params)

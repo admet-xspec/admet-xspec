@@ -7,3 +7,5 @@ checkpoints
 *.pyc
 /src/predictor/__pycache__
 /src/predictor/__pycache__
+/models
+/src/predictor/__pycache__
