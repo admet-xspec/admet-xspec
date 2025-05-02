@@ -29,7 +29,7 @@ predictor = @predictor/gin.singleton()
     ScikitPredictor.optimization_iterations = 100    # maximum times the script is allowed to draw and
                                                         # evaluate a new set of hyperparameter values
 
-    ScikitPredictor.n_jobs = 8                      # number of CPUs to use
+    ScikitPredictor.n_jobs = 32                      # number of CPUs to use
     ScikitPredictor.n_folds = 5                     # number of cross-validation folds
 
 #   Dictionary of distributions to sample hyperparameter values from. To each of the models' hyperparameters
