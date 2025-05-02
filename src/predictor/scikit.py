@@ -109,15 +109,6 @@ class ScikitPredictor(PredictorBase):
         )
 
         # Fit the model
-        logging.info(f"Optimizing hyperparams with RandomSearchCV.")
-        logging.info(f"Hyperparameter distribution:")
-        for key, value in self.hyper_opt["params_distribution"].items():
-            if isinstance(value, list):
-                logging.info(f"{key}: {value}")
-            else:
-                logging.info(f"{key}: {value().__str__()}")
-
-        # Fit the model
         random_search.fit(smiles_list, target_list)
 
         # Save only the best model after refitting to the whole training data
