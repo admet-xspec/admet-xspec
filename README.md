@@ -3,35 +3,37 @@ ADMET prediction module for GenProSyn
   
 Author: Hubert Rybka
 
-1. ##Training
+## Training
 
-Before working with this repository, please get accustomed with with [gin-config docs](https://github.com/google/gin-config). 
-All of the configuration in this project is done with this package.
+Before working with this repository, please get a look at [gin-config docs](https://github.com/google/gin-config). 
+All of the configuration in this project is done exclusively with this package.
 
-To train a simple regressor or classifier, first identify the `configs/config.gin` file.
-I hope the reader would find this file self-explainatory to a dregree.
+If you want to train your own predictive model, identify the `configs/config.gin` file first.
+This is the main configuration file for the training script. Take a look below - It is an example of one such file. It includes
+settings and parameters used by the training script. The config file is well documented, and before we move on, I encourage
+you to read and try to understand this short config file:
 
 ### config.gin
 
 ```
 #   TRAINING SCRIPT GENERAL CONFIG FILE
 
-#   Add paths to the .gin config files of a featurizer and a predictor (classifier or regressor)
+#   **Add paths to the .gin config files of a featurizer and a predictor** (classifier or regressor)
     include 'configs/featurizers/ecfp.gin'
     include 'configs/classifiers/svm.gin'
 
 #==========================================================================================================#
-#   Initializing predictor and featurizer - do not modify
+#   Do not modify this short section
     train.featurizer = @featurizer/gin.singleton()
     train.predictor = @predictor/gin.singleton()
 #==========================================================================================================#
 
-#   Provide path to the dataset
+#   **Provide path to the dataset**
     train.data_path = 'data/permeability/bbbp_pampa.csv'
     train.test_size = 0.2
     train.strafity_test=True
 
-#   Provide a name for the model
+#   **Provide a name for the model**
     NAME = 'MODEL'
 
 #   Name of the directory in which every trained model will get its own subdirectory
@@ -39,21 +41,24 @@ I hope the reader would find this file self-explainatory to a dregree.
     MODELS_DIR = 'models'
 ```
 
-Now, let's discuss the general strategy. Each of the classifiers, regressors and featurizers are implemented as classes
-and have their own .gin config files in different `configs` subdirectories. The `configs/config.gin` file is designed in
-such a way, that it only contains model-agnostic parameters and settings. All the model hyperparameters, as well as settings 
-that influence the training process of only one specific model or a family of models are included in `configs/predictor`
+### Workflow
+
+Now, let's discuss the general strategy. Each of the classifiers, regressors and featurizers is implemented as a class
+and has their own .gin config file somewhere in different `configs` subdirectories. The `configs/config.gin` file is constructed in
+such that it only takes care of model-agnostic parameters and settings, as well as gathers (imports) other .gin files needed for 
+configuration of different machine leraning models and data preparation protocols. All the model hyperparameters, as well as settings 
+that influence the training process of only one specific model or a family of models are included in `configs/predictr`
 subdirectory.
 
 **Example:** 
-If we would want to train a simple svm-based classifier and use ECFP4 fingerprint featurizer for data preparation, we 
+If we would want to train a simple svm-based classifier and use ECFP4 fingerprint featurizer for construction of the feature matix, we 
 should start by including the paths to the configs of both classes at the top of `configs/config.gin`.
 
     include 'configs/featurizers/ecfp.gin'
     include 'configs/classifiers/svm.gin'
 
-Next, if we know our datasets well, we can take care of providing path to a dataset in .csv format. The dataset should
-contain two columns: 'smiles', containing only SMILES strings, and and 'y', containing the labels (target values).
+Next, if we know our dataset well, we can take care of providing a path to the dataset in .csv format. The dataset should
+contain at least two columns: 'smiles', containing only SMILES strings, and 'y', containing true labels (target values).
 
     train.data_path = 'data/permeability/bbbp_pampa.csv'
     train.test_size = 0.2
@@ -67,12 +72,13 @@ We can choose the name under which our model will be saved by modifying the NAME
 
 ## configs/predictors/svm.gin
 
-The configuration fil `svm.gin` e of a predictor (SvmClassifier) is presented below. It can be found in 
-`configs/classifiers` directory. All the options relevent to SvmClassifier class are configurable here.
+An example configuration file `svm.gin` of a predictor class (SvmClassifier) is presented below. It can be found in 
+`configs/classifiers` directory. All the options relevent to SvmClassifier class can be configured here..
 
-The structure of the config file allows us to start by listing all the metrics we would like to include in
-the final evalluaton of our trained predicitive model. The config files themselves are well-documented and
-hopefully require little-to-no addtional explainations.
+The structure of this config file prompts us to start by listing all the metrics we would like to include in
+the final evaluation of our trained model. Apart from that, passing the name of some single metric to 
+`ScikitPredictorBase.primary_metric`, for ex. `roc_auc_score`, ensures that the result of any hyperparameter tuning
+experiment will only return the model which performed best according to our chosen`roc_auc_score` criterion.
 
 ```
     predictor/gin.singleton.constructor = @SvmClassifier
@@ -136,7 +142,8 @@ hopefully require little-to-no addtional explainations.
             C/LogUniform.min = 0.1
             C/LogUniform.max = 1000
     
-    #==========================================================================================================#```
+    #==========================================================================================================#
+```
 
 Some important parameters are:
 
@@ -155,7 +162,8 @@ more common
     ScikitPredictorBase.optimization_iterations = 20        # max no. sets of hyperparameter values to be drawn
     ScikitPredictorBase.n_jobs = 8                          # no. of CPUs to use
     ScikitPredictorBase.n_folds = 5                         # no. of folds to employ in cross-validation
-```
+
+### Randomized Hyperaparameter Tuning
 
 A somewhat more in-depth explanation should be given regarding the configuration of randomized search protocol in
 model tuning. Again, the hyperparameters and their distributions are defined in a dictionary, such as this:
