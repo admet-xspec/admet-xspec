@@ -137,7 +137,7 @@ class ScikitPredictor(PredictorBase):
         y_probabilities = self.model.predict_proba(X)
         # Retain probabilities of the predicted class
         correct_class_probabilities = np.zeros(y_pred.shape)
-        for i in range(zip(y_pred, y_probabilities)):
+        for i in range(len(y_pred)):
             correct_class_probabilities[i] = y_probabilities[i][y_pred[i]]
         # Return the predicted values and probabilities
         return y_pred, correct_class_probabilities

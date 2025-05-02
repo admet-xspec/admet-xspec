@@ -15,7 +15,7 @@ predictor = @predictor/gin.singleton()
 #   If the parameter below is set to false, the script will not execute hyperparameter optimization step.
 #   Instead, the model will be trained using fixed hyperparameters provided in params dict.
 
-    ScikitPredictor.optimize_hyperparameters = False
+    ScikitPredictor.optimize_hyperparameters = True
 
     ScikitPredictor.params = {
         'C': 1,
