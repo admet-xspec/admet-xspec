@@ -92,7 +92,7 @@ class ScikitPredictor(PredictorBase):
 
         logging.info(f"Fitting of {get_nice_class_name(self.model)} has converged.")
         logging.debug(
-            f"Primary metric: {get_nice_class_name(self.primary_metric)} on the training set = {train_primary_metric}"
+            f"Primary metric: {primary_metric} on the training set = {train_primary_metric}"
         )
 
     def train_optimize(self, smiles_list: List[str], target_list: List[float]):
@@ -132,7 +132,7 @@ class ScikitPredictor(PredictorBase):
         # Featurize the smiles
         X = self.featurizer.featurize(smiles_list)
         # Predict the target values
-        return self.model.predict_proba(X).reshape(-1, 1)
+        return self.model.predict_proba(X)
 
     def save(self, out_dir: str):
         # Check if the output directory exists

@@ -58,7 +58,7 @@ class PredictorBase(abc.ABC):
     def calc_metrics(self, target_list, pred_list):
         """Get metrics for a list of targets and a list of predictions"""
         logging.debug(
-            f"Calculating metrics: {[get_nice_class_name(x) for x in self.supported_metrics]}"
+            f"Calculating metrics: {self.supported_metrics.keys()}"
         )
         out_dict = {}
         target_list, pred_list = np.array(target_list), np.array(pred_list)
