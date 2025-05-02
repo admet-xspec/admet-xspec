@@ -89,6 +89,7 @@ class PredictorBase(abc.ABC):
         Raise the ready flag. This method should be called after the model is trained or loaded.
         :return:
         """
+        logging.debug(f"Model {get_nice_class_name(self)} is ready for inference")
         self.ready_flag = True
 
     @staticmethod

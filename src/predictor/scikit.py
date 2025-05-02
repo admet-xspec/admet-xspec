@@ -83,17 +83,10 @@ class ScikitPredictor(PredictorBase):
             # Use a set of fixed hyperparameters
             self.model.fit(X, y)
 
-        # Get the metrics on the training set
-        y_hat = self.model.predict(X)
-        train_primary_metric = self.calc_primary_metric(y, y_hat)
-
         # Signal that the model has been trained
         self._ready()
 
         logging.info(f"Fitting of {get_nice_class_name(self.model)} has converged.")
-        logging.debug(
-            f"Primary metric: {self.primary_metric} on the training set = {train_primary_metric}"
-        )
 
     def train_optimize(self, smiles_list: List[str], target_list: List[float]):
 
@@ -117,12 +110,6 @@ class ScikitPredictor(PredictorBase):
         logging.info(
             f"RandomSearchCV: Fitting converged. Keeping the best model, with params: "
             f"{random_search.best_params_}"
-        )
-        # Get the metrics on the training set
-        pred_list = self.model.predict(smiles_list)
-        train_primary_metric = self.calc_primary_metric(target_list, pred_list)
-        logging.info(
-            f"{self.primary_metric.__name__()} on the training set: {train_primary_metric}"
         )
 
         # Signal that the model has been trained

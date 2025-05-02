@@ -23,7 +23,6 @@ def train(
     data_path: str,
     predictor: PredictorBase,
     featurizer: FeaturizerBase | None,
-    random_state: int = 42,
     test_size: float = 0.2,
     strafity_test: bool = False,
     model_name="model",
@@ -49,7 +48,7 @@ def train(
         X,
         y,
         test_size=test_size,
-        random_state=random_state,
+        random_state=42,
         stratify=y if strafity_test else None,
     )
 
