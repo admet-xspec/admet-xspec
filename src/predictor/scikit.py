@@ -8,7 +8,7 @@ from pathlib import Path
 import sklearn
 import pickle as pkl
 import gin
-from typing import List
+from typing import List, Tuple
 
 
 @gin.configurable()
@@ -92,7 +92,7 @@ class ScikitPredictor(PredictorBase):
 
         logging.info(f"Fitting of {get_nice_class_name(self.model)} has converged.")
         logging.debug(
-            f"Primary metric: {primary_metric} on the training set = {train_primary_metric}"
+            f"Primary metric: {self.primary_metric} on the training set = {train_primary_metric}"
         )
 
     def train_optimize(self, smiles_list: List[str], target_list: List[float]):
@@ -128,11 +128,19 @@ class ScikitPredictor(PredictorBase):
         # Signal that the model has been trained
         self._ready()
 
-    def _predict(self, smiles_list: List[str]) -> np.array:
+    def _predict(self, smiles_list: List[str]) -> Tuple[np.array, np.array]:
         # Featurize the smiles
         X = self.featurizer.featurize(smiles_list)
         # Predict the target values
-        return self.model.predict_proba(X)
+        y_pred = self.model.predict(X)
+        # Predict class probabilities
+        y_probabilities = self.model.predict_proba(X)
+        # Retain probabilities of the predicted class
+        correct_class_probabilities = np.zeros(y_pred.shape)
+        for i in range(zip(y_pred, y_probabilities)):
+            correct_class_probabilities[i] = y_probabilities[i][y_pred[i]]
+        # Return the predicted values and probabilities
+        return y_pred, correct_class_probabilities
 
     def save(self, out_dir: str):
         # Check if the output directory exists

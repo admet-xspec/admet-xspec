@@ -70,7 +70,7 @@ def train(
     predictor.train(X_train, y_train)
 
     # test
-    y_pred = predictor.infer(X_test)
+    y_pred, probabilities = predictor.infer(X_test)
 
     # save the model
     predictor.save(out_dir)
@@ -83,8 +83,6 @@ def train(
 
     # save metrics
     metrics_path = f"{out_dir}/metrics.json"
-    logging.debug(f"y_test shape: {y_test.shape}")
-    logging.debug(f"y_pred skape: {y_pred.shape}")
     metrics_dict = predictor.calc_metrics(y_test, y_pred)
     with open(metrics_path, "w") as f:
         json.dump(
