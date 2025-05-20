@@ -1,36 +1,33 @@
 import logging
 
 import numpy as np
-from src.utils import get_nice_class_name
+from src.utils import get_nice_class_name, get_scikit_metric_callable
 from src.predictor.PredictorBase import PredictorBase
 from src.featurizer.FeaturizerBase import FeaturizerBase
 from pathlib import Path
 import sklearn
 import pickle as pkl
 import gin
-from typing import List, Tuple
+from typing import List, Tuple, Dict
 
 
-@gin.configurable()
 class ScikitPredictor(PredictorBase):
     """
     Represents a Scikit-learn predictive model
-
-    :param model: Scikit-learn model
-    :param params: Hyperparameters for the model as a dictionary
-    :param metric: Primary metric for the model as a string
-        ("mean_squared_error", "r2_score", "roc_auc_score", "accuracy_score", "f1_score", "precission_score", "recall_score")
-    :param optimize_hyperparameters: Whether to optimize hyperparameters using CV random search strategy
-
+    :param params: Hyperparameters for the model
+    :param optimize_hyperparameters: If True, hyperparameters will be optimized
+    :param target_metric: Metric to optimize for
+    :param params_distribution: Distribution of hyperparameters for optimization
+    :param optimization_iterations: Number of iterations for optimization
+    :param n_folds: Number of folds for cross-validation
+    :param n_jobs: Number of jobs for parallel processing
     """
 
     def __init__(
         self,
-        model,
         params: dict | None = None,
-        metrics: List[str] | None = None,
-        primary_metric: str | None = None,
         optimize_hyperparameters: bool = False,
+        target_metric: str | None = None,
         params_distribution: dict | None = None,
         optimization_iterations: int | None = None,
         n_folds: int | None = None,
@@ -38,20 +35,26 @@ class ScikitPredictor(PredictorBase):
     ):
 
         # Initialize the model
-        super(ScikitPredictor, self).__init__(
-            metrics=metrics, primary_metric=primary_metric
-        )
-        self.model = model
+        super(ScikitPredictor, self).__init__()
+        self.model = self._init_model()
 
         # Set the hyperparameters
-        if params is not None:
-            self._check_params(
-                self.model, params
-            )  # Check if params will be recognized by the model
+        if not (params is None or optimize_hyperparameters):
+            # Check if params will be recognized by the model
+            self._check_params(self.model, params)
+
             self.model.set_params(**params)
 
-        # Params for hyperparameter optimalization with randomised search CV
+        # Params for hyperparameter optimalization with randomized search CV
         self.optimize = optimize_hyperparameters
+
+        if target_metric not in ["accuracy", "roc_auc", "f1", "precision", "recall"]:
+            raise ValueError(
+                f"Target metric {target_metric} not supported. "
+                f"Please use one of: 'accuracy', 'roc_auc', 'f1', 'recision', 'recall'."
+            )
+        self.target_metric = target_metric
+
         self.hyper_opt = {
             "n_iter": optimization_iterations,
             "n_folds": n_folds,
@@ -59,13 +62,21 @@ class ScikitPredictor(PredictorBase):
             "params_distribution": params_distribution,
         }
 
+    def _init_model(self):
+        """
+        Initialize a scikit-learn model
+        """
+        raise NotImplementedError(
+            "This method should be implemented in the child class"
+        )
+
     def inject_featurizer(self, featurizer):
         """
         Inject a featurizer into the model
         :param featurizer: Featurizer object
         """
         if not isinstance(featurizer, FeaturizerBase):
-            raise ValueError("Featurizer must be an instance of FeaturizerBase!")
+            raise ValueError("Featurizer must be an instance of FeaturizerBase")
         logging.info(f"Using {get_nice_class_name(featurizer)} for featurization")
         self.featurizer = featurizer
 
@@ -83,10 +94,7 @@ class ScikitPredictor(PredictorBase):
             # Use a set of fixed hyperparameters
             self.model.fit(X, y)
 
-        # Signal that the model has been trained
-        self._ready()
-
-        logging.info(f"Fitting of {get_nice_class_name(self.model)} has converged.")
+        logging.info(f"Fitting of {get_nice_class_name(self.model)} has converged")
 
     def train_optimize(self, smiles_list: List[str], target_list: List[float]):
 
@@ -99,6 +107,7 @@ class ScikitPredictor(PredictorBase):
             verbose=1,
             n_jobs=self.hyper_opt["n_jobs"],
             refit=True,
+            scoring=self.target_metric,
         )
 
         # Fit the model
@@ -112,22 +121,15 @@ class ScikitPredictor(PredictorBase):
             f"{random_search.best_params_}"
         )
 
-        # Signal that the model has been trained
-        self._ready()
-
-    def _predict(self, smiles_list: List[str]) -> Tuple[np.array, np.array]:
+    def predict(self, smiles_list: List[str]) -> Tuple[np.array, np.array]:
         # Featurize the smiles
         X = self.featurizer.featurize(smiles_list)
-        # Predict the target values
-        y_pred = self.model.predict(X)
-        # Predict class probabilities
-        y_probabilities = self.model.predict_proba(X)
-        # Retain probabilities of the predicted class
-        correct_class_probabilities = np.zeros(y_pred.shape)
-        for i in range(len(y_pred)):
-            correct_class_probabilities[i] = y_probabilities[i][y_pred[i]]
-        # Return the predicted values and probabilities
-        return y_pred, correct_class_probabilities
+        if hasattr(self.model, "predict_proba"):
+            y_pred = self.model.predict_proba(X)
+            y_pred = np.array([y[1] for y in y_pred])
+        else:
+            y_pred = self.model.predict(X)
+        return y_pred
 
     def save(self, out_dir: str):
         # Check if the output directory exists
@@ -147,8 +149,6 @@ class ScikitPredictor(PredictorBase):
             raise ValueError(f"File {path} is not a pickle file")
         # Load the model
         self.model = pkl.load(path)
-        # Signal that a trained model has been loaded
-        self._ready()
 
     @staticmethod
     def _check_params(model, params):
@@ -162,27 +162,103 @@ class ScikitPredictor(PredictorBase):
 
 @gin.configurable()
 class RfRegressor(ScikitPredictor):
-    def __init__(self, params: dict | None = None):
-        super(RfRegressor, self).__init__(
-            model=sklearn.ensemble.RandomForestRegressor(), params=params
+
+    def __init__(
+        self,
+        params: dict | None = None,
+        optimize_hyperparameters: bool = False,
+        params_distribution: dict | None = None,
+        optimization_iterations: int | None = None,
+        n_folds: int | None = None,
+        n_jobs: int | None = None,
+    ):
+        super().__init__(
+            params=params,
+            optimize_hyperparameters=optimize_hyperparameters,
+            params_distribution=params_distribution,
+            optimization_iterations=optimization_iterations,
+            n_folds=n_folds,
+            n_jobs=n_jobs,
         )
+
+    def _init_model(self):
+        return sklearn.ensemble.RandomForestRegressor()
 
 
 @gin.configurable()
 class RfClassifier(ScikitPredictor):
-    def __init__(self, params: dict | None = None):
-        super(RfClassifier, self).__init__(
-            model=sklearn.ensemble.RandomForestClassifier(), params=params
+    def __init__(
+        self,
+        params: dict | None = None,
+        optimize_hyperparameters: bool = False,
+        target_metric: str | None = None,
+        params_distribution: dict | None = None,
+        optimization_iterations: int | None = None,
+        n_folds: int | None = None,
+        n_jobs: int | None = None,
+    ):
+        super().__init__(
+            params=params,
+            optimize_hyperparameters=optimize_hyperparameters,
+            target_metric=target_metric,
+            params_distribution=params_distribution,
+            optimization_iterations=optimization_iterations,
+            n_folds=n_folds,
+            n_jobs=n_jobs,
         )
+
+    def _init_model(self):
+        return sklearn.ensemble.RandomForestClassifier()
 
 
 @gin.configurable()
 class SvmRegressor(ScikitPredictor):
-    def __init__(self, params: dict | None = None):
-        super(SvmRegressor, self).__init__(model=sklearn.svm.SVR(), params=params)
+    def __init__(
+        self,
+        params: dict | None = None,
+        optimize_hyperparameters: bool = False,
+        target_metric: str | None = None,
+        params_distribution: dict | None = None,
+        optimization_iterations: int | None = None,
+        n_folds: int | None = None,
+        n_jobs: int | None = None,
+    ):
+        super().__init__(
+            params=params,
+            optimize_hyperparameters=optimize_hyperparameters,
+            target_metric=target_metric,
+            params_distribution=params_distribution,
+            optimization_iterations=optimization_iterations,
+            n_folds=n_folds,
+            n_jobs=n_jobs,
+        )
+
+    def _init_model(self):
+        return sklearn.svm.SVR()
 
 
 @gin.configurable()
 class SvmClassifier(ScikitPredictor):
-    def __init__(self, params: dict | None = None):
-        super(SvmClassifier, self).__init__(model=sklearn.svm.SVC(probability=True), params=params)
+
+    def __init__(
+        self,
+        params: dict | None = None,
+        optimize_hyperparameters: bool = False,
+        target_metric: str | None = None,
+        params_distribution: dict | None = None,
+        optimization_iterations: int | None = None,
+        n_folds: int | None = None,
+        n_jobs: int | None = None,
+    ):
+        super().__init__(
+            params=params,
+            optimize_hyperparameters=optimize_hyperparameters,
+            target_metric=target_metric,
+            params_distribution=params_distribution,
+            optimization_iterations=optimization_iterations,
+            n_folds=n_folds,
+            n_jobs=n_jobs,
+        )
+
+    def _init_model(self):
+        return sklearn.svm.SVC(probability=True)

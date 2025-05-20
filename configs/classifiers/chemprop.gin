@@ -2,42 +2,31 @@ predictor/gin.singleton.constructor = @ChempropBinaryClassifier
 predictor = @predictor/gin.singleton()
 
 #==========================================================================================================#
-#   METRICS
-#   Supported metrics are: "mean_squared_error", "r2_score", "roc_auc_score", "accuracy_score",
-#                          "f1_score", "precision_score", "recall_score"
-#==========================================================================================================#
-#   Define all the metrics used in final evaluation of the model:
-    ChempropPredictor.metrics = ['roc_auc_score', 'accuracy_score', 'precision_score', 'recall_score']
-
-#   Define the primary metric, one to be optimized during hyperparameter search:
-    ChempropPredictor.primary_metric = 'roc_auc_score'
-
-#==========================================================================================================#
 #   MODEL PARAMETERS
 #==========================================================================================================#
 #   If the parameter below is set to false, the script will not execute hyperparameter optimization step.
 #   Instead, the model will be trained using fixed hyperparameters provided in params dict.
 
-    ChempropPredictor.optimize_hyperparameters = True
+    ChempropBinaryClassifier.optimize_hyperparameters = False
 
-    ChempropPredictor.params = {
+    ChempropBinaryClassifier.params = {
         'mp_type': 'atom',          #   Type of the message passing layer. Can be 'atom' or 'bond'.
-        'message_hidden_dim': 300,  #   Hidden dimension of the message passing layer
-        'depth': 3,                 #   Number of message passing steps
+        'mp_hidden_dim': 1000,      #   Hidden dimension of the message passing layer
+        'mp_num_layers': 2,         #   Number of message passing layers
         'agg_type': 'mean',         #   Type of the aggregation function. Can be 'mean', 'sum', or 'norm'
         'ffn_hidden_dim': 1000,     #   Size of the FFN hidden layer
         'ffn_num_layers': 2,        #   Number of FFN hidden layers
-        'batch_norm': True          #   Whether to use batch normalization
+        'batch_norm': True,         #   Whether to use batch normalization
     }
 
 #==========================================================================================================#
 #   If optimize_hyperparameters is set to True, the training script will first optimize the values of
 #   hyperparameters using random search - CV strategy
 
-    ChempropPredictor.optimization_iterations = 2     # maximum times the script is alowed to draw and
+    ChempropBinaryClassifier.optimization_iterations = 2     # maximum times the script is alowed to draw and
                                                         # evaluate a new set of hyperparameter values
 
-    ChempropPredictor.n_workers = 8                      # number of CPUs to use
+    ChempropBinaryClassifier.n_workers = 8                      # number of CPUs to use
 
 #   Dictionary of distributions to sample hyperparameter values from. To each of the models' hyperparameters
 #   either a discreete list or a continous distribution may be assigned. Below is a brief demonstration on
@@ -55,40 +44,30 @@ predictor = @predictor/gin.singleton()
 #   distribution, and not for any other LogNormals used in this config. The @ is essential when passing
 #   the distribution itself (which is a class) to the dictionary, but not needed while setting attributes.
 
-    ChempropPredictor.params_distribution = {
+    ChempropBinaryClassifier.params_distribution = {
         'mp_type': ['atom'],
-        'message_hidden_dim': @message_hidden_dim/QLogUniform(),
-        'depth': @depth/QLogUniform(),
+        'mp_hidden_dim': @mp_hidden_dim/QLogUniform(),
+        'mp_num_layers': [1, 2, 3],
         'agg_type': ['mean', 'sum', 'norm'],
         'ffn_hidden_dim': @ffn_hidden_dim/QLogUniform(),
-        'ffn_num_layers': @ffn_num_layers/QLogUniform(),
+        'ffn_num_layers': [1, 2, 3],
         'batch_norm': [True, False]
     }
 
 #   Parametrizing the distribution functions:
 
-    message_hidden_dim/QLogUniform.min = 10
-    message_hidden_dim/QLogUniform.max = 1000
-
-    depth/QLogUniform.min = 1
-    depth/QLogUniform.max = 10
-
     ffn_hidden_dim/QLogUniform.min = 10
     ffn_hidden_dim/QLogUniform.max = 1000
 
-    ffn_num_layers/QLogUniform.min = 1
-    ffn_num_layers/QLogUniform.max = 10
+    mp_hidden_dim/QLogUniform.min = 10
+    mp_hidden_dim/QLogUniform.max = 1000
 
 #==========================================================================================================#
 #   OTHER
 #==========================================================================================================#
 #   Number of epochs to train the model
-    ChempropPredictor.epochs = 10
-
-#   Graph featurizer to be used
-    ChempropPredictor.featurizer = @featurizers.SimpleMoleculeMolGraphFeaturizer()
+    ChempropBinaryClassifier.epochs = 10
 
 #   Whether to use GPU for training
-    ChempropPredictor.use_gpu = True
-
+    ChempropBinaryClassifier.use_gpu = True
 #==========================================================================================================#

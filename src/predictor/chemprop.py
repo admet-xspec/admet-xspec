@@ -1,6 +1,7 @@
 import logging
 from src.predictor.PredictorBase import PredictorBase
 import chemprop as chp
+from chemprop.featurizers import SimpleMoleculeMolGraphFeaturizer
 import ray
 from typing import List
 from pathlib import Path
@@ -19,31 +20,30 @@ import torch
 import gin
 
 
-@gin.configurable
 class ChempropPredictor(PredictorBase):
     def __init__(
         self,
-        metrics: List[str] | None = None,
-        primary_metric: str | None = None,
-        featurizer: (
-            chp.featurizers.Featurizer | None
-        ) = None,
-        n_workers: int = 1,
-        optimize_hyperparameters: bool = False,
-        params_distribution: dict | None = None,
-        optimization_iterations: int = 10,
-        params: dict | None = None,
-        epochs: int = 100,
-        use_gpu: bool = True
+        featurizer: chp.featurizers.Featurizer,
+        n_workers: int,
+        optimize_hyperparameters: bool,
+        params_distribution: dict,
+        optimization_iterations: int,
+        params: dict,
+        epochs: int,
+        use_gpu: bool,
     ):
         """
-        Represents a ChemProp message passing neural network model
-        :param metrics: List of metrics to be used for training
-        :param primary_metric: Primary metric to be used for training
+        Represents a ChemProp message passing neural network model.
+        :param featurizer: featurizer object
+        :param n_workers: number of workers
+        :param optimize_hyperparameters: whether to optimize hyperparameters using Ray Tune
+        :param params_distribution: dictionary of hyperparameter distributions for optimization
+        :param optimization_iterations: number of iterations for hyperparameter optimization
+        :param params: dictionary of hyperparameters for the model (ignored if optimize_hyperparameters is True)
+        :param epochs: number of epochs for training
+        :param use_gpu: whether to use GPU for training
         """
-        super(ChempropPredictor, self).__init__(
-            metrics=metrics, primary_metric=primary_metric
-        )
+        self.params = params
         self.featurizer = featurizer
         self.num_workers = n_workers
         self.optimize_hyperparameters = optimize_hyperparameters
@@ -51,15 +51,11 @@ class ChempropPredictor(PredictorBase):
             params_distribution
         )
         self.n_tries = optimization_iterations
-        self.params = params
         self.epochs = epochs
         self.use_gpu = use_gpu
+        super(ChempropPredictor, self).__init__()
 
-        # Initialize the model
-        self.model = self._init_model()
-
-    @abc.abstractmethod
-    def _init_ffn(self, hidden_dim: int = 1000, n_layers: int = 3):
+    def _init_ffn(self, num_layers: int, hidden_dim: int):
         """
         Initialize the feed forward network (FFN) for the model, as defined in the ChemProp library.
         Will be handled by the ChemPropRegressor and ChemPropBinaryClassifier classes, as the
@@ -68,7 +64,7 @@ class ChempropPredictor(PredictorBase):
         """
         raise NotImplementedError()
 
-    def train(self, smiles_list, target_list):
+    def train(self, smiles_list: List[str], target_list: List[float]):
         """
         Train the model with the given smiles and target list.
         This method should also raise the ready_flag by calling _ready() method
@@ -85,7 +81,9 @@ class ChempropPredictor(PredictorBase):
         # Raise the ready flag
         self._ready()
 
-    def _train_once(self, smiles_list, target_list, config=None):
+    def _train_once(
+        self, smiles_list: List[str], target_list: List[float], config=None
+    ):
 
         if config is not None:
             # Use a dictionary of parameters to initialize the model
@@ -119,7 +117,7 @@ class ChempropPredictor(PredictorBase):
         # Train the model
         trainer.fit(self.model, train_loader, val_loader)
 
-    def _train_optimize(self, smiles_list, target_list):
+    def _train_optimize(self, smiles_list: List[str], target_list: List[float]):
 
         ray.init()
         scheduler = FIFOScheduler()
@@ -185,7 +183,7 @@ class ChempropPredictor(PredictorBase):
         # Raise the ready flag
         self._ready()
 
-    def _predict(self, smiles_list: List[str]) -> np.array:
+    def predict(self, smiles_list: List[str]) -> np.array:
         datapoints = [chp.data.MoleculeDatapoint.from_smi(smi) for smi in smiles_list]
         dataset = chp.data.MoleculeDataset(datapoints, self.featurizer)
         loader = chp.data.build_dataloader(
@@ -220,10 +218,10 @@ class ChempropPredictor(PredictorBase):
             raise ValueError("Model state file must have either .ckpt or .pt extension")
 
         self.model = chp.models.MPNN.load_from_file(path)
-        self.ready_flag = True
+        logging.info(f"Model weights loaded from {path}")
 
     @staticmethod
-    def _init_mp(mp_type="atom", d_h=1000, depth=2):
+    def _init_mp(mp_type: str, d_h: int, depth: int):
         if mp_type.lower() == "atom":
             return chp.nn.AtomMessagePassing(
                 d_h=d_h,
@@ -235,7 +233,9 @@ class ChempropPredictor(PredictorBase):
                 depth=depth,
             )
         else:
-            raise ValueError(f"Unsupported message passing type: {mp_type}")
+            raise ValueError(
+                f"Unsupported message passing type: {mp_type}. Can be 'atom' or 'bond'."
+            )
 
     @staticmethod
     def _init_agg(agg_type="mean"):
@@ -246,7 +246,9 @@ class ChempropPredictor(PredictorBase):
         elif agg_type.lower() == "norm":
             return chp.nn.NormAggregation()
         else:
-            raise ValueError(f"Unsupported aggregation type: {agg_type}")
+            raise ValueError(
+                f"Unsupported aggregation type: {agg_type}. Can be 'mean', 'sum' or 'norm'."
+            )
 
     def _init_model(self, config: dict = None):
         """
@@ -260,8 +262,8 @@ class ChempropPredictor(PredictorBase):
         # Check if the config file is valid
         for param in [
             "mp_type",
-            "message_hidden_dim",
-            "depth",
+            "mp_hidden_dim",
+            "mp_num_layers",
             "agg_type",
             "ffn_hidden_dim",
             "ffn_num_layers",
@@ -275,27 +277,12 @@ class ChempropPredictor(PredictorBase):
 
         return chp.models.MPNN(
             self._init_mp(
-                config["mp_type"], config["message_hidden_dim"], config["depth"]
+                config["mp_type"], config["mp_hidden_dim"], config["mp_num_layers"]
             ),
             self._init_agg(config["agg_type"]),
             self._init_ffn(config["ffn_hidden_dim"], config["ffn_num_layers"]),
             config["batch_norm"],
         )
-
-    @staticmethod
-    def _get_supported_metrics_dict():
-        """
-        Get a dictionary of all supported metrics, with string (metrics names) as the keys and chemprop
-        class references as values.
-        :return: Dictionary of supported metrics (string -> function)
-        """
-        return {
-            "mean_squared_error": chp.nn.metrics.MSE(),
-            "r2_score": chp.nn.metrics.R2Score(),
-            "roc_auc_score": chp.nn.metrics.BinaryAUROC(),
-            "accuracy_score": chp.nn.metrics.BinaryAccuracy(),
-            "f1_score": chp.nn.metrics.BinaryF1Score(),
-        }
 
     def prepare_dataloaders(self, smiles_list, target_list):
         """
@@ -316,7 +303,7 @@ class ChempropPredictor(PredictorBase):
             d.mol for d in all_data
         ]  # RDkit Mol objects are use for structure-based splits
         train_indices, _, val_indices = chp.data.make_split_indices(
-            mols=mols, sizes=(0.8, 0, 0.2), seed=42, split='random'
+            mols=mols, sizes=(0.8, 0, 0.2), seed=42, split="random"
         )
 
         # Split the data into train and validation sets
@@ -341,8 +328,8 @@ class ChempropPredictor(PredictorBase):
         return train_loader, val_loader
 
     @staticmethod
-    def process_param_distribution_dict(input_dict):
-        """_init_model
+    def process_param_distribution_dict(input_dict: dict) -> dict:
+        """
         Get Ray library distribution objects for the parameters in the params_distribution dictionary,
         which are defined as subclasses of scipy.stats.rv_continuous or rv_discrete.
         :return: Dictionary of parameter distributions (instances of classes from ray.tune)
@@ -362,19 +349,63 @@ class ChempropPredictor(PredictorBase):
 
 @gin.configurable
 class ChempropRegressor(ChempropPredictor):
-    def __init__(self):
-        super(ChempropRegressor, self).__init__()
 
-    def _init_ffn(self, hidden_dim: int = 1000, n_layers: int = 2):
-        return chp.nn.RegressionFFN(hidden_dim=hidden_dim, n_layers=n_layers)
+    def __init__(
+        self,
+        featurizer: (
+            chp.featurizers.Featurizer | None
+        ) = SimpleMoleculeMolGraphFeaturizer(),
+        n_workers: int = 1,
+        optimize_hyperparameters: bool = False,
+        params_distribution: dict | None = None,
+        optimization_iterations: int = 10,
+        params: dict | None = None,
+        epochs: int = 100,
+        use_gpu: bool = True,
+    ):
+        super(ChempropRegressor, self).__init__(
+            featurizer=featurizer,
+            n_workers=n_workers,
+            optimize_hyperparameters=optimize_hyperparameters,
+            params_distribution=params_distribution,
+            optimization_iterations=optimization_iterations,
+            params=params,
+            epochs=epochs,
+            use_gpu=use_gpu,
+        )
+
+    def _init_ffn(self, num_layers: int, hidden_dim: int):
+        return chp.nn.RegressionFFN(hidden_dim=hidden_dim, n_layers=num_layers)
 
 
 @gin.configurable
 class ChempropBinaryClassifier(ChempropPredictor):
+
     def __init__(
         self,
+        featurizer: (
+            chp.featurizers.Featurizer | None
+        ) = SimpleMoleculeMolGraphFeaturizer(),
+        n_workers: int = 1,
+        optimize_hyperparameters: bool = False,
+        params_distribution: dict | None = None,
+        optimization_iterations: int = 10,
+        params: dict | None = None,
+        epochs: int = 100,
+        use_gpu: bool = True,
     ):
-        super(ChempropBinaryClassifier, self).__init__()
+        super(ChempropBinaryClassifier, self).__init__(
+            featurizer=featurizer,
+            n_workers=n_workers,
+            optimize_hyperparameters=optimize_hyperparameters,
+            params_distribution=params_distribution,
+            optimization_iterations=optimization_iterations,
+            params=params,
+            epochs=epochs,
+            use_gpu=use_gpu,
+        )
 
-    def _init_ffn(self, hidden_dim: int = 1000, n_layers: int = 2):
-        return chp.nn.BinaryClassificationFFN(hidden_dim=hidden_dim, n_layers=n_layers)
+    def _init_ffn(self, num_layers: int, hidden_dim: int):
+        return chp.nn.BinaryClassificationFFN(
+            hidden_dim=hidden_dim, n_layers=num_layers
+        )

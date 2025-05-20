@@ -1,18 +1,15 @@
-#   Initializing predictor and featurizer - do not modify
-    train.featurizer = @featurizer/gin.singleton()
-    train.predictor = @predictor/gin.singleton()
 #==========================================================================================================#
 #   TRAINING SCRIPT GENERAL CONFIG
 
 #   Provide a name for the model
-    NAME = 'LAS'
+    NAME = 'chemprop'
 
 #   Directory in which models are saved
     MODELS_DIR = 'models'
 
 #   Provide paths to the .gin config files of a featurizer and a predictor (classifier or regressor)
-    include 'configs/featurizers/ecfp.gin'
     include 'configs/classifiers/chemprop.gin'
+    include 'configs/featurizers/none.gin'
 
 #   Provide path to the dataset
     train.data_path = 'data/permeability/bbbp_pampa.csv'
@@ -23,3 +20,8 @@
     train.metrics = ['roc_auc', 'accuracy', 'f1', 'precision', 'recall']
     train.test_size = 0.2
     train.strafity_test = True
+
+#==========================================================================================================#
+#   Initializing predictor and featurizer - do not modify
+    train.featurizer = %featurizer
+    train.predictor = %predictor

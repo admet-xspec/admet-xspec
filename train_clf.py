@@ -1,5 +1,5 @@
 import pandas as pd
-from src.utils import clean_smiles, get_nice_class_name
+from src.utils import clean_smiles, get_nice_class_name, get_scikit_metric_callable
 import logging
 from src.predictor.chemprop import ChempropBinaryClassifier, ChempropRegressor
 from src.predictor.scikit import (
@@ -15,6 +15,7 @@ import time
 import json
 import gin
 import sys
+
 sys.setrecursionlimit(2000)
 
 
@@ -23,10 +24,11 @@ def train(
     data_path: str,
     predictor: PredictorBase,
     featurizer: FeaturizerBase | None,
-    test_size: float = 0.2,
-    strafity_test: bool = False,
-    model_name="model",
-    out_dir="models",
+    metrics: list[str],
+    test_size: float,
+    strafity_test: bool,
+    model_name: str,
+    out_dir: str,
 ):
     # Load data
     df = pd.read_csv(data_path)
@@ -69,7 +71,7 @@ def train(
     predictor.train(X_train, y_train)
 
     # test
-    y_pred, probabilities = predictor.infer(X_test)
+    y_pred = predictor.predict(X_test)
 
     # save the model
     predictor.save(out_dir)
@@ -80,16 +82,30 @@ def train(
         f.write(gin.operative_config_str())
     logging.info(f"Config saved to {gin_path}")
 
+    metrics_dict = {}
+    for metric in metrics:
+        # get the metric callable
+        metric_callable = get_scikit_metric_callable(metric)
+
+        if metric == "roc_auc":
+            # calculate the metric
+            score = metric_callable(y_test, y_pred)
+        else:
+            # convert the predictions to binary values assuming a threshold of 0.5
+            y_pred_binary = [1 if pred > 0.5 else 0 for pred in y_pred]
+            score = metric_callable(y_test, y_pred_binary)
+        metrics_dict[metric] = score
+        logging.info(f"{metric}: {score}")
+
     # save metrics
     metrics_path = f"{out_dir}/metrics.json"
-    metrics_dict = predictor.calc_metrics(y_test, y_pred)
+    metrics_dict = {}
     with open(metrics_path, "w") as f:
         json.dump(
             metrics_dict,
             f,
         )
         logging.info(f"Metrics saved to {metrics_path}")
-        logging.info(metrics_dict)
 
 
 if __name__ == "__main__":
@@ -99,7 +115,8 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        "--config",
+        "--cfg",
+        "-c",
         type=str,
         help="Path to the config file",
         default="configs/config.gin",
@@ -113,19 +130,23 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     # Load the gin configuration
-    if not os.path.isfile(args.config):
-        raise FileNotFoundError(f"Config file {args.config} not found.")
-    gin.parse_config_file(args.config)
+    if not os.path.isfile(args.cfg):
+        raise FileNotFoundError(f"Config file {args.cfg} not found.")
+    gin.parse_config_file(args.cfg)
 
     # Create a directory for the outputs (model_name)
     models_dir = gin.query_parameter("%MODELS_DIR")
     model_name = gin.query_parameter("%NAME")
     out_dir = f"{models_dir}/{model_name}"
 
-    # If the directory already exists, add a timestamp to the name
+    # Create the directory for all results if it doesn't exist
+    if not os.path.isdir(models_dir):
+        os.mkdir(models_dir)
+
+    # If the output directory already exists, add a timestamp to the name
     if os.path.isdir(out_dir):
         out_dir = out_dir + f'_{time.strftime("%Y%m%d-%H%M%S")}'
-
+    # Create the output directory for the model
     os.mkdir(out_dir)
 
     # Configure logger
@@ -138,4 +159,4 @@ if __name__ == "__main__":
     )
 
     # Train the model
-    train(out_dir=out_dir)
+    train(out_dir=out_dir, model_name=model_name)

@@ -3,21 +3,17 @@ predictor = @predictor/gin.singleton()
 
 #==========================================================================================================#
 #   METRICS
-#   Supported metrics are: "mean_squared_error", "r2_score", "roc_auc_score", "accuracy_score",
-#                          "f1_score", "precision_score", "recall_score"
-#==========================================================================================================#
-#   Define all the metrics used in final evaluation of the model:                   # list of strings
-    ScikitPredictor.metrics = ['roc_auc_score', 'accuracy_score', 'precision_score', 'recall_score']
+#   Supported metrics are: 'accuracy', 'roc_auc', 'f1', 'recision', 'recall'
 
-#   Define the primary metric, one to be optimized during hyperparameter search:    # string
-    ScikitPredictor.primary_metric = 'roc_auc_score'
+#   Define the target metric, one to be optimized during hyperparameter search:    # string
+    RfClassifier.target_metric = 'roc_auc'
 #==========================================================================================================#
 #   If the parameter below is set to false, the script will not execute hyperparameter optimization step.
 #   Instead, the model will be trained using fixed hyperparameters provided in params dict.
 
-    ScikitPredictor.optimize_hyperparameters = True
+    RfClassifier.optimize_hyperparameters = False
 
-    ScikitPredictor.params = {
+    RfClassifier.params = {
         'n_estimators': 100,
         'criterion': 'gini',
         'max_depth': None,
@@ -29,11 +25,11 @@ predictor = @predictor/gin.singleton()
 #   If optimize_hyperparameters is set to True, the training script will first optimize the values of
 #   hyperparameters using random search - CV strategy
 
-    ScikitPredictor.optimization_iterations = 10    # maximum times the script is allowed to draw and
+    RfClassifier.optimization_iterations = 10    # maximum times the script is allowed to draw and
                                                         # evaluate a new set of hyperparameter values
 
-    ScikitPredictor.n_jobs = 32                      # number of CPUs to use
-    ScikitPredictor.n_folds = 5                     # number of cross-validation folds
+    RfClassifier.n_jobs = 32                      # number of CPUs to use
+    RfClassifier.n_folds = 5                     # number of cross-validation folds
 
 #   Dictionary of distributions to sample hyperparameter values from. To each of the models' hyperparameters
 #   either a discrete list or a continuous distribution may be assigned. Below is a brief demonstration on
@@ -52,7 +48,7 @@ predictor = @predictor/gin.singleton()
 #   config. The @ is essential when passing the distribution itself (which is an instance of a class) to the
 #   params_distribution dict, but not when setting the distribution parameters.
 
-    ScikitPredictor.params_distribution = {
+    RfClassifier.params_distribution = {
         'n_estimators': @n_estimators/QUniform(),
         'criterion': ['gini', 'entropy', 'log_loss'],
         'max_depth': @max_depth/QUniform(),

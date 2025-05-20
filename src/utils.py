@@ -4,6 +4,7 @@ from rdkit.Chem.MolStandardize.rdMolStandardize import Uncharger
 from typing import List
 from rdkit import RDLogger
 import logging
+from sklearn import metrics
 
 # disable RDKit warnings
 RDLogger.DisableLog("rdApp.*")
@@ -38,3 +39,16 @@ def get_nice_class_name(obj):
     :return: str
     """
     return type(obj).__name__
+
+
+def get_scikit_metric_callable(metric_name: str):
+    metrics_dict = {
+        "accuracy": metrics.accuracy_score,
+        "roc_auc": metrics.roc_auc_score,
+        "f1": metrics.f1_score,
+        "precision": metrics.precision_score,
+        "recall": metrics.recall_score,
+    }
+    if metric_name not in metrics_dict.keys():
+        raise ValueError
+    return metrics_dict[metric_name]

@@ -2,22 +2,17 @@ predictor/gin.singleton.constructor = @SvmClassifier
 predictor = @predictor/gin.singleton()
 
 #==========================================================================================================#
-#   METRICS
-#   Supported metrics are: "mean_squared_error", "r2_score", "roc_auc_score", "accuracy_score",
-#                          "f1_score", "precision_score", "recall_score"
-#==========================================================================================================#
-#   Define all the metrics used in final evaluation of the model:                   # list of strings
-    ScikitPredictor.metrics = ['roc_auc_score', 'accuracy_score', 'precision_score', 'recall_score']
+#   Define the target metric, one to be optimized during hyperparameter search.
+#   Supported metrics are: 'accuracy', 'roc_auc', 'f1', 'recision', 'recall'
 
-#   Define the primary metric, one to be optimized during hyperparameter search:    # string
-    ScikitPredictor.primary_metric = 'roc_auc_score'
+    SvmClassifier.target_metric = 'roc_auc'
 #==========================================================================================================#
 #   If the parameter below is set to false, the script will not execute hyperparameter optimization step.
 #   Instead, the model will be trained using fixed hyperparameters provided in params dict.
 
-    ScikitPredictor.optimize_hyperparameters = True
+    SvmClassifier.optimize_hyperparameters = False
 
-    ScikitPredictor.params = {
+    SvmClassifier.params = {
         'C': 1,
         'kernel': 'rbf',
         'gamma': 'scale',
@@ -26,11 +21,11 @@ predictor = @predictor/gin.singleton()
 #   If optimize_hyperparameters is set to True, the training script will first optimize the values of
 #   hyperparameters using random search - CV strategy
 
-    ScikitPredictor.optimization_iterations = 10    # maximum times the script is allowed to draw and
+    SvmClassifier.optimization_iterations = 10    # maximum times the script is allowed to draw and
                                                         # evaluate a new set of hyperparameter values
 
-    ScikitPredictor.n_jobs = 32                      # number of CPUs to use
-    ScikitPredictor.n_folds = 5                     # number of cross-validation folds
+    SvmClassifier.n_jobs = 4                      # number of CPUs to use
+    SvmClassifier.n_folds = 5                     # number of cross-validation folds
 
 #   Dictionary of distributions to sample hyperparameter values from. To each of the models' hyperparameters
 #   either a discrete list or a continuous distribution may be assigned. Below is a brief demonstration on
@@ -48,19 +43,15 @@ predictor = @predictor/gin.singleton()
 #   distribution, and not for any other LogUniforms used in this config. The @ is essential when passing
 #   the distribution itself (which is a class) to the dictionary, but not needed while setting attributes.
 
-    ScikitPredictor.params_distribution = {
+    SvmClassifier.params_distribution = {
         'C': @C/LogUniform(),
         'gamma': ['scale', 'auto'],
-        'kernel': ['rbf'],
-        'degree': @degree/Uniform(),
+        'kernel': ['rbf']
         }
 
 #   Parametrizing the distribution functions:
 
         C/LogUniform.min = 0.1
         C/LogUniform.max = 1000
-
-        degree/Uniform.min = 1
-        degree/Uniform.max = 5
 
 #==========================================================================================================#
