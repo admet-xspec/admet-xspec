@@ -1,31 +1,44 @@
 """
 This module defines various probability distributions used for hyperparameter optimization.
-It includes the following distributions, all parametrized by a lower and upper bound (min and max):
+It includes the following distributions, all parametrized by a lower and upper bound (a and b):
 - Uniform
 - LogUniform
 - QUniform (discrete uniform)
 - QLogUniform (discrete log uniform)
-The distributions are defined under the `scipy.stats.rv_continuous` or `scipy.stats.rv_discrete` superclass.
 """
 
-from scipy.stats import rv_continuous, rv_discrete
+from scipy.stats import uniform, loguniform, rv_discrete
 import numpy as np
 import ray.tune as tune
 import gin
+import abc
 
 
-@gin.register
-class Uniform(rv_continuous):
+class Distribution(abc.ABC):
+
     def __init__(self, min=0, max=1):
         super().__init__()
         self.lower = min
         self.upper = max
+        self.distribution = self._init_distribution()
 
-    def _pdf(self, x):
-        if self.lower <= x <= self.upper:
-            return 1 / (self.upper - self.lower)
-        else:
-            return 0
+    def rvs(self, size=1):
+        return self.distribution.rvs(size=size)
+
+    @abc.abstractmethod
+    def _init_distribution(self):
+        """
+        This method must be implemented by subclasses.
+        It should return a scipy.stats distribution object.
+        """
+        pass
+
+
+@gin.register
+class Uniform(Distribution):
+
+    def _init_distribution(self):
+        return uniform(self.lower, self.upper)
 
     def __str__(self):
         return f"Uniform (lower={self.lower}, upper={self.upper})"
@@ -36,17 +49,10 @@ class Uniform(rv_continuous):
 
 
 @gin.register
-class LogUniform(rv_continuous):
-    def __init__(self, min=0, max=1):
-        super().__init__()
-        self.lower = min
-        self.upper = max
+class LogUniform(Distribution):
 
-    def _pdf(self, x):
-        if self.lower <= x <= self.upper:
-            return 1 / (x * np.log(self.upper / self.lower))
-        else:
-            return 0
+    def _init_distribution(self):
+        return loguniform(self.lower, self.upper)
 
     def __str__(self):
         return f"LogUniform (lower={self.lower}, upper={self.upper})"
@@ -57,17 +63,14 @@ class LogUniform(rv_continuous):
 
 
 @gin.register
-class QUniform(rv_continuous):
-    def __init__(self, min=0, max=1):
-        super().__init__()
-        self.lower = min
-        self.upper = max
+class QUniform(Distribution):
 
-    def _pmf(self, x):
-        if self.lower <= x <= self.upper:
-            return 1 / (self.upper - self.lower + 1)
-        else:
-            return 0
+    def _init_distribution(self):
+        return uniform(self.lower, self.upper)
+
+    def rvs(self, size=1):
+        samples = self.distribution.rvs(size=size)
+        return [int(sample) for sample in samples]
 
     def __str__(self):
         return f"QUniform (lower={self.lower}, upper={self.upper})"
@@ -78,17 +81,14 @@ class QUniform(rv_continuous):
 
 
 @gin.register
-class QLogUniform(rv_continuous):
-    def __init__(self, min=0, max=1):
-        super().__init__()
-        self.lower = min
-        self.upper = max
+class QLogUniform(Distribution):
 
-    def _pmf(self, x):
-        if self.lower <= x <= self.upper:
-            return 1 / (x * np.log(self.upper / self.lower))
-        else:
-            return 0
+    def _init_distribution(self):
+        return loguniform(self.lower, self.upper)
+
+    def rvs(self, size=1):
+        samples = self.distribution.rvs(size=size)
+        return [int(sample) for sample in samples]
 
     def __str__(self):
         return f"QLogUniform (lower={self.lower}, upper={self.upper})"
