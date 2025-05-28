@@ -99,7 +99,6 @@ def train(
 
     # save metrics
     metrics_path = f"{out_dir}/metrics.json"
-    metrics_dict = {}
     with open(metrics_path, "w") as f:
         json.dump(
             metrics_dict,
