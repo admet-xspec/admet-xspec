@@ -7,8 +7,7 @@ It includes the following distributions, all parametrized by a lower and upper b
 - QLogUniform (discrete log uniform)
 """
 
-from scipy.stats import uniform, loguniform, rv_discrete
-import numpy as np
+from scipy.stats import uniform, loguniform
 import ray.tune as tune
 import gin
 import abc
@@ -22,8 +21,8 @@ class Distribution(abc.ABC):
         self.upper = max
         self.distribution = self._init_distribution()
 
-    def rvs(self, size=1):
-        return self.distribution.rvs(size=size)
+    def rvs(self, size=1, random_state=None):
+        return self.distribution.rvs(size=size, random_state=random_state)
 
     @abc.abstractmethod
     def _init_distribution(self):
@@ -68,16 +67,16 @@ class QUniform(Distribution):
     def _init_distribution(self):
         return uniform(self.lower, self.upper)
 
-    def rvs(self, size=1):
-        samples = self.distribution.rvs(size=size)
-        return [int(sample) for sample in samples]
+    def rvs(self, size=1, random_state=None):
+        samples = self.distribution.rvs(size=size, random_state=random_state)
+        return [int(sample) for sample in samples] if size > 1 else int(samples)
 
     def __str__(self):
         return f"QUniform (lower={self.lower}, upper={self.upper})"
 
     def get_ray_distrib(self):
         """Get the corresponding Ray library distribution object - used by ChemProp models"""
-        return tune.randint(self.lower, self.upper + 1)
+        return tune.randint(self.lower, self.upper, q=1)
 
 
 @gin.register
@@ -86,9 +85,9 @@ class QLogUniform(Distribution):
     def _init_distribution(self):
         return loguniform(self.lower, self.upper)
 
-    def rvs(self, size=1):
-        samples = self.distribution.rvs(size=size)
-        return [int(sample) for sample in samples]
+    def rvs(self, size=1, random_state=None):
+        samples = self.distribution.rvs(size=size, random_state=random_state)
+        return [int(sample) for sample in samples] if size > 1 else int(samples)
 
     def __str__(self):
         return f"QLogUniform (lower={self.lower}, upper={self.upper})"

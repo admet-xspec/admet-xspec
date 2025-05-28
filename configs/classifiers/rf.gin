@@ -11,7 +11,7 @@ predictor = @predictor/gin.singleton()
 #   If the parameter below is set to false, the script will not execute hyperparameter optimization step.
 #   Instead, the model will be trained using fixed hyperparameters provided in params dict.
 
-    RfClassifier.optimize_hyperparameters = False
+    RfClassifier.optimize_hyperparameters = True
 
     RfClassifier.params = {
         'n_estimators': 100,
@@ -25,10 +25,10 @@ predictor = @predictor/gin.singleton()
 #   If optimize_hyperparameters is set to True, the training script will first optimize the values of
 #   hyperparameters using random search - CV strategy
 
-    RfClassifier.optimization_iterations = 10    # maximum times the script is allowed to draw and
+    RfClassifier.optimization_iterations = 200    # maximum times the script is allowed to draw and
                                                         # evaluate a new set of hyperparameter values
 
-    RfClassifier.n_jobs = 32                      # number of CPUs to use
+    RfClassifier.n_jobs = 22                      # number of CPUs to use
     RfClassifier.n_folds = 5                     # number of cross-validation folds
 
 #   Dictionary of distributions to sample hyperparameter values from. To each of the models' hyperparameters
@@ -50,7 +50,7 @@ predictor = @predictor/gin.singleton()
 
     RfClassifier.params_distribution = {
         'n_estimators': @n_estimators/QUniform(),
-        'criterion': ['gini', 'entropy', 'log_loss'],
+        'criterion': ['gini'],
         'max_depth': @max_depth/QUniform(),
         'min_samples_split': @min_samples_split/QUniform(),
         'min_samples_leaf': @min_samples_leaf/QUniform(),
@@ -59,7 +59,7 @@ predictor = @predictor/gin.singleton()
 
 #   Parametrizing the distribution functions:
 
-        n_estimators/QUniform.min = 1
+        n_estimators/QUniform.min = 100
         n_estimators/QUniform.max = 1000
 
         max_depth/QUniform.min = 2
