@@ -24,7 +24,7 @@ predictor = @predictor/gin.singleton()
     SvmClassifier.optimization_iterations = 10    # maximum times the script is allowed to draw and
                                                         # evaluate a new set of hyperparameter values
 
-    SvmClassifier.n_jobs = 4                      # number of CPUs to use
+    SvmClassifier.n_jobs = 16                      # number of CPUs to use
     SvmClassifier.n_folds = 5                     # number of cross-validation folds
 
 #   Dictionary of distributions to sample hyperparameter values from. To each of the models' hyperparameters

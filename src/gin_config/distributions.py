@@ -7,7 +7,7 @@ It includes the following distributions, all parametrized by a lower and upper b
 - QLogUniform (discrete log uniform)
 """
 
-from scipy.stats import uniform, loguniform, rv_discrete
+from scipy.stats import uniform, loguniform
 import numpy as np
 import ray.tune as tune
 import gin

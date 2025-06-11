@@ -262,3 +262,23 @@ class SvmClassifier(ScikitPredictor):
 
     def _init_model(self):
         return sklearn.svm.SVC(probability=True)
+
+    def __init__(
+        self,
+        params: dict | None = None,
+        optimize_hyperparameters: bool = False,
+        target_metric: str | None = None,
+        params_distribution: dict | None = None,
+        optimization_iterations: int | None = None,
+        n_folds: int | None = None,
+        n_jobs: int | None = None,
+    ):
+        super().__init__(
+            params=params,
+            optimize_hyperparameters=optimize_hyperparameters,
+            target_metric=target_metric,
+            params_distribution=params_distribution,
+            optimization_iterations=optimization_iterations,
+            n_folds=n_folds,
+            n_jobs=n_jobs,
+        )

@@ -1,2 +1,1 @@
-from .FeaturizerBase import *
-from .fingerprint import *
+from .featurizer import *
