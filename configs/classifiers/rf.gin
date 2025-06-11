@@ -10,7 +10,7 @@ predictor = @predictor/gin.singleton()
 #   If the parameter below is set to false, the script will not execute hyperparameter optimization step.
 #   Instead, the model will be trained using fixed hyperparameters provided in params dict.
 
-    RfClassifier.optimize_hyperparameters = False
+    RfClassifier.optimize_hyperparameters = True
 
     RfClassifier.params = {
         'n_estimators': 100,
@@ -27,7 +27,7 @@ predictor = @predictor/gin.singleton()
     RfClassifier.optimization_iterations = 10    # maximum times the script is allowed to draw and
                                                         # evaluate a new set of hyperparameter values
 
-    RfClassifier.n_jobs = 16                      # number of CPUs to use
+    RfClassifier.n_jobs = 32                      # number of CPUs to use
     RfClassifier.n_folds = 5                     # number of cross-validation folds
 
 #   Dictionary of distributions to sample hyperparameter values from. To each of the models' hyperparameters

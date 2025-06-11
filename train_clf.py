@@ -14,9 +14,6 @@ from sklearn.model_selection import train_test_split
 import time
 import json
 import gin
-import sys
-
-sys.setrecursionlimit(2000)
 
 
 @gin.configurable()
@@ -30,6 +27,8 @@ def train(
     model_name: str,
     out_dir: str,
 ):
+    time_start = time.time()
+
     # Load data
     df = pd.read_csv(data_path)
 
@@ -105,6 +104,14 @@ def train(
             f,
         )
         logging.info(f"Metrics saved to {metrics_path}")
+
+    # log the time
+    time_elapsed = time.time() - time_start
+    logging.info(
+        f"Training completed in {round(time_elapsed, 2)} seconds."
+        if time_elapsed < 60
+        else f"Training completed in {round(time_elapsed / 60, 2)} minutes."
+    )
 
 
 if __name__ == "__main__":

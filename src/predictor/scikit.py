@@ -104,7 +104,7 @@ class ScikitPredictor(PredictorBase):
             param_distributions=self.hyper_opt["params_distribution"],
             n_iter=self.hyper_opt["n_iter"],
             cv=self.hyper_opt["n_folds"],
-            verbose=1,
+            verbose=2,
             n_jobs=self.hyper_opt["n_jobs"],
             refit=True,
             scoring=self.target_metric,
@@ -114,7 +114,7 @@ class ScikitPredictor(PredictorBase):
         random_search.fit(smiles_list, target_list)
 
         # Save only the best model after refitting to the whole training data
-        self.model = random_search.estimator
+        self.model = random_search.best_estimator_
 
         logging.info(
             f"RandomSearchCV: Fitting converged. Keeping the best model, with params: "
