@@ -5,7 +5,7 @@ predictor = @predictor/gin.singleton()
 #   Define the target metric, one to be optimized during hyperparameter search.
 #   Supported metrics are: 'accuracy', 'roc_auc', 'f1', 'recision', 'recall'
 
-    SvmClassifier.target_metric = 'roc_auc'
+    RfClassifier.target_metric = 'roc_auc'
 #==========================================================================================================#
 #   If the parameter below is set to false, the script will not execute hyperparameter optimization step.
 #   Instead, the model will be trained using fixed hyperparameters provided in params dict.
