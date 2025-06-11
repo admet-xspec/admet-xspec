@@ -22,8 +22,8 @@ class Distribution(abc.ABC):
         self.upper = max
         self.distribution = self._init_distribution()
 
-    def rvs(self, size=1):
-        return self.distribution.rvs(size=size)
+    def rvs(self, size=1, **kwargs):
+        return self.distribution.rvs(size=size, **kwargs)
 
     @abc.abstractmethod
     def _init_distribution(self):
