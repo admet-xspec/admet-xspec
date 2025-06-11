@@ -3,7 +3,7 @@ import logging
 import numpy as np
 from src.utils import get_nice_class_name, get_scikit_metric_callable
 from src.predictor.PredictorBase import PredictorBase
-from src.featurizer.FeaturizerBase import FeaturizerBase
+from src.featurizer import FeaturizerBase
 from pathlib import Path
 import sklearn
 import pickle as pkl
