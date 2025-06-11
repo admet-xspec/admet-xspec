@@ -9,7 +9,12 @@ from src.predictor.scikit import (
     RfRegressor,
     PredictorBase,
 )
-from src.featurizer.fingerprint import EcfpFeaturizer, FeaturizerBase
+from src.featurizer.featurizer import (
+    FeaturizerBase,
+    EcfpFeaturizer,
+    MordredEcfpFeaturizer,
+    MordredEcfpFeaturizer,
+)
 from sklearn.model_selection import train_test_split
 import time
 import json
