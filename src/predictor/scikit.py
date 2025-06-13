@@ -148,7 +148,8 @@ class ScikitPredictor(PredictorBase):
         if not path.endswith(".pkl"):
             raise ValueError(f"File {path} is not a pickle file")
         # Load the model
-        self.model = pkl.load(path)
+        with open(path, "rb") as filein:
+            self.model = pkl.load(file=filein)
 
     @staticmethod
     def _check_params(model, params):

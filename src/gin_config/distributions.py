@@ -70,7 +70,7 @@ class QUniform(Distribution):
 
     def rvs(self, size=1):
         samples = self.distribution.rvs(size=size)
-        return [int(sample) for sample in samples]
+        return [int(sample) for sample in samples] if len(samples) > 1 else int(samples)
 
     def __str__(self):
         return f"QUniform (lower={self.lower}, upper={self.upper})"
@@ -88,7 +88,7 @@ class QLogUniform(Distribution):
 
     def rvs(self, size=1):
         samples = self.distribution.rvs(size=size)
-        return [int(sample) for sample in samples]
+        return [int(sample) for sample in samples] if len(samples) > 1 else int(samples)
 
     def __str__(self):
         return f"QLogUniform (lower={self.lower}, upper={self.upper})"

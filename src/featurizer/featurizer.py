@@ -36,21 +36,15 @@ class EcfpFeaturizer(FeaturizerBase):
         """
         Featurize the given SMILES string
         """
-
-        fp_list = []
-        for smi in smiles_list:
-            mol = Chem.MolFromSmiles(smi)
-            if mol is None:
-                raise ValueError(
-                    f"SMILES string {smi} could not be converted to RDKit mol object"
-                )
-
-            # Generate the fingerprint
-            if self.count:
-                fp = self.generator.GetCountFingerprintAsNumPy(mol)
-            else:
-                fp = self.generator.GetFingerprintAsNumPy(mol)
-            fp_list.append(fp)
+        mols = [Chem.MolFromSmiles(smi) for smi in smiles_list]
+        if any(mol is None for mol in mols):
+            raise ValueError(
+                "One or more SMILES strings could not be converted to RDKit mol object"
+            )
+        if self.count:
+            fp_list = [self.generator.GetCountFingerprintAsNumPy(mol) for mol in mols]
+        else:
+            fp_list = [self.generator.GetFingerprintAsNumPy(mol) for mol in mols]
 
         return np.stack(fp_list)
 
@@ -61,7 +55,7 @@ from mordred import Calculator, descriptors
 @gin.configurable
 class MordredFeaturizer(FeaturizerBase):
     def __init__(self, ignore_3D: bool = True):
-        self.calc = Calculator(descriptors, ignore_3D=False)
+        self.calc = Calculator(descriptors, ignore_3D=ignore_3D, version="1.0.0")
         super(MordredFeaturizer, self).__init__()
 
     def featurize(
@@ -76,7 +70,9 @@ class MordredFeaturizer(FeaturizerBase):
             )
 
         # Calculate the descriptors
-        descs = np.array(self.calc.pandas(mols))
+        descs = self.calc.pandas(mols)
+        # Leave only the numerical columns
+        descs = descs.select_dtypes(include=[np.number]).values
 
         return descs
 
