@@ -1,6 +1,7 @@
 import abc
 from typing import List, Tuple
 import pathlib
+import pickle
 
 
 class PredictorBase(abc.ABC):
@@ -29,8 +30,6 @@ class PredictorBase(abc.ABC):
         pathlib.Path(path).parent.mkdir(parents=True, exist_ok=True)
         # Pickle the model
         with open(path, "wb") as f:
-            import pickle
-
             pickle.dump(self, f)
 
     def load(self, path: str):
