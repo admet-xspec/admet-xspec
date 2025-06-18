@@ -9,7 +9,7 @@
 
 #   Provide paths to the .gin config files of a featurizer and a predictor (classifier or regressor)
     include 'configs/classifiers/rf.gin'
-    include 'configs/featurizers/ecfp.gin'
+    include 'configs/featurizers/mordred.gin'
 
 #   Provide path to the dataset
     train.data_path = 'data/permeability/bbbp_pampa.csv'

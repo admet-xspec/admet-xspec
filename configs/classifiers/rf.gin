@@ -49,25 +49,25 @@ predictor = @predictor/gin.singleton()
 
     RfClassifier.params_distribution = {
         'n_estimators': @n_estimators/QUniform(),
-        'criterion': ['gini', 'entropy', 'log_loss'],
+        'criterion': ['gini', 'entropy'],
         'max_depth': @max_depth/QUniform(),
         'min_samples_split': @min_samples_split/QUniform(),
         'min_samples_leaf': @min_samples_leaf/QUniform(),
-        'max_features': ['sqrt', 'log2', None]
+        'max_features': ['sqrt', 'log2', 'auto']
         }
 
 #   Parametrizing the distribution functions:
 
         n_estimators/QUniform.min = 1
-        n_estimators/QUniform.max = 1000
+        n_estimators/QUniform.max = 2000
 
-        max_depth/QUniform.min = 2
-        max_depth/QUniform.max = 20
+        max_depth/QUniform.min = 10
+        max_depth/QUniform.max = 100
 
         min_samples_split/QUniform.min = 2
         min_samples_split/QUniform.max = 20
 
         min_samples_leaf/QUniform.min = 1
-        min_samples_leaf/QUniform.max = 20
+        min_samples_leaf/QUniform.max = 10
 
 #==========================================================================================================#

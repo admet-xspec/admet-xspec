@@ -71,8 +71,10 @@ class MordredFeaturizer(FeaturizerBase):
 
         # Calculate the descriptors
         descs = self.calc.pandas(mols)
-        # Leave only the numerical columns
-        descs = descs.select_dtypes(include=[np.number]).values
+        # Print indices of columns that are not numeric
+        non_numeric_cols = descs.select_dtypes(exclude=[np.number]).columns
+        if not descs.empty and not non_numeric_cols.empty:
+            print(f"Non-numeric columns found: {non_numeric_cols.tolist()}")
 
         return descs
 
