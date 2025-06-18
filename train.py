@@ -78,7 +78,7 @@ def train(
     y_pred = predictor.predict(X_test)
 
     # save the model
-    predictor.save(out_dir)
+    predictor.save(f"{out_dir}/model.pkl")
 
     # dump operative config
     gin_path = f"{out_dir}/operative_config.gin"
@@ -130,7 +130,7 @@ if __name__ == "__main__":
         "-c",
         type=str,
         help="Path to the config file",
-        default="configs/config.gin",
+        default="configs/classifier.gin",
     )
     parser.add_argument(
         "--log-level",
