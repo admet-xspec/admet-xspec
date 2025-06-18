@@ -1,14 +1,12 @@
 import logging
 
 import numpy as np
-from src.utils import get_nice_class_name, get_scikit_metric_callable
+from src.utils import get_nice_class_name
 from src.predictor.PredictorBase import PredictorBase
 from src.featurizer import FeaturizerBase
-from pathlib import Path
 import sklearn
-import pickle as pkl
 import gin
-from typing import List, Tuple, Dict
+from typing import List, Tuple
 
 
 class ScikitPredictor(PredictorBase):
@@ -37,6 +35,9 @@ class ScikitPredictor(PredictorBase):
         # Initialize the model
         super(ScikitPredictor, self).__init__()
         self.model = self._init_model()
+
+        # Initialize the featurizer
+        self.featurizer = None
 
         # Set the hyperparameters
         if not (params is None or optimize_hyperparameters):
@@ -83,6 +84,8 @@ class ScikitPredictor(PredictorBase):
     def train(self, smiles_list: List[str], target_list: List[float]):
 
         # Featurize the smiles
+        if self.featurizer is None:
+            raise ValueError("Featurizer is not set. Please inject a featurizer first.")
         X = self.featurizer.featurize(smiles_list)
         y = target_list
 
@@ -130,26 +133,6 @@ class ScikitPredictor(PredictorBase):
         else:
             y_pred = self.model.predict(X)
         return y_pred
-
-    def save(self, out_dir: str):
-        # Check if the output directory exists
-        if not Path.is_dir(Path(out_dir)):
-            raise FileNotFoundError(f"Directory {out_dir} does not exist")
-        # Save the model
-        with open(out_dir + "/model.pkl", "wb") as fileout:
-            pkl.dump(obj=self.model, file=fileout)
-        logging.info(f"Model saved to {out_dir}/model.pkl")
-
-    def load(self, path: str):
-        # Check if the file exists
-        if not Path(path).exists():
-            raise FileNotFoundError(f"File {path} does not exist")
-        # Check if the file is a pickle file
-        if not path.endswith(".pkl"):
-            raise ValueError(f"File {path} is not a pickle file")
-        # Load the model
-        with open(path, "rb") as filein:
-            self.model = pkl.load(file=filein)
 
     @staticmethod
     def _check_params(model, params):
@@ -263,23 +246,3 @@ class SvmClassifier(ScikitPredictor):
 
     def _init_model(self):
         return sklearn.svm.SVC(probability=True)
-
-    def __init__(
-        self,
-        params: dict | None = None,
-        optimize_hyperparameters: bool = False,
-        target_metric: str | None = None,
-        params_distribution: dict | None = None,
-        optimization_iterations: int | None = None,
-        n_folds: int | None = None,
-        n_jobs: int | None = None,
-    ):
-        super().__init__(
-            params=params,
-            optimize_hyperparameters=optimize_hyperparameters,
-            target_metric=target_metric,
-            params_distribution=params_distribution,
-            optimization_iterations=optimization_iterations,
-            n_folds=n_folds,
-            n_jobs=n_jobs,
-        )

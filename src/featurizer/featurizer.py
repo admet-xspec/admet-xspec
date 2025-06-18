@@ -1,4 +1,6 @@
 import abc
+import logging
+
 import numpy as np
 from typing import Any, Callable, Dict, Iterable, List, Optional, Tuple, Union
 from rdkit.Chem.rdFingerprintGenerator import GetMorganGenerator
@@ -56,12 +58,18 @@ from mordred import Calculator, descriptors
 class MordredFeaturizer(FeaturizerBase):
     def __init__(self, ignore_3D: bool = True):
         self.calc = Calculator(descriptors, ignore_3D=ignore_3D, version="1.0.0")
+        self.invalid_descriptors = None
         super(MordredFeaturizer, self).__init__()
 
     def featurize(
         self,
         smiles_list: List[str],
     ) -> np.ndarray:
+        """
+        Featurize the given SMILES string using Mordred descriptors.
+        :param smiles_list:
+        :return:
+        """
 
         mols = [Chem.MolFromSmiles(smi) for smi in smiles_list]
         if any(mol is None for mol in mols):
@@ -71,10 +79,24 @@ class MordredFeaturizer(FeaturizerBase):
 
         # Calculate the descriptors
         descs = self.calc.pandas(mols)
-        # Print indices of columns that are not numeric
-        non_numeric_cols = descs.select_dtypes(exclude=[np.number]).columns
-        if not descs.empty and not non_numeric_cols.empty:
-            print(f"Non-numeric columns found: {non_numeric_cols.tolist()}")
+
+        # Check for invalid descriptors
+        if self.invalid_descriptors is None:
+            # Store the invalid descriptors for future use
+            self.invalid_descriptors = descs.columns[descs.isnull().any()].tolist()
+            logging.warning(
+                f"Found {len(self.invalid_descriptors)} invalid descriptors: {self.invalid_descriptors}"
+            )
+
+        # Drop invalid descriptors
+        descs = descs.drop(columns=self.invalid_descriptors, errors="ignore")
+        # Check for NaN values
+        if descs.isnull().values.any():
+            logging.warning(
+                "Some descriptors contain NaN values. These will be replaced with 0."
+            )
+            descs = descs.fillna(0)
+        descs.to_numpy()
 
         return descs
 

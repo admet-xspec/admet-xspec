@@ -1,5 +1,6 @@
 import abc
 from typing import List, Tuple
+import pathlib
 
 
 class PredictorBase(abc.ABC):
@@ -22,15 +23,27 @@ class PredictorBase(abc.ABC):
         """Train the model with the given smiles and target list."""
         pass
 
-    @abc.abstractmethod
     def save(self, path: str):
-        """Save the model to the given path"""
-        pass
+        """Save the model to the given path."""
+        # Ensure the directory exists
+        pathlib.Path(path).parent.mkdir(parents=True, exist_ok=True)
+        # Pickle the model
+        with open(path, "wb") as f:
+            import pickle
 
-    @abc.abstractmethod
+            pickle.dump(self, f)
+
     def load(self, path: str):
         """Load the model from the given path."""
-        pass
+        # Check if the path exists
+        if not pathlib.Path(path).exists():
+            raise FileNotFoundError(f"Model file not found at {path}")
+        # Load the model
+        with open(path, "rb") as f:
+            import pickle
+
+            loaded_model = pickle.load(f)
+            self.__dict__.update(loaded_model.__dict__)
 
     def set_working_dir(self, path: str):
         """

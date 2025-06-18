@@ -196,30 +196,6 @@ class ChempropPredictor(PredictorBase):
             preds = torch.cat(preds, dim=0).cpu().numpy()
             return np.array(preds).reshape(-1, 1)
 
-    def save(self, out_dir: str):
-        """
-        Save the model to the given path.
-        :param out_dir: Path to save the model to
-        """
-
-        # Check if the output directory exists
-        if not Path(out_dir).exists():
-            raise FileNotFoundError(f"Directory {Path(out_dir)} does not exist")
-
-        chp.models.utils.save_model(out_dir + "/", self.model)
-
-    def load(self, path: str):
-        """
-        Load the model from the given path.
-        :param path: Path to load the model from
-        """
-
-        if not path.endswith(".ckpt") and not path.endswith(".pt"):
-            raise ValueError("Model state file must have either .ckpt or .pt extension")
-
-        self.model = chp.models.MPNN.load_from_file(path)
-        logging.info(f"Model weights loaded from {path}")
-
     @staticmethod
     def _init_mp(mp_type: str, d_h: int, depth: int):
         if mp_type.lower() == "atom":
