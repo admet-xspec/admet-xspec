@@ -2,6 +2,8 @@ import abc
 from typing import List, Tuple
 import pathlib
 from src.utils import get_scikit_metric_callable
+import pickle
+
 
 class PredictorBase(abc.ABC):
     def __init__(self):

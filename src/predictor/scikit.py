@@ -147,7 +147,6 @@ class ScikitPredictor(PredictorBase):
 
 @gin.configurable()
 class RfRegressor(ScikitPredictor):
-
     def __init__(
         self,
         params: dict | None = None,
@@ -232,7 +231,6 @@ class SvmRegressor(ScikitPredictor):
 
 @gin.configurable()
 class SvmClassifier(ScikitPredictor):
-
     def __init__(
         self,
         params: dict | None = None,

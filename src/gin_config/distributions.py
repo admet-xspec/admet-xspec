@@ -15,7 +15,6 @@ import abc
 
 
 class Distribution(abc.ABC):
-
     def __init__(self, min=0, max=1):
         super().__init__()
         self.lower = min
@@ -23,7 +22,8 @@ class Distribution(abc.ABC):
         self.distribution = self._init_distribution()
 
     def rvs(self, size=1, **kwargs):
-        return self.distribution.rvs(size=size, **kwargs)
+        samples = self.distribution.rvs(size=size, **kwargs)
+        return [int(sample) for sample in samples] if len(samples) > 1 else int(samples)
 
     @abc.abstractmethod
     def _init_distribution(self):
@@ -36,7 +36,6 @@ class Distribution(abc.ABC):
 
 @gin.register
 class Uniform(Distribution):
-
     def _init_distribution(self):
         return uniform(self.lower, self.upper)
 
@@ -50,7 +49,6 @@ class Uniform(Distribution):
 
 @gin.register
 class LogUniform(Distribution):
-
     def _init_distribution(self):
         return loguniform(self.lower, self.upper)
 
@@ -64,7 +62,6 @@ class LogUniform(Distribution):
 
 @gin.register
 class QUniform(Distribution):
-
     def _init_distribution(self):
         return uniform(self.lower, self.upper)
 
@@ -82,7 +79,6 @@ class QUniform(Distribution):
 
 @gin.register
 class QLogUniform(Distribution):
-
     def _init_distribution(self):
         return loguniform(self.lower, self.upper)
 

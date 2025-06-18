@@ -325,7 +325,6 @@ class ChempropPredictor(PredictorBase):
 
 @gin.configurable
 class ChempropRegressor(ChempropPredictor):
-
     def __init__(
         self,
         featurizer: (
@@ -356,7 +355,6 @@ class ChempropRegressor(ChempropPredictor):
 
 @gin.configurable
 class ChempropBinaryClassifier(ChempropPredictor):
-
     def __init__(
         self,
         featurizer: (
