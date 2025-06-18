@@ -26,14 +26,15 @@ class ScikitPredictor(PredictorBase):
         params: dict | None = None,
         optimize_hyperparameters: bool = False,
         target_metric: str | None = None,
+        evaluation_metrics: List[str] | None = None,
         params_distribution: dict | None = None,
         optimization_iterations: int | None = None,
         n_folds: int | None = None,
         n_jobs: int | None = None,
     ):
+        super(ScikitPredictor, self).__init__(evaluation_metrics=evaluation_metrics)
 
         # Initialize the model
-        super(ScikitPredictor, self).__init__()
         self.model = self._init_model()
 
         # Initialize the featurizer
@@ -152,6 +153,8 @@ class RfRegressor(ScikitPredictor):
         params: dict | None = None,
         optimize_hyperparameters: bool = False,
         params_distribution: dict | None = None,
+        target_metric: str | None = None,
+        evaluation_metrics: List[str] | None = None,
         optimization_iterations: int | None = None,
         n_folds: int | None = None,
         n_jobs: int | None = None,
@@ -161,6 +164,8 @@ class RfRegressor(ScikitPredictor):
             optimize_hyperparameters=optimize_hyperparameters,
             params_distribution=params_distribution,
             optimization_iterations=optimization_iterations,
+            target_metric=target_metric,
+            evaluation_metrics=evaluation_metrics,
             n_folds=n_folds,
             n_jobs=n_jobs,
         )
@@ -176,6 +181,7 @@ class RfClassifier(ScikitPredictor):
         params: dict | None = None,
         optimize_hyperparameters: bool = False,
         target_metric: str | None = None,
+        evaluation_metrics: List[str] | None = None,
         params_distribution: dict | None = None,
         optimization_iterations: int | None = None,
         n_folds: int | None = None,
@@ -185,6 +191,7 @@ class RfClassifier(ScikitPredictor):
             params=params,
             optimize_hyperparameters=optimize_hyperparameters,
             target_metric=target_metric,
+            evaluation_metrics=evaluation_metrics,
             params_distribution=params_distribution,
             optimization_iterations=optimization_iterations,
             n_folds=n_folds,
@@ -202,6 +209,7 @@ class SvmRegressor(ScikitPredictor):
         params: dict | None = None,
         optimize_hyperparameters: bool = False,
         target_metric: str | None = None,
+        evaluation_metrics: List[str] | None = None,
         params_distribution: dict | None = None,
         optimization_iterations: int | None = None,
         n_folds: int | None = None,
@@ -211,6 +219,7 @@ class SvmRegressor(ScikitPredictor):
             params=params,
             optimize_hyperparameters=optimize_hyperparameters,
             target_metric=target_metric,
+            evaluation_metrics=evaluation_metrics,
             params_distribution=params_distribution,
             optimization_iterations=optimization_iterations,
             n_folds=n_folds,
@@ -229,6 +238,7 @@ class SvmClassifier(ScikitPredictor):
         params: dict | None = None,
         optimize_hyperparameters: bool = False,
         target_metric: str | None = None,
+        evaluation_metrics: List[str] | None = None,
         params_distribution: dict | None = None,
         optimization_iterations: int | None = None,
         n_folds: int | None = None,
@@ -238,6 +248,7 @@ class SvmClassifier(ScikitPredictor):
             params=params,
             optimize_hyperparameters=optimize_hyperparameters,
             target_metric=target_metric,
+            evaluation_metrics=evaluation_metrics,
             params_distribution=params_distribution,
             optimization_iterations=optimization_iterations,
             n_folds=n_folds,

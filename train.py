@@ -1,5 +1,5 @@
 import pandas as pd
-from src.utils import clean_smiles, get_nice_class_name, get_scikit_metric_callable
+from src.utils import clean_smiles, get_nice_class_name
 import logging
 from src.predictor.chemprop import ChempropBinaryClassifier, ChempropRegressor
 from src.predictor.scikit import (
@@ -26,7 +26,6 @@ def train(
     data_path: str,
     predictor: PredictorBase,
     featurizer: FeaturizerBase | None,
-    metrics: list[str],
     test_size: float,
     strafity_test: bool,
     model_name: str,
@@ -86,20 +85,9 @@ def train(
         f.write(gin.operative_config_str())
     logging.info(f"Config saved to {gin_path}")
 
-    metrics_dict = {}
-    for metric in metrics:
-        # get the metric callable
-        metric_callable = get_scikit_metric_callable(metric)
-
-        if metric == "roc_auc":
-            # calculate the metric
-            score = metric_callable(y_test, y_pred)
-        else:
-            # convert the predictions to binary values assuming a threshold of 0.5
-            y_pred_binary = [1 if pred > 0.5 else 0 for pred in y_pred]
-            score = metric_callable(y_test, y_pred_binary)
-        metrics_dict[metric] = score
-        logging.info(f"{metric}: {score}")
+    # evaluate the model
+    metrics_dict = predictor.evaluate(X_test, y_test)
+    logging.info(f"Metrics: {metrics_dict}")
 
     # save metrics
     metrics_path = f"{out_dir}/metrics.json"

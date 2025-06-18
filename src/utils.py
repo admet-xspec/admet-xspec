@@ -48,6 +48,10 @@ def get_scikit_metric_callable(metric_name: str):
         "f1": metrics.f1_score,
         "precision": metrics.precision_score,
         "recall": metrics.recall_score,
+        "mse": metrics.mean_squared_error,
+        "mae": metrics.mean_absolute_error,
+        "r2": metrics.r2_score,
+        "rmse": metrics.root_mean_squared_error
     }
     if metric_name not in metrics_dict.keys():
         raise ValueError
