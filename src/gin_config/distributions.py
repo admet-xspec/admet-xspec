@@ -68,8 +68,8 @@ class QUniform(Distribution):
     def _init_distribution(self):
         return uniform(self.lower, self.upper)
 
-    def rvs(self, size=1):
-        samples = self.distribution.rvs(size=size)
+    def rvs(self, size=1, **kwargs):
+        samples = self.distribution.rvs(size=size, **kwargs)
         return [int(sample) for sample in samples] if len(samples) > 1 else int(samples)
 
     def __str__(self):
@@ -86,8 +86,8 @@ class QLogUniform(Distribution):
     def _init_distribution(self):
         return loguniform(self.lower, self.upper)
 
-    def rvs(self, size=1):
-        samples = self.distribution.rvs(size=size)
+    def rvs(self, size=1, **kwargs):
+        samples = self.distribution.rvs(size=size, **kwargs)
         return [int(sample) for sample in samples] if len(samples) > 1 else int(samples)
 
     def __str__(self):
