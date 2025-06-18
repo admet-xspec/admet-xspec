@@ -5,6 +5,7 @@ import numpy as np
 from typing import Any, Callable, Dict, Iterable, List, Optional, Tuple, Union
 from rdkit.Chem.rdFingerprintGenerator import GetMorganGenerator
 from rdkit import Chem
+import pandas as pd
 from typing import List
 import numpy as np
 import gin
@@ -26,10 +27,10 @@ class FeaturizerBase(abc.ABC):
 class EcfpFeaturizer(FeaturizerBase):
     def __init__(self, radius: int = 2, n_bits: int = 2048, count: bool = False):
         super(EcfpFeaturizer, self).__init__()
-        self.generator = GetMorganGenerator(radius=radius, fpSize=n_bits)
-
-        # If count is True, the fingerprint will be a count fingerprint
+        self.radius = radius
+        self.n_bits = n_bits
         self.count = count
+        self.generator = GetMorganGenerator(radius=radius, fpSize=n_bits)
 
     def featurize(
         self,
@@ -49,6 +50,16 @@ class EcfpFeaturizer(FeaturizerBase):
             fp_list = [self.generator.GetFingerprintAsNumPy(mol) for mol in mols]
 
         return np.stack(fp_list)
+
+    def __getstate__(self):
+        state = self.__dict__.copy()
+        # Don't pickle the generator
+        del state["generator"]
+        return state
+
+    def __setstate__(self, state):
+        self.__dict__.update(state)
+        self.generator = GetMorganGenerator(radius=self.radius, fpSize=self.n_bits)
 
 
 from mordred import Calculator, descriptors
@@ -80,22 +91,23 @@ class MordredFeaturizer(FeaturizerBase):
         # Calculate the descriptors
         descs = self.calc.pandas(mols)
 
+        # Check for non-numeric values and replace them with NaN
+        descs = descs.apply(pd.to_numeric, errors="coerce")
+
         # Check for invalid descriptors
         if self.invalid_descriptors is None:
             # Store the invalid descriptors for future use
-            self.invalid_descriptors = descs.columns[descs.isnull().any()].tolist()
+            # Invalid descriptors are those that have non-numeric values
+            self.invalid_descriptors = descs.select_dtypes(
+                exclude=[np.number]
+            ).columns.tolist()
             logging.warning(
                 f"Found {len(self.invalid_descriptors)} invalid descriptors: {self.invalid_descriptors}"
             )
 
         # Drop invalid descriptors
-        descs = descs.drop(columns=self.invalid_descriptors, errors="ignore")
-        # Check for NaN values
-        if descs.isnull().values.any():
-            logging.warning(
-                "Some descriptors contain NaN values. These will be replaced with 0."
-            )
-            descs = descs.fillna(0)
+        # descs = descs.drop(columns=self.invalid_descriptors, errors="ignore")
+
         descs.to_numpy()
 
         return descs
