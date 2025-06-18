@@ -9,7 +9,7 @@ class PredictorBase(abc.ABC):
     def __init__(self):
         self.working_dir = None  # working directory for training and inference
         self.model = self._init_model()
-        self.evaluation_metrics = [] # list of metrics to be used for model evaluation
+        self.evaluation_metrics = []  # list of metrics to be used for model evaluation
 
     @abc.abstractmethod
     def _init_model(self):
@@ -32,8 +32,6 @@ class PredictorBase(abc.ABC):
         pathlib.Path(path).parent.mkdir(parents=True, exist_ok=True)
         # Pickle the model
         with open(path, "wb") as f:
-            import pickle
-
             pickle.dump(self, f)
 
     def load(self, path: str):
@@ -43,8 +41,6 @@ class PredictorBase(abc.ABC):
             raise FileNotFoundError(f"Model file not found at {path}")
         # Load the model
         with open(path, "rb") as f:
-            import pickle
-
             loaded_model = pickle.load(f)
             self.__dict__.update(loaded_model.__dict__)
 
@@ -57,14 +53,15 @@ class PredictorBase(abc.ABC):
         metrics_dict = {}
         for metric in self.evaluation_metrics:
             metric_callable = get_scikit_metric_callable(metric)
-            if metric == 'accuracy':
+            if metric == "accuracy":
                 # For accuracy, we need to convert predictions to binary labels
-                score = metric_callable(target_list, [1 if pred >= 0.5 else 0 for pred in predictions])
+                score = metric_callable(
+                    target_list, [1 if pred >= 0.5 else 0 for pred in predictions]
+                )
             else:
                 score = metric_callable(target_list, predictions)
             metrics_dict[metric] = score
         return metrics_dict
-
 
     def set_working_dir(self, path: str):
         """

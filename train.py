@@ -2,13 +2,7 @@ import pandas as pd
 from src.utils import clean_smiles, get_nice_class_name
 import logging
 from src.predictor.chemprop import ChempropBinaryClassifier, ChempropRegressor
-from src.predictor.scikit import (
-    SvmClassifier,
-    SvmRegressor,
-    RfClassifier,
-    RfRegressor,
-    PredictorBase,
-)
+from src.predictor.scikit import SvmClassifier, SvmRegressor, RfClassifier, RfRegressor
 from src.featurizer.featurizer import (
     FeaturizerBase,
     EcfpFeaturizer,

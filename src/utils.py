@@ -51,7 +51,7 @@ def get_scikit_metric_callable(metric_name: str):
         "mse": metrics.mean_squared_error,
         "mae": metrics.mean_absolute_error,
         "r2": metrics.r2_score,
-        "rmse": metrics.root_mean_squared_error
+        "rmse": metrics.root_mean_squared_error,
     }
     if metric_name not in metrics_dict.keys():
         raise ValueError

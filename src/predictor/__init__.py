@@ -1,3 +1,3 @@
-from .PredictorBase import *
+from .base import *
 from .chemprop import *
 from .scikit import *
