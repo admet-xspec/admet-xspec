@@ -5,20 +5,16 @@
 #   TRAINING SCRIPT GENERAL CONFIG
 
 #   Provide a name for the model
-    NAME = 'LAS'
+    NAME = 'SVC_RDKIT_LOGD'
 
 #   Directory in which models are saved
     MODELS_DIR = 'models'
 
 #   Provide paths to the .gin config files of a featurizer and a predictor (classifier or regressor)
-    include 'configs/featurizers/ecfp.gin'
-    include 'configs/classifiers/chemprop.gin'
+    include 'configs/featurizers/rdkit.gin'
+    include 'configs/regressors/svm.gin'
 
 #   Provide path to the dataset
     train.data_path = 'data/logD/logD-cleaned.csv'
 
-#   Provide a list of metrics to use during evaluation
-#   Supported metrics for regressor models are: 'mae', 'mse', 'rmse', 'r2'
-
-    train.metrics = ['mae', 'mse', 'rmse', 'r2']
     train.test_size = 0.2

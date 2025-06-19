@@ -1,17 +1,15 @@
 import logging
-from src.predictor.PredictorBase import PredictorBase
+from src.predictor.base import PredictorBase
 import chemprop as chp
 from chemprop.featurizers import SimpleMoleculeMolGraphFeaturizer
 import ray
 from typing import List
-from pathlib import Path
 from ray.train import ScalingConfig
 from ray import tune
 from ray.train.torch import TorchTrainer
 from src.gin_config.distributions import Uniform, LogUniform, QUniform, QLogUniform
 from ray.tune.search.hyperopt import HyperOptSearch
 from ray.tune.schedulers import FIFOScheduler
-import abc
 import numpy as np
 from lightning import pytorch as pl
 from lightning.pytorch.callbacks import ModelCheckpoint

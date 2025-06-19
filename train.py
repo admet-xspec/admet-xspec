@@ -3,11 +3,12 @@ from src.utils import clean_smiles, get_nice_class_name
 import logging
 from src.predictor.chemprop import ChempropBinaryClassifier, ChempropRegressor
 from src.predictor.scikit import SvmClassifier, SvmRegressor, RfClassifier, RfRegressor
+from src.predictor.base import PredictorBase
 from src.featurizer.featurizer import (
     FeaturizerBase,
     EcfpFeaturizer,
-    MordredEcfpFeaturizer,
-    MordredEcfpFeaturizer,
+    RdkitFeaturizer,
+    RdkitEcfpFeaturizer
 )
 from sklearn.model_selection import train_test_split
 import time
@@ -21,9 +22,9 @@ def train(
     predictor: PredictorBase,
     featurizer: FeaturizerBase | None,
     test_size: float,
-    strafity_test: bool,
     model_name: str,
     out_dir: str,
+    strafity_test: bool = False
 ):
     time_start = time.time()
 
@@ -66,9 +67,6 @@ def train(
     # train (either use hyperparameters provided in the predictor .gin config file directly, or
     #        conduct hyperparameter optimization over distributions given in the same .gin config file)
     predictor.train(X_train, y_train)
-
-    # test
-    y_pred = predictor.predict(X_test)
 
     # save the model
     predictor.save(f"{out_dir}/model.pkl")

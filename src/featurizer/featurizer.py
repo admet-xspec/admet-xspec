@@ -1,8 +1,4 @@
 import abc
-import logging
-
-import numpy as np
-from typing import Any, Callable, Dict, Iterable, List, Optional, Tuple, Union
 from rdkit.Chem.rdFingerprintGenerator import GetMorganGenerator
 from rdkit import Chem
 import pandas as pd
@@ -61,77 +57,58 @@ class EcfpFeaturizer(FeaturizerBase):
         self.__dict__.update(state)
         self.generator = GetMorganGenerator(radius=self.radius, fpSize=self.n_bits)
 
-
-from mordred import Calculator, descriptors
-
+from rdkit.Chem import Descriptors
+from sklearn.preprocessing import StandardScaler
 
 @gin.configurable
-class MordredFeaturizer(FeaturizerBase):
-    def __init__(self, ignore_3D: bool = True):
-        self.calc = Calculator(descriptors, ignore_3D=ignore_3D, version="1.0.0")
-        self.invalid_descriptors = None
-        super(MordredFeaturizer, self).__init__()
+class RdkitFeaturizer(FeaturizerBase):
 
-    def featurize(
-        self,
-        smiles_list: List[str],
-    ) -> np.ndarray:
-        """
-        Featurize the given SMILES string using Mordred descriptors.
-        :param smiles_list:
-        :return:
-        """
+    def __init__(self):
+        super(RdkitFeaturizer, self).__init__()
+        # Initialize a StandardScaler to normalize the descriptors
+        self.scaler = StandardScaler()
+        self.scaler_fitted = False
 
+    def featurize(self, smiles_list: List[str]) -> np.ndarray:
         mols = [Chem.MolFromSmiles(smi) for smi in smiles_list]
-        if any(mol is None for mol in mols):
-            raise ValueError(
-                "One or more SMILES strings could not be converted to RDKit mol object"
-            )
-
-        # Calculate the descriptors
-        descs = self.calc.pandas(mols)
-
-        # Check for non-numeric values and replace them with NaN
-        descs = descs.apply(pd.to_numeric, errors="coerce")
-
-        # Check for invalid descriptors
-        if self.invalid_descriptors is None:
-            # Store the invalid descriptors for future use
-            # Invalid descriptors are those that have non-numeric values
-            self.invalid_descriptors = descs.select_dtypes(
-                exclude=[np.number]
-            ).columns.tolist()
-            logging.warning(
-                f"Found {len(self.invalid_descriptors)} invalid descriptors: {self.invalid_descriptors}"
-            )
-
-        # Drop invalid descriptors
-        # descs = descs.drop(columns=self.invalid_descriptors, errors="ignore")
-
-        descs.to_numpy()
+        descs = [self.get_descriptors(mol, missing=np.nan) for mol in mols]
+        # Convert list of dicts to DataFrame
+        desc_df = pd.DataFrame(descs)
+        # Fill NaN values with 0
+        desc_df.fillna(0, inplace=True)
+        # Convert DataFrame to numpy array
+        descs = desc_df.to_numpy()
+        # Normalize the descriptors
+        if not self.scaler_fitted:
+            self.scaler.fit(descs)
+            self.scaler_fitted = True
+        descs = self.scaler.transform(descs)
 
         return descs
 
+    @staticmethod
+    def get_descriptors(mol, missing=None):
+        desc_dict = {}
+        for name, fn in Descriptors._descList:
+            try:
+                value = fn(mol)
+            except:
+                value = missing
+            desc_dict[name] = value
+        return desc_dict
 
 @gin.configurable
-class MordredEcfpFeaturizer(FeaturizerBase):
-    def __init__(
-        self,
-        radius: int = 2,
-        n_bits: int = 2048,
-        count: bool = False,
-        ignore_3D: bool = False,
-    ):
-        self.ecfp = EcfpFeaturizer(radius=radius, n_bits=n_bits, count=count)
-        self.mordred = MordredFeaturizer(ignore_3D=ignore_3D)
-        super(MordredEcfpFeaturizer, self).__init__()
+class RdkitEcfpFeaturizer(FeaturizerBase):
 
-    def featurize(
-        self,
-        smiles_list: List[str],
-    ) -> np.ndarray:
+    def __init__(self, radius: int = 2, n_bits: int = 2048, count: bool = False):
+        super(RdkitEcfpFeaturizer, self).__init__()
+        self.ecfp_featurizer = EcfpFeaturizer(radius=radius, n_bits=n_bits, count=count)
+        self.rdkit_featurizer = RdkitFeaturizer()
 
-        ecfp_features = self.ecfp.featurize(smiles_list)
-        mordred_features = self.mordred.featurize(smiles_list)
+    def featurize(self, smiles_list: List[str]) -> np.ndarray:
+        ecfp_features = self.ecfp_featurizer.featurize(smiles_list)
+        rdkit_features = self.rdkit_featurizer.featurize(smiles_list)
 
-        return np.hstack((ecfp_features, mordred_features))
+        # Combine features
+        combined_features = np.hstack((ecfp_features, rdkit_features))
+        return combined_features

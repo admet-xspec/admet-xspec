@@ -1,0 +1,6 @@
+RdkitEcfpFeaturizer.radius = 2
+RdkitEcfpFeaturizer.n_bits = 2048
+RdkitEcfpFeaturizer.count = False
+
+featurizer/gin.singleton.constructor = @RdkitEcfpFeaturizer
+featurizer = @featurizer/gin.singleton()

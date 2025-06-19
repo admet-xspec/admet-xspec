@@ -7,8 +7,7 @@ It includes the following distributions, all parametrized by a lower and upper b
 - QLogUniform (discrete log uniform)
 """
 
-from scipy.stats import uniform, loguniform, rv_discrete
-import numpy as np
+from scipy.stats import uniform, loguniform
 import ray.tune as tune
 import gin
 import abc
@@ -23,7 +22,7 @@ class Distribution(abc.ABC):
 
     def rvs(self, size=1, **kwargs):
         samples = self.distribution.rvs(size=size, **kwargs)
-        return [int(sample) for sample in samples] if len(samples) > 1 else int(samples)
+        return samples[0]
 
     @abc.abstractmethod
     def _init_distribution(self):

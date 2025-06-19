@@ -53,8 +53,8 @@ class PredictorBase(abc.ABC):
         metrics_dict = {}
         for metric in self.evaluation_metrics:
             metric_callable = get_scikit_metric_callable(metric)
-            if metric == "accuracy":
-                # For accuracy, we need to convert predictions to binary labels
+            if metric in ["accuracy", "f1", "precision", "recall"]:
+                # For classification metrics, convert predictions to binary
                 score = metric_callable(
                     target_list, [1 if pred >= 0.5 else 0 for pred in predictions]
                 )

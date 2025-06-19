@@ -1,4 +1,0 @@
-MordredFeaturizer.ignore_3D = False
-
-featurizer/gin.singleton.constructor = @MordredFeaturizer
-featurizer = @featurizer/gin.singleton()

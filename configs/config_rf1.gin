@@ -2,18 +2,22 @@
 #   TRAINING SCRIPT GENERAL CONFIG
 
 #   Provide a name for the model
-    NAME = 'SVC_ECFP_BBBP_PAMPA'
+    NAME = 'RF_ECFP_hERG'
 
 #   Directory in which models are saved
     MODELS_DIR = 'models'
 
 #   Provide paths to the .gin config files of a featurizer and a predictor (classifier or regressor)
-    include 'configs/classifiers/svm.gin'
+    include 'configs/classifiers/rf.gin'
     include 'configs/featurizers/ecfp.gin'
 
 #   Provide path to the dataset
-    train.data_path = 'data/permeability/bbbp_pampa.csv'
+    train.data_path = 'data/herg/herg_central_processed.csv'
 
+#   Provide a list of metrics to use during evaluation
+#   Supported metrics for classifier models are: 'accuracy', 'roc_auc', 'f1', 'recision', 'recall'
+
+    train.metrics = ['roc_auc', 'accuracy', 'f1', 'precision', 'recall']
     train.test_size = 0.2
     train.strafity_test = True
 

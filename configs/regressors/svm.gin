@@ -1,18 +1,23 @@
-predictor/gin.singleton.constructor = @SvmClassifier
+predictor/gin.singleton.constructor = @SvmRegressor
 predictor = @predictor/gin.singleton()
 
 #==========================================================================================================#
 #   Define the target metric, one to be optimized during hyperparameter search.
-#   Supported metrics are: 'accuracy', 'roc_auc', 'f1', 'recision', 'recall'
+#   Supported metrics are: 'neg_mean_absolute_error', 'neg_mean_squared_error', 'neg_root_mean_squared_error'
 
-    SvmClassifier.target_metric = 'roc_auc'
+    SvmRegressor.target_metric = 'neg_mean_squared_error'
+
+#   Provide a list of metrics to use during evaluation
+
+    SvmRegressor.evaluation_metrics = ['mae', 'mse', 'rmse', 'r2']
+
 #==========================================================================================================#
 #   If the parameter below is set to false, the script will not execute hyperparameter optimization step.
 #   Instead, the model will be trained using fixed hyperparameters provided in params dict.
 
-    SvmClassifier.optimize_hyperparameters = False
+    SvmRegressor.optimize_hyperparameters = True
 
-    SvmClassifier.params = {
+    SvmRegressor.params = {
         'C': 1,
         'kernel': 'rbf',
         'gamma': 'scale',
@@ -21,11 +26,11 @@ predictor = @predictor/gin.singleton()
 #   If optimize_hyperparameters is set to True, the training script will first optimize the values of
 #   hyperparameters using random search - CV strategy
 
-    SvmClassifier.optimization_iterations = 10    # maximum times the script is allowed to draw and
+    SvmRegressor.optimization_iterations = 200    # maximum times the script is allowed to draw and
                                                         # evaluate a new set of hyperparameter values
 
-    SvmClassifier.n_jobs = 16                      # number of CPUs to use
-    SvmClassifier.n_folds = 5                     # number of cross-validation folds
+    SvmRegressor.n_jobs = 20                      # number of CPUs to use
+    SvmRegressor.n_folds = 5                     # number of cross-validation folds
 
 #   Dictionary of distributions to sample hyperparameter values from. To each of the models' hyperparameters
 #   either a discrete list or a continuous distribution may be assigned. Below is a brief demonstration on
@@ -43,9 +48,9 @@ predictor = @predictor/gin.singleton()
 #   distribution, and not for any other LogUniforms used in this config. The @ is essential when passing
 #   the distribution itself (which is a class) to the dictionary, but not needed while setting attributes.
 
-    SvmClassifier.params_distribution = {
+    SvmRegressor.params_distribution = {
         'C': @C/LogUniform(),
-        'gamma': ['scale', 'auto'],
+        'gamma': @gamma/LogUniform(),
         'kernel': ['rbf']
         }
 
@@ -53,5 +58,8 @@ predictor = @predictor/gin.singleton()
 
         C/LogUniform.min = 0.1
         C/LogUniform.max = 1000
+
+        gamma/LogUniform.min = 0.001
+        gamma/LogUniform.max = 1
 
 #==========================================================================================================#

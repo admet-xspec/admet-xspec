@@ -2,7 +2,7 @@ import logging
 
 import numpy as np
 from src.utils import get_nice_class_name
-from src.predictor.PredictorBase import PredictorBase
+from src.predictor.base import PredictorBase
 from src.featurizer import FeaturizerBase
 import sklearn
 import gin
@@ -15,6 +15,7 @@ class ScikitPredictor(PredictorBase):
     :param params: Hyperparameters for the model
     :param optimize_hyperparameters: If True, hyperparameters will be optimized
     :param target_metric: Metric to optimize for
+    :param evaluation_metrics: List of metrics for model evaluation
     :param params_distribution: Distribution of hyperparameters for optimization
     :param optimization_iterations: Number of iterations for optimization
     :param n_folds: Number of folds for cross-validation
@@ -32,7 +33,7 @@ class ScikitPredictor(PredictorBase):
         n_folds: int | None = None,
         n_jobs: int | None = None,
     ):
-        super(ScikitPredictor, self).__init__(evaluation_metrics=evaluation_metrics)
+        super(ScikitPredictor, self).__init__()
 
         # Initialize the model
         self.model = self._init_model()
@@ -50,12 +51,9 @@ class ScikitPredictor(PredictorBase):
         # Params for hyperparameter optimalization with randomized search CV
         self.optimize = optimize_hyperparameters
 
-        if target_metric not in ["accuracy", "roc_auc", "f1", "precision", "recall"]:
-            raise ValueError(
-                f"Target metric {target_metric} not supported. "
-                f"Please use one of: 'accuracy', 'roc_auc', 'f1', 'recision', 'recall'."
-            )
+        # Set the target metric for optimization and metrics for final evaluation
         self.target_metric = target_metric
+        self.evaluation_metrics = evaluation_metrics
 
         self.hyper_opt = {
             "n_iter": optimization_iterations,
