@@ -1,4 +1,4 @@
-SMILES,logD
+SMILES,y
 Nc1ccn([C@@H]2O[C@H](CO)[C@@H](O)C2(F)F)c(=O)n1,-1.5
 O=c1[nH]c(S)nc2[nH]cnc12,-1.48
 CN(C)c1cccc2c(S(=O)(=O)N(C)CC(=O)O)cccc12,-1.45

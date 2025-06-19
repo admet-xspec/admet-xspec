@@ -26,7 +26,7 @@ predictor = @predictor/gin.singleton()
 #   If optimize_hyperparameters is set to True, the training script will first optimize the values of
 #   hyperparameters using random search - CV strategy
 
-    SvmRegressor.optimization_iterations = 200    # maximum times the script is allowed to draw and
+    SvmRegressor.optimization_iterations = 50    # maximum times the script is allowed to draw and
                                                         # evaluate a new set of hyperparameter values
 
     SvmRegressor.n_jobs = 20                      # number of CPUs to use

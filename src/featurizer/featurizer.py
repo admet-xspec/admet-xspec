@@ -57,12 +57,13 @@ class EcfpFeaturizer(FeaturizerBase):
         self.__dict__.update(state)
         self.generator = GetMorganGenerator(radius=self.radius, fpSize=self.n_bits)
 
+
 from rdkit.Chem import Descriptors
 from sklearn.preprocessing import StandardScaler
 
+
 @gin.configurable
 class RdkitFeaturizer(FeaturizerBase):
-
     def __init__(self):
         super(RdkitFeaturizer, self).__init__()
         # Initialize a StandardScaler to normalize the descriptors
@@ -97,9 +98,9 @@ class RdkitFeaturizer(FeaturizerBase):
             desc_dict[name] = value
         return desc_dict
 
+
 @gin.configurable
 class RdkitEcfpFeaturizer(FeaturizerBase):
-
     def __init__(self, radius: int = 2, n_bits: int = 2048, count: bool = False):
         super(RdkitEcfpFeaturizer, self).__init__()
         self.ecfp_featurizer = EcfpFeaturizer(radius=radius, n_bits=n_bits, count=count)

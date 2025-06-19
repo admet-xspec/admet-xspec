@@ -8,7 +8,7 @@ from src.featurizer.featurizer import (
     FeaturizerBase,
     EcfpFeaturizer,
     RdkitFeaturizer,
-    RdkitEcfpFeaturizer
+    RdkitEcfpFeaturizer,
 )
 from sklearn.model_selection import train_test_split
 import time
@@ -24,7 +24,7 @@ def train(
     test_size: float,
     model_name: str,
     out_dir: str,
-    strafity_test: bool = False
+    strafity_test: bool = False,
 ):
     time_start = time.time()
 
