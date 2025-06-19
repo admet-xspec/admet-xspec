@@ -1,0 +1,13 @@
+#==========================================================================================================#
+#   PREDICT GENERAL CONFIG
+
+#   Provide the name of the task
+    predict.task_name = 'BBBP'
+
+#   Provide a path to the pickled model
+    predict.model_path = 'models'
+
+#   Provide path to the data
+    predict.data_path = 'results'
+
+#==========================================================================================================#

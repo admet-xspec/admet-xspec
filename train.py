@@ -102,7 +102,7 @@ def train(
 if __name__ == "__main__":
     import argparse
     import gin
-    import os
+    import pathlib
 
     parser = argparse.ArgumentParser()
     parser.add_argument(
@@ -131,14 +131,14 @@ if __name__ == "__main__":
     out_dir = f"{models_dir}/{model_name}"
 
     # Create the directory for all results if it doesn't exist
-    if not os.path.isdir(models_dir):
-        os.mkdir(models_dir)
+    if not pathlib.Path(models_dir).exists():
+        pathlib.Path(models_dir).mkdir(parents=True, exist_ok=True)
 
     # If the output directory already exists, add a timestamp to the name
-    if os.path.isdir(out_dir):
+    if pathlib.Path(out_dir).exists():
         out_dir = out_dir + f'_{time.strftime("%Y%m%d-%H%M%S")}'
     # Create the output directory for the model
-    os.mkdir(out_dir)
+    pathlib.Path(out_dir).mkdir(parents=True, exist_ok=True)
 
     # Configure logger
     logging.basicConfig(

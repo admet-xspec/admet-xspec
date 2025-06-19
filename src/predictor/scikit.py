@@ -170,6 +170,10 @@ class RfRegressor(ScikitPredictor):
     def _init_model(self):
         return sklearn.ensemble.RandomForestRegressor()
 
+    @property
+    def task_type(self) -> str:
+        return "regressor"
+
 
 @gin.configurable()
 class RfClassifier(ScikitPredictor):
@@ -197,6 +201,10 @@ class RfClassifier(ScikitPredictor):
 
     def _init_model(self):
         return sklearn.ensemble.RandomForestClassifier()
+
+    @property
+    def task_type(self) -> str:
+        return "classifier"
 
 
 @gin.configurable()
@@ -226,6 +234,10 @@ class SvmRegressor(ScikitPredictor):
     def _init_model(self):
         return sklearn.svm.SVR()
 
+    @property
+    def task_type(self) -> str:
+        return "regressor"
+
 
 @gin.configurable()
 class SvmClassifier(ScikitPredictor):
@@ -253,3 +265,7 @@ class SvmClassifier(ScikitPredictor):
 
     def _init_model(self):
         return sklearn.svm.SVC(probability=True)
+
+    @property
+    def task_type(self) -> str:
+        return "classifier"

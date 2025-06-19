@@ -11,6 +11,12 @@ class PredictorBase(abc.ABC):
         self.model = self._init_model()
         self.evaluation_metrics = []  # list of metrics to be used for model evaluation
 
+    @property
+    @abc.abstractmethod
+    def task_type(self) -> str:
+        """Return the type of the model (e.g., 'classifier', 'regressor')."""
+        pass
+
     @abc.abstractmethod
     def _init_model(self):
         """Initialize the model."""
