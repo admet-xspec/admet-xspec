@@ -10,6 +10,7 @@ from src.utils import clean_smiles, get_nice_class_name
 
 SMILES_COLUMN = ["smiles", "molecule"]
 
+@gin.configurable
 def predict(data_path: str | None = None,
             model_path: str | None = None,
             task_name: str | None = None):
@@ -33,7 +34,8 @@ def predict(data_path: str | None = None,
         logging.warning(f"{len(smiles_list) - len(processed_smiles)} SMILES strings could not be prepared")
 
     # Load the model
-    model = pickle.load(model_path)
+    with open(model_path, "rb") as model_file:
+        model = pickle.load(model_file)
     logging.info(f"Loaded model {get_nice_class_name(model)} from {model_path}")
 
     # Make inferences
@@ -42,7 +44,7 @@ def predict(data_path: str | None = None,
 
     # Add predictions to the DataFrame
     if model.task_type == "classifier":
-        data[f"{task_name}_class"] = [int(pred) for pred in y_pred]
+        data[f"{task_name}_class"] = [0 if pred < 0.5 else 1 for pred in y_pred]
         data[f"{task_name}_class_probability"] = [float(pred) for pred in y_pred]
 
     elif model.task_type == "regressor":

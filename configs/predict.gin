@@ -2,12 +2,12 @@
 #   PREDICT GENERAL CONFIG
 
 #   Provide the name of the task
-    predict.task_name = 'BBBP'
+    predict.task_name = 'LogD'
 
 #   Provide a path to the pickled model
-    predict.model_path = 'models'
+    predict.model_path = 'models/SVC_RDKIT_ECFP_LOGD/model.pkl'
 
 #   Provide path to the data
-    predict.data_path = 'results'
+    predict.data_path = 'results/sirt_mixed/4I5I_2/4I5I_2_CNS_BBBP.csv'
 
 #==========================================================================================================#

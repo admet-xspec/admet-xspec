@@ -121,7 +121,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     # Load the gin configuration
-    if not os.path.isfile(args.cfg):
+    if not pathlib.Path(args.cfg).exists():
         raise FileNotFoundError(f"Config file {args.cfg} not found.")
     gin.parse_config_file(args.cfg)
 
