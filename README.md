@@ -16,29 +16,27 @@ you to read and try to understand this short config file:
 ### config.gin
 
 ```
-#   TRAINING SCRIPT GENERAL CONFIG FILE
-
-#   **Add paths to the .gin config files of a featurizer and a predictor** (classifier or regressor)
-    include 'configs/featurizers/ecfp.gin'
-    include 'configs/classifiers/svm.gin'
-
-#==========================================================================================================#
-#   Do not modify this short section
+#   Initializing predictor and featurizer - do not modify
     train.featurizer = @featurizer/gin.singleton()
     train.predictor = @predictor/gin.singleton()
 #==========================================================================================================#
+#   TRAINING SCRIPT GENERAL CONFIG
 
-#   **Provide path to the dataset**
-    train.data_path = 'data/permeability/bbbp_pampa.csv'
-    train.test_size = 0.2
-    train.strafity_test=True
+#   Provide a name for the model
+    NAME = 'BBBP_SVM'
 
-#   **Provide a name for the model**
-    NAME = 'MODEL'
-
-#   Name of the directory in which every trained model will get its own subdirectory
-#   to store output files, metrics and trained weights in. Default: 'models'.
+#   Directory in which models are saved
     MODELS_DIR = 'models'
+
+#   Provide paths to the .gin config files of a featurizer and a predictor (classifier or regressor)
+    include 'configs/featurizers/ecfp.gin'
+    include 'configs/classifiers/svm.gin'
+
+#   Provide path to the dataset
+    train.data_path = 'data/permeability/bbbp_pampa.csv'
+
+    train.test_size = 0.2
+    train.strafity_test = True
 ```
 
 ### Workflow
@@ -47,7 +45,7 @@ Now, let's discuss the general strategy. Each of the classifiers, regressors and
 and has their own .gin config file somewhere in different `configs` subdirectories. The `configs/config.gin` file is constructed in
 such that it only takes care of model-agnostic parameters and settings, as well as gathers (imports) other .gin files needed for 
 configuration of different machine leraning models and data preparation protocols. All the model hyperparameters, as well as settings 
-that influence the training process of only one specific model or a family of models are included in `configs/predictr`
+that influence the training process of only one specific model or a family of models are included in `configs/predictor`
 subdirectory.
 
 **Example:** 
@@ -81,68 +79,71 @@ the final evaluation of our trained model. Apart from that, passing the name of 
 experiment will only return the model which performed best according to our chosen`roc_auc_score` criterion.
 
 ```
-    predictor/gin.singleton.constructor = @SvmClassifier
-    #==========================================================================================================#
-    #   Supported metrics are: "mean_squared_error", "r2_score", "roc_auc_score", "accuracy_score",
-    #                          "f1_score", "precision_score", "recall_score"
-    #==========================================================================================================#
-    #   Define all the metrics used in final evaluation of the model:                   # list of strings
-        ScikitPredictorBase.metrics = ['roc_auc_score', 'accuracy_score', 'precision_score', 'recall_score']
-    
-    #   Define the primary metric, one to be optimized during hyperparameter search:    # string
-        ScikitPredictorBase.primary_metric = 'roc_auc_score'
-    #==========================================================================================================#
-    #   If the parameter below is set to false, the script will not execute hyperparameter optimization step.
-    #   Instead, the model will be trained using fixed hyperparameters provided in params dict.
-    
-        ScikitPredictorBase.optimize_hyperparameters = False
-    
-        ScikitPredictorBase.params = {
-            'C': 1,
-            'kernel': 'rbf',
-            'gamma': 'scale',
-            }
-    #==========================================================================================================#
-    #   If optimize_hyperparameters is set to True, the training script will first optimize the values of
-    #   hyperparameters using random search - CV strategy
-    
-        ScikitPredictorBase.optimization_iterations = 20    # maximum times the script is alowed to draw and
-                                                            # evaluate a new set of hyperparameter values
-    
-        ScikitPredictorBase.n_jobs = 8                      # number of CPUs to use
-        ScikitPredictorBase.n_folds = 5                     # number of cross-validation folds
-    
-    #   Dictionary of distributions to sample hyperparameter values from. To each of the models' hyperparameters
-    #   either a discreete list or a continous distribution may be assigned. Below is a brief demonstration on
-    #   how to configure continuous probability distributions for the hyperparameters.
-    
-    #   There are 2 continuous distributions you can use:
-    #       - `Uniform`
-    #       - `LogUniform`
-    #   And 2 discrete distributions:
-    #       - `UniformDiscrete`
-    #       - `LogUniformDiscrete`
-    #   The first two are used to sample continuous values, while the last two are used to sample discrete values. 
-    #   All of those are parametrized by their min and max values.
-    
-    #   If you wanted to provide a LogNormal distribution for the parameter C, remember to put it in
-    #   some scope (ex. @C/LogNormal, where C/ is the scope). That way, when setting C/LogUniform.min
-    #   and C/LogUniform.max distribution parameters later on, those will only change for our C hyperparam
-    #   distribution, and not for any other LogNormals used in this config. The @ is essential when passing
-    #   the distribution itself (which is a class) to the dictionary, but not needed while setting attributes.
-    
-        ScikitPredictorBase.params_distribution = {
-            'C': @C/LogUniform,
-            'gamma': ['scale', 'auto'],
-            'kernel': ['rbf']
-            }
-    
-    #   Parametrizing the distribution functions:
-    
-            C/LogUniform.min = 0.1
-            C/LogUniform.max = 1000
-    
-    #==========================================================================================================#
+predictor/gin.singleton.constructor = @SvmClassifier
+predictor = @predictor/gin.singleton()
+
+#==========================================================================================================#
+#   Define the target metric, one to be optimized during hyperparameter search.
+#   Supported metrics are: 'accuracy', 'roc_auc', 'f1', 'recision', 'recall'
+
+    SvmClassifier.target_metric = 'roc_auc'
+
+#   Provide a list of metrics to use during evaluation
+
+    SvmClassifier.evaluation_metrics = ['roc_auc', 'accuracy', 'f1', 'precision', 'recall']
+
+#==========================================================================================================#
+#   If the parameter below is set to false, the script will not execute hyperparameter optimization step.
+#   Instead, the model will be trained using fixed hyperparameters provided in params dict.
+
+    SvmClassifier.optimize_hyperparameters = True
+
+    SvmClassifier.params = {
+        'C': 3,
+        'kernel': 'rbf',
+        'gamma': 'scale',
+        }
+#==========================================================================================================#
+#   If optimize_hyperparameters is set to True, the training script will first optimize the values of
+#   hyperparameters using random search - CV strategy
+
+    SvmClassifier.optimization_iterations = 200         # maximum times the script is allowed to draw and
+                                                        # evaluate a new set of hyperparameter values
+
+    SvmClassifier.n_jobs = 8                      # number of CPUs to use
+    SvmClassifier.n_folds = 5                     # number of cross-validation folds
+
+#   Dictionary of distributions to sample hyperparameter values from. To each of the models' hyperparameters
+#   either a discrete list or a continuous distribution may be assigned. Below is a brief demonstration on
+#   how to configure probability distributions for the hyperparameters.
+
+#   There are four distributions you can use, all parametrized by min and max:
+#       * Uniform       (continuous)
+#       * LogUniform    (continuous)
+#       * QUniform      (discrete)
+#       * QLogUniform   (discrete)
+
+#   If you wanted to provide a LogUniform distribution for the parameter C, remember to put it in
+#   some scope (ex. @C/LogUniform, where C/ is the scope). That way, when setting C/LogUniform.min
+#   and C/LogUniform.max distribution parameters later on, those will only change for our C hyperparam
+#   distribution, and not for any other LogUniforms used in this config. The @ is essential when passing
+#   the distribution itself (which is a class) to the dictionary, but not needed while setting attributes.
+
+    SvmClassifier.params_distribution = {
+        'C': @C/LogUniform(),
+        'gamma': @gamma/LogUniform(),
+        'kernel': ['rbf']
+        }
+
+#   Parametrizing the distribution functions:
+
+        C/LogUniform.min = 0.1
+        C/LogUniform.max = 1000
+
+        gamma/LogUniform.min = 0.001
+        gamma/LogUniform.max = 1
+
+#==========================================================================================================#
 ```
 
 Some important parameters are:
@@ -158,7 +159,7 @@ If, however, we set `ScikitPredictorBase.optimize_hyperparameters = True`, the m
 `slearn.model_selection.RandomizedSearchCV` cross-validation randomized search strategy, and the best set of 
 hyperparameters will be used to re-train the final model on the whole training set. The user can modify parameters
 of this search with:
-more common
+
     ScikitPredictorBase.optimization_iterations = 20        # max no. sets of hyperparameter values to be drawn
     ScikitPredictorBase.n_jobs = 8                          # no. of CPUs to use
     ScikitPredictorBase.n_folds = 5                         # no. of folds to employ in cross-validation
@@ -170,7 +171,7 @@ model tuning. Again, the hyperparameters and their distributions are defined in 
 
     ScikitPredictorBase.params_distribution = {
                 'C': @C/LogUniform,
-                'gamma': ['scale', 'auto'],
+                'gamma': @gamma/LogUniform,
                 'kernel': ['rbf']
                 }
 
