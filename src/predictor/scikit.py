@@ -7,6 +7,7 @@ from src.featurizer import FeaturizerBase
 import sklearn
 import gin
 from typing import List, Tuple
+from sklearn.utils.validation import check_array
 
 
 class ScikitPredictor(PredictorBase):
@@ -126,16 +127,19 @@ class ScikitPredictor(PredictorBase):
     def predict(self, smiles_list: List[str]) -> List[float]:
         # Featurize the smiles
         X = self.featurizer.featurize(smiles_list)
-        # Replace np.inf and NaN values with 0.0
-        # Log the number of inf and NaN values
-        num_inf = np.sum(np.isinf(X))
-        num_nan = np.sum(np.isnan(X))
-        if num_inf > 0:
+        # Cast to numpy array
+        X = np.array(X, dtype=np.float32)
+        # Check for and log the number of data points with NaN or infinite features
+        if np.isnan(X).any() or np.isinf(X).any():
+            num_nan = np.sum(np.isnan(X))
+            num_inf = np.sum(np.isinf(X))
             logging.warning(
-                f"Number of data points with inf or Nan values: {num_inf}. "
-                "These will be imputed with zeros in the prediction."
+                f"Input data contains {num_nan} NaN values and {num_inf} infinite values. "
+                "These will be replaced with 0.0."
             )
-            X = np.nan_to_num(X, posinf=0.0, neginf=0.0, nan=0.0)
+            X = np.nan_to_num(X, nan=0.0, posinf=0.0, neginf=0.0)
+        # Ensure the input is a 2D array with finite values
+        X = check_array(X, ensure_all_finite=True, dtype=np.float32)
         if hasattr(self.model, "predict_proba"):
             # If the model has predict_proba method, return probabilities
             y_pred = self.model.predict_proba(X)
