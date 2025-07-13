@@ -126,16 +126,16 @@ class ScikitPredictor(PredictorBase):
     def predict(self, smiles_list: List[str]) -> List[float]:
         # Featurize the smiles
         X = self.featurizer.featurize(smiles_list)
-        # Replace non-float32 values with NaN
-        X = np.array(X, dtype=np.float32)
-        # Log number of data points containing NaN values
+        # Replace np.inf and NaN values with 0.0
+        # Log the number of inf and NaN values
+        num_inf = np.sum(np.isinf(X))
         num_nan = np.sum(np.isnan(X))
-        if num_nan > 0:
+        if num_inf > 0:
             logging.warning(
-                f"Number of data points with NaN values: {num_nan}. "
-                "These will be ignored in the prediction."
+                f"Number of data points with inf or Nan values: {num_inf}. "
+                "These will be imputed with zeros in the prediction."
             )
-            X = np.nan_to_num(X, nan=0.0)
+            X = np.nan_to_num(X, posinf=0.0, neginf=0.0, nan=0.0)
         if hasattr(self.model, "predict_proba"):
             # If the model has predict_proba method, return probabilities
             y_pred = self.model.predict_proba(X)
