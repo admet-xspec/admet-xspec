@@ -123,10 +123,21 @@ class ScikitPredictor(PredictorBase):
             f"{random_search.best_params_}"
         )
 
-    def predict(self, smiles_list: List[str]) -> Tuple[np.array, np.array]:
+    def predict(self, smiles_list: List[str]) -> List[float]:
         # Featurize the smiles
         X = self.featurizer.featurize(smiles_list)
+        # Replace non-float32 values with NaN
+        X = np.array(X, dtype=np.float32)
+        # Log number of data points containing NaN values
+        num_nan = np.sum(np.isnan(X))
+        if num_nan > 0:
+            logging.warning(
+                f"Number of data points with NaN values: {num_nan}. "
+                "These will be ignored in the prediction."
+            )
+            X = np.nan_to_num(X, nan=0.0)
         if hasattr(self.model, "predict_proba"):
+            # If the model has predict_proba method, return probabilities
             y_pred = self.model.predict_proba(X)
             y_pred = np.array([y[1] for y in y_pred])
         else:
