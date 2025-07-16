@@ -285,6 +285,7 @@ class SvmClassifier(ScikitPredictor):
     def task_type(self) -> str:
         return "classifier"
 
+
 class XGBoostRegressor(ScikitPredictor):
     def __init__(
         self,
@@ -310,11 +311,13 @@ class XGBoostRegressor(ScikitPredictor):
 
     def _init_model(self):
         import xgboost as xgb
+
         return xgb.XGBRegressor()
 
     @property
     def task_type(self) -> str:
         return "regressor"
+
 
 class XGBoostClassifier(ScikitPredictor):
     def __init__(
@@ -341,6 +344,7 @@ class XGBoostClassifier(ScikitPredictor):
 
     def _init_model(self):
         import xgboost as xgb
+
         return xgb.XGBClassifier()
 
     @property
