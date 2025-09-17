@@ -5,10 +5,11 @@ import subprocess
 
 
 class DeepChemStableWrapper:
-    def __init__(self):
-        self.dcs_path = pathlib.Path("external/DeepChemStable")
+    """Wrapper for DeepChemStable to predict chemical stability from SMILES strings."""
+    def __init__(self, dcs_path="external/DeepChemStable", conda_env="stable"):
+        self.dcs_path = pathlib.Path(dcs_path)
         self.dcs_figures = self.dcs_path / "figures"
-        self.dcs_conda_env = "stable"
+        self.dcs_conda_env = conda_env
         self.dcs_output_file = self.dcs_path / "results.csv"
         self._check_dcs_directory()
 
