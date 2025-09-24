@@ -1,0 +1,20 @@
+#   Initializing predictor and featurizer - do not modify
+    TrainingPipeline.featurizer = @featurizer/gin.singleton()
+    TrainingPipeline.predictor = @predictor/gin.singleton()
+#==========================================================================================================#
+#   TRAINING SCRIPT GENERAL CONFIG
+
+#   Provide a name for the model
+    TrainingPipeline.model_name = 'LAS'
+
+#   Directory to which the models are saved
+    TrainingPipeline.out_dir = 'models'
+
+#   Provide paths to the .gin config files of a data splitter, a featurizer and a predictor
+    include 'configs/data_splitters/random.gin'
+    include 'configs/featurizers/ecfp.gin'
+    include 'configs/classifiers/rf.gin'
+
+#   Provide path to the dataset
+#   (The dataset should be in .csv format and contain 'smiles' and 'y' columns)
+    TrainingPipeline.data_path = 'data/permeability/bbbp_pampa.csv'

@@ -1,7 +1,7 @@
 import pandas as pd
 from src.utils import clean_smiles, get_nice_class_name
 import logging
-from src.predictor.base import PredictorBase
+from src.predictor.predictor_base import PredictorBase
 from src.data.featurizer import (
     FeaturizerBase,
 )
@@ -22,6 +22,8 @@ class TrainingPipeline:
         featurizer: FeaturizerBase,
         model_name: str,
         out_dir: Path | str = "models",
+        test_size: float = 0.2,
+        stratify: bool = True,
     ):
 
         self.data_path = Path(data_path)
@@ -29,6 +31,8 @@ class TrainingPipeline:
         self.predictor = predictor
         self.model_name = model_name
         self.out_dir = out_dir
+        self.test_size = test_size
+        self.stratify = stratify
 
         # If the predictor has an inject_featurizer method, invoke it
         if hasattr(predictor, "inject_featurizer"):
@@ -117,7 +121,7 @@ class TrainingPipeline:
         self.predictor.train(X_train, y_train)
 
         # save the traned model
-        self.predictor.save(f"{self.out_dir}/model.pkl")
+        self.predictor.save()
 
     def evaluate(self):
         """

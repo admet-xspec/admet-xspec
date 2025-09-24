@@ -1,0 +1,6 @@
+RandomSplitter.test_size = 0.2
+RandomSplitter.random_state = 42
+RandomSplitter.stratify = True
+
+splitter/gin.singleton.constructor = @RandomSplitter
+splitter = @splitter/gin.singleton()

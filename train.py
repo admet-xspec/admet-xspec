@@ -13,7 +13,7 @@ if __name__ == "__main__":
         "-c",
         type=str,
         help="Path to the config file",
-        default="configs/classifier.gin",
+        default="configs/train.gin",
     )
     parser.add_argument(
         "--log-level",

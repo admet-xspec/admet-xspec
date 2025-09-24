@@ -4,6 +4,8 @@ from rdkit import Chem
 from rdkit.Chem.Scaffolds import MurckoScaffold
 import numpy as np
 import abc
+import gin
+import logging
 
 
 class DataSplitterBase(abc.ABC):
@@ -11,8 +13,10 @@ class DataSplitterBase(abc.ABC):
     Abstract base class for data splitters.
     """
 
-    def __init__(self):
-        pass
+    def __init__(self, test_size=0.2, random_state=42, stratify=True):
+        self.test_size = test_size
+        self.random_state = random_state
+        self.stratify = stratify
 
     @abc.abstractmethod
     def split(self, X: pd.Series, y: pd.Series):
@@ -27,7 +31,14 @@ class DataSplitterBase(abc.ABC):
         """
         return f"{self.__class__.__name__}_{hash(frozenset(self.__dict__.items()))}"
 
+    @staticmethod
+    def _get_number_of_classes(labels):
+        if not isinstance(labels, pd.Series):
+            labels = pd.Series(labels)
+        return len(labels.unique())
 
+
+@gin.configurable
 class RandomSplitter(DataSplitterBase):
     """
     Splits the dataset into training and testing sets using random sampling.
@@ -35,24 +46,35 @@ class RandomSplitter(DataSplitterBase):
     """
 
     def __init__(self, test_size=0.2, random_state=42, stratify=None):
-        super(RandomSplitter).__init__()
-        self.test_size = test_size
-        self.random_state = random_state
-        self.stratify = stratify
+        super(RandomSplitter).__init__(
+            test_size=test_size, random_state=random_state, stratify=stratify
+        )
 
     def split(
         self, X: pd.Series, y: pd.Series
     ) -> tuple[pd.Series, pd.Series, pd.Series, pd.Series]:
+
+        if self.stratify:
+            if self._get_number_of_classes(y) == 2:
+                labels_to_stratify = y
+            else:
+                logging.warning(
+                    """The data splitter was configured to perform a stratified split, but the labels
+                provided are not binary. The stratify=True argument is being ignored."""
+                )
+                labels_to_stratify = None
+
         X_train, X_test, y_train, y_test = train_test_split(
             X,
             y,
             test_size=self.test_size,
             random_state=self.random_state,
-            stratify=self.stratify,
+            stratify=labels_to_stratify,
         )
         return X_train, X_test, y_train, y_test
 
 
+@gin.configurable
 class ScaffoldSplitter(DataSplitterBase):
     # TODO: Verify this implementation!!!
     """
@@ -62,9 +84,9 @@ class ScaffoldSplitter(DataSplitterBase):
     """
 
     def __init__(self, test_size=0.2, random_state=42):
-        super(ScaffoldSplitter).__init__()
-        self.test_size = test_size
-        self.random_state = random_state
+        super(ScaffoldSplitter).__init__(
+            test_size=test_size, random_state=random_state, stratify=False
+        )
 
     def split(
         self, X: pd.Series, y: pd.Series
