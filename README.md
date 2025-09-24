@@ -168,7 +168,7 @@ for each scope. Scopes are denoted with `/`, so `@C/LogUniform` that we saw in p
 Now, If we were interested in creating a separate LogUniformDiscrete object for each of the three layer sizes, we can 
 approach it like this:
 
-    FFN.params_distribution = {in
+    FFN.params_distribution = {
                     'layer_1_size': @layer_1_size/LogUniform
                     'layer_2_size': @layer_2_size/LogUniform
                     'layer_3_size': @layer_3_size/LogUniform
