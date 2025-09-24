@@ -3,7 +3,7 @@ ADMET prediction module for GenProSyn
 
 ## Training
 
-Before working with this repository, please get a look at [gin-config docs](https://github.com/google/gin-config). 
+Before working with this repository, please take a look at [gin-config docs](https://github.com/google/gin-config). 
 All of the configuration in this project is done exclusively with this package.
 
 If you want to train your own predictive model, identify the `configs/train.gin` config file first.
