@@ -4,7 +4,7 @@ ADMET prediction module for GenProSyn
 ## Training
 
 Before working with this repository, please take a look at [gin-config docs](https://github.com/google/gin-config). 
-All of the configuration in this project is done exclusively with this package.
+All configuration in this repository is handled exclusively with gin-config.
 
 ### Workflow
 
