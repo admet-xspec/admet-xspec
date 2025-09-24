@@ -14,6 +14,7 @@ class ScikitPredictor(PredictorBase):
     """
     Common interface for scikit-learn-based regressors and classifiers.
     """
+
     def __init__(
         self,
         params: dict | None = None,
@@ -153,14 +154,16 @@ class ScikitPredictor(PredictorBase):
                     f"Model {type(model).__name__} does not accept hyperparameter {key}."
                 )
 
+
 class ScikitRegressor(ScikitPredictor):
     """
     A class to interface with scikit-learn-based regression models.
     """
+
     def __init__(self, *args, **kwargs):
         super(ScikitRegressor).__init__(*args, **kwargs)
         # evaluation metrics for regressor models
-        self.evaluation_metrics = ['mse', 'rmse', 'mae', 'r2']
+        self.evaluation_metrics = ["mse", "rmse", "mae", "r2"]
 
     def evaluate(self, smiles_list: List[str], target_list: List[float]) -> dict:
         preds = self.predict(smiles_list)
@@ -169,22 +172,24 @@ class ScikitRegressor(ScikitPredictor):
             metrics_dict[m] = getattr(self, m)(preds, target_list)
         return metrics_dict
 
+
 class ScikitBinaryClassifier(ScikitPredictor):
     """
     A class to interface with scikit-learn-based binary classification models.
     """
+
     def __init__(self, *args, **kwargs):
         super(ScikitBinaryClassifier).__init__(*args, **kwargs)
         self.class_threshold = 0.5
         # evaluation metrics for classifier models
-        self.evaluation_metrics = ['accuracy', 'roc_auc', 'f1', 'precision', 'recall']
+        self.evaluation_metrics = ["accuracy", "roc_auc", "f1", "precision", "recall"]
 
     def evaluate(self, smiles_list: List[str], target_list: List[float]) -> dict:
         preds = self.predict(smiles_list)
         binary_preds = self.classify(preds)
         metrics_dict = {}
         for m in self.evaluation_metrics:
-            if m == 'roc_auc':
+            if m == "roc_auc":
                 metrics_dict[m] = getattr(self, m)(preds, target_list)
             else:
                 metrics_dict[m] = getattr(self, m)(binary_preds, target_list)

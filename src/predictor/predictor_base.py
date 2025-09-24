@@ -4,11 +4,12 @@ import pathlib
 from sklearn import metrics
 import pickle
 
+
 class PredictorBase(abc.ABC):
     def __init__(self):
         self.model = self._init_model()
         self.working_dir = None  # working directory for training and inference
-        self.evaluation_metrics = [] # will be set by the child
+        self.evaluation_metrics = []  # will be set by the child
 
     @abc.abstractmethod
     def _init_model(self):
@@ -37,7 +38,7 @@ class PredictorBase(abc.ABC):
         """
         Pickle the model to working_dir/model.pkl
         """
-        path = self.working_dir / 'model.pkl'
+        path = self.working_dir / "model.pkl"
         pathlib.Path(path).parent.mkdir(parents=True, exist_ok=True)
         # Pickle the model
         with open(path, "wb") as f:
@@ -74,5 +75,5 @@ class PredictorBase(abc.ABC):
             "rmse": metrics.root_mean_squared_error,
         }
         if metric_name not in metrics_dict.keys():
-            raise ValueError(f'Unknown metric: {metric_name}.')
+            raise ValueError(f"Unknown metric: {metric_name}.")
         return metrics_dict[metric_name]

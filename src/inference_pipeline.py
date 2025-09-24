@@ -5,10 +5,16 @@ import pickle
 from src.utils import clean_smiles, get_nice_class_name
 from pathlib import Path
 
+
 @gin.configurable
 class InferencePipeline:
 
-    def __init__(self, model_path: Path | str, data_path: Path | str, task_name, ):
+    def __init__(
+        self,
+        model_path: Path | str,
+        data_path: Path | str,
+        task_name,
+    ):
 
         self.model = self._load_model(model_path)
         self.data_path = data_path

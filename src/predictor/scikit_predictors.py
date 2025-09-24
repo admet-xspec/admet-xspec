@@ -4,6 +4,7 @@ from typing import List
 from src.predictor.scikit_base import ScikitRegressor, ScikitBinaryClassifier
 import xgboost as xgb
 
+
 @gin.configurable()
 class RfRegressor(ScikitRegressor):
     def __init__(
@@ -115,9 +116,10 @@ class SvmClassifier(ScikitBinaryClassifier):
     def _init_model(self):
         return sklearn.svm.SVC(probability=True)
 
+
 @gin.configurable()
 class XGBoostRegressor(ScikitRegressor):
-    #TODO: What hyperparameters does this accept?
+    # TODO: What hyperparameters does this accept?
     def __init__(
         self,
         params: dict | None = None,
@@ -142,6 +144,7 @@ class XGBoostRegressor(ScikitRegressor):
 
     def _init_model(self):
         return xgb.XGBRegressor()
+
 
 @gin.configurable()
 class XGBoostClassifier(ScikitBinaryClassifier):

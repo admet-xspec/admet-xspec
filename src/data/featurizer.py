@@ -8,6 +8,7 @@ import gin
 from rdkit.Chem import Descriptors
 from sklearn.preprocessing import StandardScaler
 
+
 class FeaturizerBase(abc.ABC):
     def __init__(self):
         pass
@@ -57,6 +58,7 @@ class EcfpFeaturizer(FeaturizerBase):
     def __setstate__(self, state):
         self.__dict__.update(state)
         self.generator = GetMorganGenerator(radius=self.radius, fpSize=self.n_bits)
+
 
 @gin.configurable
 class PropertyFeaturizer(FeaturizerBase):
