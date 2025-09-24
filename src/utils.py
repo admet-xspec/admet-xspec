@@ -4,7 +4,6 @@ from rdkit.Chem.MolStandardize.rdMolStandardize import Uncharger
 from typing import List
 from rdkit import RDLogger
 import logging
-from sklearn import metrics
 
 # disable RDKit warnings
 RDLogger.DisableLog("rdApp.*")

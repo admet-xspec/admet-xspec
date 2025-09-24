@@ -1,2 +1,0 @@
-featurizer/gin.singleton.constructor = @RdkitFeaturizer
-featurizer = @featurizer/gin.singleton()

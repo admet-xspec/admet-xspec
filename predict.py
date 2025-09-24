@@ -1,80 +1,6 @@
-import pandas as pd
 import gin
 import logging
-import pickle
-import argparse
-from src.featurizer.featurizer import (
-    EcfpFeaturizer,
-    RdkitFeaturizer,
-    RdkitEcfpFeaturizer,
-)
-from src.predictor.base import PredictorBase
-from src.predictor.scikit import SvmClassifier, SvmRegressor, RfClassifier, RfRegressor
-from src.utils import clean_smiles, get_nice_class_name
-
-
-# those are the possible names for the SMILES column in the input CSV
-SMILES_COLUMN = ["smiles", "SMILES", "molecule"]
-
-
-@gin.configurable
-def predict(
-    data_path: str | None = None,
-    model_path: str | None = None,
-    task_name: str | None = None,
-    threshold: float = 0.5,
-):
-
-    data = pd.read_csv(data_path)
-    logging.info(f"Loaded data from {data_path}")
-
-    # Parse the SMILES column
-    smiles_list = []
-    for col in SMILES_COLUMN:
-        if col in data.columns:
-            smiles_list = data[col].tolist()
-            logging.info(f"Found {len(smiles_list)} SMILES strings in column '{col}'")
-            break
-    if not smiles_list:
-        raise ValueError(
-            "No valid SMILES column found in the input data. Expected one of: "
-            + ", ".join(SMILES_COLUMN)
-        )
-
-    # Clean the SMILES strings
-    processed_smiles = clean_smiles(smiles_list)
-    if len(processed_smiles) != len(smiles_list):
-        logging.warning(
-            f"{len(smiles_list) - len(processed_smiles)} SMILES were dropped in preparation."
-        )
-
-    # Load the model
-    with open(model_path, "rb") as model_file:
-        model = pickle.load(model_file)
-    logging.info(f"Loaded {get_nice_class_name(model)} model from {model_path}")
-
-    # Inference
-    y_pred = model.predict(smiles_list)
-    logging.info(f"Predicted {len(y_pred)} values for task '{task_name}'")
-
-    # Add predictions to the DataFrame
-    if model.task_type == "classifier":
-        data[f"{task_name}_class"] = [0 if pred < threshold else 1 for pred in y_pred]
-        data[f"{task_name}_class_probability"] = [float(pred) for pred in y_pred]
-
-    elif model.task_type == "regressor":
-        data[f"{task_name}_pred"] = y_pred
-
-    else:
-        raise ValueError(
-            f"Unknown task type: {model.task_type}. Expected 'classifier' or 'regressor'."
-        )
-
-    # Save the predictions to a new CSV file
-    output_path = data_path.replace(".csv", f"_{task_name}.csv")
-    data.to_csv(output_path, index=False)
-    logging.info(f"Predictions saved to {output_path}")
-
+from src.inference_pipeline import InferencePipeline
 
 if __name__ == "__main__":
     import argparse
@@ -114,5 +40,14 @@ if __name__ == "__main__":
         ],
     )
 
+    # Initialize the inference pipeline
+    pipeline = InferencePipeline()
+
     # Run the prediction
-    predict()
+    pipeline.predict()
+
+    # Dump operative config
+    gin_path = f"{out_dir}/operative_config.gin"
+    with open(gin_path, "w") as f:
+        f.write(gin.operative_config_str())
+    logging.info(f"Config saved to {gin_path}")

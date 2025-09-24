@@ -2,16 +2,6 @@ predictor/gin.singleton.constructor = @SvmRegressor
 predictor = @predictor/gin.singleton()
 
 #==========================================================================================================#
-#   Define the target metric, one to be optimized during hyperparameter search.
-#   Supported metrics are: 'neg_mean_absolute_error', 'neg_mean_squared_error', 'neg_root_mean_squared_error'
-
-    SvmRegressor.target_metric = 'neg_mean_squared_error'
-
-#   Provide a list of metrics to use during evaluation
-
-    SvmRegressor.evaluation_metrics = ['mae', 'mse', 'rmse', 'r2']
-
-#==========================================================================================================#
 #   If the parameter below is set to false, the script will not execute hyperparameter optimization step.
 #   Instead, the model will be trained using fixed hyperparameters provided in params dict.
 
@@ -22,6 +12,13 @@ predictor = @predictor/gin.singleton()
         'kernel': 'rbf',
         'gamma': 'scale',
         }
+
+#==========================================================================================================#
+#   Define the target metric, one to be optimized during hyperparameter search.
+#   Supported metrics are: 'neg_mean_absolute_error', 'neg_mean_squared_error', 'neg_root_mean_squared_error'
+
+    SvmRegressor.target_metric = 'neg_mean_squared_error'
+
 #==========================================================================================================#
 #   If optimize_hyperparameters is set to True, the training script will first optimize the values of
 #   hyperparameters using random search - CV strategy

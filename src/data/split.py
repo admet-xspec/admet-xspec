@@ -1,3 +1,4 @@
+import pandas as pd
 from sklearn.model_selection import train_test_split
 from rdkit import Chem
 from rdkit.Chem.Scaffolds import MurckoScaffold
@@ -14,7 +15,7 @@ class DataSplitterBase(abc.ABC):
         pass
 
     @abc.abstractmethod
-    def split(self, X, y):
+    def split(self, X: pd.Series, y: pd.Series):
         """
         Split the dataset into training and testing sets.
         """
@@ -39,14 +40,17 @@ class RandomSplitter(DataSplitterBase):
         self.random_state = random_state
         self.stratify = stratify
 
-    def split(self, X, y):
-        return train_test_split(
+    def split(
+        self, X: pd.Series, y: pd.Series
+    ) -> tuple[pd.Series, pd.Series, pd.Series, pd.Series]:
+        X_train, X_test, y_train, y_test = train_test_split(
             X,
             y,
             test_size=self.test_size,
             random_state=self.random_state,
-            stratify=y if self.stratify else None,
+            stratify=self.stratify,
         )
+        return X_train, X_test, y_train, y_test
 
 
 class ScaffoldSplitter(DataSplitterBase):
@@ -62,7 +66,9 @@ class ScaffoldSplitter(DataSplitterBase):
         self.test_size = test_size
         self.random_state = random_state
 
-    def split(self, X, y):
+    def split(
+        self, X: pd.Series, y: pd.Series
+    ) -> tuple[pd.Series, pd.Series, pd.Series, pd.Series]:
         scaffolds = {}
         for i, smi in enumerate(X):
             mol = Chem.MolFromSmiles(smi)
@@ -84,9 +90,6 @@ class ScaffoldSplitter(DataSplitterBase):
             else:
                 train_indices.extend(scaffold_set)
 
-        return (
-            [X[i] for i in train_indices],
-            [X[i] for i in test_indices],
-            [y[i] for i in train_indices],
-            [y[i] for i in test_indices],
-        )
+        X_train, X_test = X.iloc[train_indices], X.iloc[test_indices]
+        y_train, y_test = y.iloc[train_indices], y.iloc[test_indices]
+        return X_train, X_test, y_train, y_test

@@ -1,103 +1,6 @@
-import pandas as pd
-from src.utils import clean_smiles, get_nice_class_name
 import logging
-from src.predictor.chemprop import ChempropBinaryClassifier, ChempropRegressor
-from src.predictor.scikit import SvmClassifier, SvmRegressor, RfClassifier, RfRegressor
-from src.predictor.base import PredictorBase
-from src.featurizer.featurizer import (
-    FeaturizerBase,
-    EcfpFeaturizer,
-    RdkitFeaturizer,
-    RdkitEcfpFeaturizer,
-)
-from sklearn.model_selection import train_test_split
 import time
-import json
-import gin
-
-
-@gin.configurable()
-def train(
-    data_path: str,
-    predictor: PredictorBase,
-    featurizer: FeaturizerBase | None,
-    test_size: float,
-    model_name: str,
-    out_dir: str,
-    strafity_test: bool = False,
-):
-    time_start = time.time()
-
-    # Load data
-    df = pd.read_csv(data_path)
-
-    # Try to sanitize the data
-    pre_cleaning_length = len(df)
-    df.columns = df.columns.str.lower()
-    df["smiles"] = clean_smiles(df["smiles"])
-    df = df.dropna(subset=["smiles"]).reset_index(drop=True)
-    new_length = len(df)
-    if pre_cleaning_length != new_length:
-        logging.info(f"Dropped {pre_cleaning_length - new_length} invalid SMILES")
-    logging.info(f"Dataset size: {new_length}")
-    logging.info(f"Predictor: {get_nice_class_name(predictor.model)}")
-
-    # Perform a train-test split
-    X, y = df["smiles"], df["y"]
-    X_train, X_test, y_train, y_test = train_test_split(
-        X,
-        y,
-        test_size=test_size,
-        random_state=42,
-        stratify=y if strafity_test else None,
-    )
-
-    # set the working directory
-    predictor.set_working_dir(f"{out_dir}/{model_name}")
-
-    if hasattr(predictor, "inject_featurizer"):
-        # If the predictor has an inject_featurizer method, use it
-        predictor.inject_featurizer(featurizer)
-    else:
-        # ingore the featurizer
-        logging.info(
-            f"Model {get_nice_class_name(predictor)} uses internal featurizer - ignoring {get_nice_class_name(featurizer)}."
-        )
-
-    # train (either use hyperparameters provided in the predictor .gin config file directly, or
-    #        conduct hyperparameter optimization over distributions given in the same .gin config file)
-    predictor.train(X_train, y_train)
-
-    # save the model
-    predictor.save(f"{out_dir}/model.pkl")
-
-    # dump operative config
-    gin_path = f"{out_dir}/operative_config.gin"
-    with open(gin_path, "w") as f:
-        f.write(gin.operative_config_str())
-    logging.info(f"Config saved to {gin_path}")
-
-    # evaluate the model
-    metrics_dict = predictor.evaluate(X_test, y_test)
-    logging.info(f"Metrics: {metrics_dict}")
-
-    # save metrics
-    metrics_path = f"{out_dir}/metrics.json"
-    with open(metrics_path, "w") as f:
-        json.dump(
-            metrics_dict,
-            f,
-        )
-        logging.info(f"Metrics saved to {metrics_path}")
-
-    # log the time
-    time_elapsed = time.time() - time_start
-    logging.info(
-        f"Training completed in {round(time_elapsed, 2)} seconds."
-        if time_elapsed < 60
-        else f"Training completed in {round(time_elapsed / 60, 2)} minutes."
-    )
-
+from src.training_pipeline import TrainingPipeline
 
 if __name__ == "__main__":
     import argparse
@@ -120,6 +23,9 @@ if __name__ == "__main__":
     )
     args = parser.parse_args()
 
+    # Log the start time
+    time_start = time.time()
+
     # Load the gin configuration
     if not pathlib.Path(args.cfg).exists():
         raise FileNotFoundError(f"Config file {args.cfg} not found.")
@@ -137,6 +43,7 @@ if __name__ == "__main__":
     # If the output directory already exists, add a timestamp to the name
     if pathlib.Path(out_dir).exists():
         out_dir = out_dir + f'_{time.strftime("%Y%m%d-%H%M%S")}'
+
     # Create the output directory for the model
     pathlib.Path(out_dir).mkdir(parents=True, exist_ok=True)
 
@@ -149,5 +56,28 @@ if __name__ == "__main__":
         ],
     )
 
+    # Initialize the training pipeline
+    pipeline = TrainingPipeline()
+
+    # Split the data
+    pipeline.prepare_data()
+
     # Train the model
-    train(out_dir=out_dir, model_name=model_name)
+    pipeline.train()
+
+    # Evaluate the model
+    pipeline.evaluate()
+
+    # Log time
+    time_elapsed = time.time() - time_start
+    logging.info(
+        f"Training completed in {round(time_elapsed, 2)} seconds."
+        if time_elapsed < 60
+        else f"Training completed in {round(time_elapsed / 60, 2)} minutes."
+    )
+
+    # Dump operative config
+    gin_path = f"{out_dir}/operative_config.gin"
+    with open(gin_path, "w") as f:
+        f.write(gin.operative_config_str())
+    logging.info(f"Config saved to {gin_path}")

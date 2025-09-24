@@ -5,7 +5,8 @@ import pandas as pd
 from typing import List
 import numpy as np
 import gin
-
+from rdkit.Chem import Descriptors
+from sklearn.preprocessing import StandardScaler
 
 class FeaturizerBase(abc.ABC):
     def __init__(self):
@@ -57,15 +58,10 @@ class EcfpFeaturizer(FeaturizerBase):
         self.__dict__.update(state)
         self.generator = GetMorganGenerator(radius=self.radius, fpSize=self.n_bits)
 
-
-from rdkit.Chem import Descriptors
-from sklearn.preprocessing import StandardScaler
-
-
 @gin.configurable
-class RdkitFeaturizer(FeaturizerBase):
+class PropertyFeaturizer(FeaturizerBase):
     def __init__(self):
-        super(RdkitFeaturizer, self).__init__()
+        super(PropertyFeaturizer, self).__init__()
         # Initialize a StandardScaler to normalize the descriptors
         self.scaler = StandardScaler()
         self.scaler_fitted = False
@@ -100,16 +96,16 @@ class RdkitFeaturizer(FeaturizerBase):
 
 
 @gin.configurable
-class RdkitEcfpFeaturizer(FeaturizerBase):
+class PropertyEcfpFeaturizer(FeaturizerBase):
     def __init__(self, radius: int = 2, n_bits: int = 2048, count: bool = False):
-        super(RdkitEcfpFeaturizer, self).__init__()
+        super(PropertyEcfpFeaturizer, self).__init__()
         self.ecfp_featurizer = EcfpFeaturizer(radius=radius, n_bits=n_bits, count=count)
-        self.rdkit_featurizer = RdkitFeaturizer()
+        self.property_featurizer = PropertyFeaturizer()
 
     def featurize(self, smiles_list: List[str]) -> np.ndarray:
         ecfp_features = self.ecfp_featurizer.featurize(smiles_list)
-        rdkit_features = self.rdkit_featurizer.featurize(smiles_list)
+        property_features = self.property_featurizer.featurize(smiles_list)
 
         # Combine features
-        combined_features = np.hstack((ecfp_features, rdkit_features))
+        combined_features = np.hstack((ecfp_features, property_features))
         return combined_features

@@ -1,36 +1,31 @@
-predictor/gin.singleton.constructor = @RfClassifier
+predictor/gin.singleton.constructor = @XGBoostRegressor
 predictor = @predictor/gin.singleton()
 
 #==========================================================================================================#
 #   If the parameter below is set to false, the script will not execute hyperparameter optimization step.
 #   Instead, the model will be trained using fixed hyperparameters provided in params dict.
 
-    RfClassifier.optimize_hyperparameters = True
+    XGBoostRegressor.optimize_hyperparameters = True
 
-    RfClassifier.params = {
-        'n_estimators': 439,
-        'criterion': 'gini',
-        'max_depth': 21,
-        'min_samples_split': 3,
-        'min_samples_leaf': 1,
-        'max_features': 'sqrt'
+    XGBoostRegressor.params = {
+        'does_not_work': 'yet'
         }
 
 #==========================================================================================================#
 #   Define the target metric, one to be optimized during hyperparameter search.
 #   Supported metrics are: 'accuracy', 'roc_auc', 'f1', 'recision', 'recall'
 
-    RfClassifier.target_metric = 'roc_auc'
+    XGBoostRegressor.target_metric = 'roc_auc'
 
 #==========================================================================================================#
 #   If optimize_hyperparameters is set to True, the training script will first optimize the values of
 #   hyperparameters using random search - CV strategy
 
-    RfClassifier.optimization_iterations = 200    # maximum times the script is allowed to draw and
+    XGBoostRegressor.optimization_iterations = 200    # maximum times the script is allowed to draw and
                                                         # evaluate a new set of hyperparameter values
 
-    RfClassifier.n_jobs = 20                      # number of CPUs to use
-    RfClassifier.n_folds = 5                     # number of cross-validation folds
+    XGBoostRegressor.n_jobs = 20                      # number of CPUs to use
+    XGBoostRegressor.n_folds = 5                     # number of cross-validation folds
 
 #   Dictionary of distributions to sample hyperparameter values from. To each of the models' hyperparameters
 #   either a discrete list or a continuous distribution may be assigned. Below is a brief demonstration on
@@ -49,7 +44,7 @@ predictor = @predictor/gin.singleton()
 #   config. The @ is essential when passing the distribution itself (which is an instance of a class) to the
 #   params_distribution dict, but not when setting the distribution parameters.
 
-    RfClassifier.params_distribution = {
+    XGBoostRegressor.params_distribution = {
         'n_estimators': @n_estimators/QLogUniform(),
         'criterion': ['gini', 'entropy'],
         'max_depth': @max_depth/QUniform(),
