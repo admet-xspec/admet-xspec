@@ -12,7 +12,9 @@ from src.predictor.base import PredictorBase
 from src.predictor.scikit import SvmClassifier, SvmRegressor, RfClassifier, RfRegressor
 from src.utils import clean_smiles, get_nice_class_name
 
-SMILES_COLUMN = ["smiles", "molecule"]
+
+# those are the possible names for the SMILES column in the input CSV
+SMILES_COLUMN = ["smiles", "SMILES", "molecule"]
 
 
 @gin.configurable
@@ -20,6 +22,7 @@ def predict(
     data_path: str | None = None,
     model_path: str | None = None,
     task_name: str | None = None,
+    threshold: float = 0.5,
 ):
 
     data = pd.read_csv(data_path)
@@ -30,37 +33,42 @@ def predict(
     for col in SMILES_COLUMN:
         if col in data.columns:
             smiles_list = data[col].tolist()
+            logging.info(f"Found {len(smiles_list)} SMILES strings in column '{col}'")
             break
     if not smiles_list:
-        raise ValueError("No valid SMILES column found in the data.")
+        raise ValueError(
+            "No valid SMILES column found in the input data. Expected one of: "
+            + ", ".join(SMILES_COLUMN)
+        )
 
     # Clean the SMILES strings
     processed_smiles = clean_smiles(smiles_list)
-    logging.info(f"Cleaned {len(smiles_list)} SMILES strings")
     if len(processed_smiles) != len(smiles_list):
         logging.warning(
-            f"{len(smiles_list) - len(processed_smiles)} SMILES strings could not be prepared"
+            f"{len(smiles_list) - len(processed_smiles)} SMILES were dropped in preparation."
         )
 
     # Load the model
     with open(model_path, "rb") as model_file:
         model = pickle.load(model_file)
-    logging.info(f"Loaded model {get_nice_class_name(model)} from {model_path}")
+    logging.info(f"Loaded {get_nice_class_name(model)} model from {model_path}")
 
-    # Make inferences
+    # Inference
     y_pred = model.predict(smiles_list)
     logging.info(f"Predicted {len(y_pred)} values for task '{task_name}'")
 
     # Add predictions to the DataFrame
     if model.task_type == "classifier":
-        data[f"{task_name}_class"] = [0 if pred < 0.5 else 1 for pred in y_pred]
+        data[f"{task_name}_class"] = [0 if pred < threshold else 1 for pred in y_pred]
         data[f"{task_name}_class_probability"] = [float(pred) for pred in y_pred]
 
     elif model.task_type == "regressor":
         data[f"{task_name}_pred"] = y_pred
 
     else:
-        raise ValueError(f"Unknown task type: {model.task_type}")
+        raise ValueError(
+            f"Unknown task type: {model.task_type}. Expected 'classifier' or 'regressor'."
+        )
 
     # Save the predictions to a new CSV file
     output_path = data_path.replace(".csv", f"_{task_name}.csv")
