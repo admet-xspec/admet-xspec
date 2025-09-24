@@ -1,96 +1,50 @@
 # admet-prediction
 ADMET prediction module for GenProSyn
-  
-Author: Hubert Rybka
 
 ## Training
 
 Before working with this repository, please get a look at [gin-config docs](https://github.com/google/gin-config). 
 All of the configuration in this project is done exclusively with this package.
 
-If you want to train your own predictive model, identify the `configs/config.gin` file first.
-This is the main configuration file for the training script. Take a look below - It is an example of one such file. It includes
-settings and parameters used by the training script. The config file is well documented, and before we move on, I encourage
-you to read and try to understand this short config file:
-
-### config.gin
-
-```
-#   Initializing predictor and featurizer - do not modify
-    train.featurizer = @featurizer/gin.singleton()
-    train.predictor = @predictor/gin.singleton()
-#==========================================================================================================#
-#   TRAINING SCRIPT GENERAL CONFIG
-
-#   Provide a name for the model
-    NAME = 'BBBP_SVM'
-
-#   Directory in which models are saved
-    MODELS_DIR = 'models'
-
-#   Provide paths to the .gin config files of a featurizer and a predictor (classifier or regressor)
-    include 'configs/featurizers/ecfp.gin'
-    include 'configs/classifiers/svm.gin'
-
-#   Provide path to the dataset
-    train.data_path = 'data/permeability/bbbp_pampa.csv'
-
-    train.test_size = 0.2
-    train.strafity_test = True
-```
+If you want to train your own predictive model, identify the `configs/train.gin` config file first.
+This is the main configuration file for the training script.
 
 ### Workflow
 
 Now, let's discuss the general strategy. Each of the classifiers, regressors and featurizers is implemented as a class
-and has their own .gin config file somewhere in different `configs` subdirectories. The `configs/config.gin` file is constructed in
+and has their own .gin config file somewhere in different `configs` subdirectories. The `configs/train.gin` file is constructed in
 such that it only takes care of model-agnostic parameters and settings, as well as gathers (imports) other .gin files needed for 
 configuration of different machine leraning models and data preparation protocols. All the model hyperparameters, as well as settings 
-that influence the training process of only one specific model or a family of models are included in `configs/predictor`
-subdirectory.
+that influence the training process of only one specific model or a family of models are included in `configs/classifiers` and
+`configs/regressors` subdirectories.
 
 **Example:** 
-If we would want to train a simple svm-based classifier and use ECFP4 fingerprint featurizer for construction of the feature matix, we 
-should start by including the paths to the configs of both classes at the top of `configs/config.gin`.
+If we would want to train a simple svm-based classifier, perform a random train-test split and use ECFP4 fingerprint featurizer for 
+construction of the feature matix, we should start by including paths to the configs of the classes somewhere in `configs/train.gin`.
 
+    include 'configs/data_splitters/random.gin'
     include 'configs/featurizers/ecfp.gin'
     include 'configs/classifiers/svm.gin'
 
-Next, if we know our dataset well, we can take care of providing a path to the dataset in .csv format. The dataset should
-contain at least two columns: 'smiles', containing only SMILES strings, and 'y', containing true labels (target values).
+Next we can take care of providing a path to the dataset in .csv format. The data file should contain at least two columns: 'smiles', 
+containing only SMILES strings, and 'y', containing true labels (target values) as floats.
 
-    train.data_path = 'data/permeability/bbbp_pampa.csv'
-    train.test_size = 0.2
-    train.strafity_test=True
+    TrainingPipeline.data_path = 'data/permeability/bbbp_pampa.csv'
 
-All the saved states, metrics, logs and different output files will be saved in `MODEL_DIR/NAME` directory.
-We can choose the name under which our model will be saved by modifying the NAME macro.
+All the saved states, metrics, logs and different output files will be saved in `out_dir/model_name` directory.
+We can choose the name under which our model will be saved by modifying the `TrainingPipeline.model_name` parameter.
 
-    NAME = 'MODEL'
-    MODEL_DIR = 'models'
+    TrainingPipeline.out_dir = 'models'
+    TrainingPipeline.model_name = 'MyRandomForest'
 
 ## configs/predictors/svm.gin
 
-An example configuration file `svm.gin` of a predictor class (SvmClassifier) is presented below. It can be found in 
-`configs/classifiers` directory. All the options relevent to SvmClassifier class can be configured here..
-
-The structure of this config file prompts us to start by listing all the metrics we would like to include in
-the final evaluation of our trained model. Apart from that, passing the name of some single metric to 
-`ScikitPredictorBase.primary_metric`, for ex. `roc_auc_score`, ensures that the result of any hyperparameter tuning
-experiment will only return the model which performed best according to our chosen`roc_auc_score` criterion.
+An example configuration file `svm.gin` for a predictor class (SvmClassifier) is presented below. It can be found in 
+`configs/classifiers` directory. All the options relevent to SvmClassifier class are to be configured here.
 
 ```
 predictor/gin.singleton.constructor = @SvmClassifier
 predictor = @predictor/gin.singleton()
-
-#==========================================================================================================#
-#   Define the target metric, one to be optimized during hyperparameter search.
-#   Supported metrics are: 'accuracy', 'roc_auc', 'f1', 'recision', 'recall'
-
-    SvmClassifier.target_metric = 'roc_auc'
-
-#   Provide a list of metrics to use during evaluation
-
-    SvmClassifier.evaluation_metrics = ['roc_auc', 'accuracy', 'f1', 'precision', 'recall']
 
 #==========================================================================================================#
 #   If the parameter below is set to false, the script will not execute hyperparameter optimization step.
@@ -103,14 +57,21 @@ predictor = @predictor/gin.singleton()
         'kernel': 'rbf',
         'gamma': 'scale',
         }
+
+#==========================================================================================================#
+#   Define the target metric, one to be optimized during hyperparameter search.
+#   Supported metrics are: 'accuracy', 'roc_auc', 'f1', 'recision', 'recall'
+
+    SvmClassifier.target_metric = 'roc_auc'
+
 #==========================================================================================================#
 #   If optimize_hyperparameters is set to True, the training script will first optimize the values of
 #   hyperparameters using random search - CV strategy
 
-    SvmClassifier.optimization_iterations = 200         # maximum times the script is allowed to draw and
+    SvmClassifier.optimization_iterations = 50    # maximum times the script is allowed to draw and
                                                         # evaluate a new set of hyperparameter values
 
-    SvmClassifier.n_jobs = 8                      # number of CPUs to use
+    SvmClassifier.n_jobs = 20                      # number of CPUs to use
     SvmClassifier.n_folds = 5                     # number of cross-validation folds
 
 #   Dictionary of distributions to sample hyperparameter values from. To each of the models' hyperparameters
@@ -148,37 +109,38 @@ predictor = @predictor/gin.singleton()
 
 Some important parameters are:
 
-    ScikitPredictorBase.optimize_hyperparameters = False
+    SvmClassifier.optimize_hyperparameters = False
 
 If this parameter is set to False, the model will be trained with a set of fixed hyperparameters, which can
-configured in a dictionary below.
+configured in `params` dictionary.
 
-    ScikitPredictorBase.params = {'C': 1, 'kernel': 'rbf', 'gamma': 'scale'}
+    SvmClassifier.params = {'C': 1, 'kernel': 'rbf', 'gamma': 'scale'}
 
-If, however, we set `ScikitPredictorBase.optimize_hyperparameters = True`, the model will first be tuned using
-`slearn.model_selection.RandomizedSearchCV` cross-validation randomized search strategy, and the best set of 
-hyperparameters will be used to re-train the final model on the whole training set. The user can modify parameters
-of this search with:
+If, however, we set `SvmClassifier.optimize_hyperparameters = True`, the model will first be tuned using
+k-fold cross-validation randomized search strategy, and the best set of hyperparameters will be used to re-train 
+the final model on the whole training set. The user can modify parameters of hyperparameter search with:
 
-    ScikitPredictorBase.optimization_iterations = 20        # max no. sets of hyperparameter values to be drawn
-    ScikitPredictorBase.n_jobs = 8                          # no. of CPUs to use
-    ScikitPredictorBase.n_folds = 5                         # no. of folds to employ in cross-validation
+    SvmClassifier.optimization_iterations = 20        # how many sets of hyperparameter values to be drawn
+    SvmClassifier.n_jobs = 8                          # no. of CPUs to use
+    SvmClassifier.n_folds = 5                         # no. of folds in cross-validation
 
 ### Randomized Hyperaparameter Tuning
 
 A somewhat more in-depth explanation should be given regarding the configuration of randomized search protocol in
 model tuning. Again, the hyperparameters and their distributions are defined in a dictionary, such as this:
 
-    ScikitPredictorBase.params_distribution = {
+    SvmClassifier.params_distribution = {
                 'C': @C/LogUniform,
                 'gamma': @gamma/LogUniform,
                 'kernel': ['rbf']
                 }
 
-- Passing a python list to one of the hyperparameter keys is equivalent to passing a discrete distribution to it.
-- If we wanted intead to assign a continuous distribution to one (or a few) of the hyperparameters, some basic understanding 
-of gin-config would be of great help. Currently, there are two continuous and two discrete distributions at our disposal. 
-Those are implemented as class wrappers for well-known `scipy.stat` functions and can be found in `src/gin_config/distributions.py'
+- Passing a python list to one of the hyperparameter keys is equivalent to passing a uniform discrete distribution to it.
+- If we intead wanted to assign a continuous non-uniform distribution to one (or a few) of the hyperparameters, some basic understanding 
+of gin-config is needed. Currently, there are two continuous and two discrete distributions at our disposal: `Uniform`, `LogUniform`, `QUniform`, `QLogUniform`,
+each parametrized by `min` and `max` values.
+
+The distributions are implemented as class wrappers for `scipy.stat` functions and can be found in `src/gin_config/distributions.py`.
 
 **Example:** Let's take a look on how we would defne a distribution of parameters to tune a feed-forward neural network.
 Imagine, that the param dict for this hypotetical model looks like this:
