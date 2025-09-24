@@ -12,7 +12,7 @@ If you want to train your own predictive model, identify the `configs/train.gin`
 This is the main configuration file for the training script.
 
 Now, let's discuss the general strategy. Each of the classifiers, regressors and featurizers is implemented as a class
-and has their own .gin config file somewhere in different `configs` subdirectories. The `configs/train.gin` file is constructed in
+and has their own .gin config file somewhere in the `configs/` subdirectories. The `configs/train.gin` file is constructed in
 such that it only takes care of model-agnostic parameters and settings, as well as gathers (imports) other .gin files needed for 
 configuration of different machine leraning models and data preparation protocols. All the model hyperparameters, as well as settings 
 that influence the training process of only one specific model or a family of models are included in `configs/classifiers` and
