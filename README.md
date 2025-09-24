@@ -18,7 +18,7 @@ configuration of different machine leraning models and data preparation protocol
 
 All the model hyperparameters, as well as settings that influence the training process of only one specific model or a family of models 
 are included in `configs/classifiers` and `configs/regressors` subdirectories. All the train-test splitting protocols and featurizers
-exist as .gin config files in `configs/data_splitters` and `configs/featurizers`.
+exist as .gin config files in `configs/data_splitters` and `configs/featurizers` subdirectories, respectively.
 
 **Example:** 
 If we would want to train a simple svm-based classifier, perform a random train-test split and use ECFP4 fingerprint featurizer for 
