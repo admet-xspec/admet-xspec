@@ -28,12 +28,12 @@ construction of the feature matix, we should start by including paths to the con
     include 'configs/featurizers/ecfp.gin'
     include 'configs/classifiers/svm.gin'
 
-Next we can take care of providing a path to the dataset in .csv format. The data file should contain at least two columns: 'smiles', 
+Next we provide a path to the dataset in .csv format. The data file should contain at least two columns: 'smiles', 
 containing only SMILES strings, and 'y', containing true labels (target values) as floats.
 
     TrainingPipeline.data_path = 'data/permeability/bbbp_pampa.csv'
 
-All the saved states, metrics, logs and different output files will be saved in `out_dir/model_name` directory.
+All the saved model states, metrics, logs and different output files will be saved in `out_dir/model_name` directory.
 We can choose the name under which our model will be saved by modifying the `TrainingPipeline.model_name` parameter.
 
     TrainingPipeline.out_dir = 'models'
@@ -194,4 +194,3 @@ and parametrize it in the same way. Learning rate is also a float, so we can use
     dropout_rate/Uniform.max = 0.5
     learning_rate/Uniform.min = 0.0005
     learning_rate/Uniform.max = 0.02
-
