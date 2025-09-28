@@ -1,0 +1,2864 @@
+smarts,label
+"[F,Cl,Br][CX3](=[OX1])[#1,*&!$([OH1])&!$([SH1])]",Skin sensitization
+"[CX3](=[OX1])[$([NX2]=[NX2+]=[NX1-]),$(N=[NX2+]=N),$([NX2-]-[NX2+]#[NX1])]",Skin sensitization
+"[#6][Sv6X4](=[OX1])(=[OX1])[Cl,Br]",Skin sensitization
+"[Sv6X4](=[OX1])(=[OX1])[$([NX2]=[NX2+]=[NX1-]),$([NX2]=[NX2+]=N)]",Skin sensitization
+[CX3](=[OX1])[OX2][CX3](=[OX1]),Skin sensitization
+[CX3](=[OX1])[OX2][OX2][CX3](=[OX1]),Skin sensitization
+[cR1]1([OX2][CX3](=[OX1])[#6])[cR1][cR1][cR1][cR1][cR1]1,Skin sensitization
+[NX2]=[CX2]=[OX1],Skin sensitization
+[NX3]1[CX4][CX4][CX3]1(=[OX1]),Skin sensitization
+[CX3](=[SX1])[SX2],Skin sensitization
+"[CX4][Cl,Br,I]",Skin sensitization
+"[$([#6][OX2][Sv6X4](=[OX1])(=[OX1])[OX2][#6]),$([#6][Sv6X4](=[OX1])(=[OX1])[OX2][#6])]",Skin sensitization
+"[CX3](=[OX1])[NX3]([CX4]([Cl,Br,I])([Cl,Br,I])[Cl,Br,I])[CX3](=[OX1])",Skin sensitization
+"[$([#6X3]1=,:[#6X3]-,:[#6X3](=[OX1])-,:[#6X3]=,:[#6X3]-,:[#6X3]1(=[OX1])),$([#6X3]1(=[OX1])-,:[#6X3](=[OX1])-,:[#6X3]=,:[#6X3]-,:[#6X3]=,:[#6X3]1)]",Skin sensitization
+"[#1,CX4][OX2][cR1]1[cR1][cR1][cR1]([OX2][#1,CX4])[cR1][cR1]1",Skin sensitization
+"[#1,CX4][OX2][cR1]1[cR1]([OX2][#1,CX4])[cR1][cR1][cR1][cR1]1",Skin sensitization
+"[$([CX3]([#6,$([NX3]([CX3]=[OX1])([#6])[#6]),$([OX2]([CX3]=[OX1])[#6]);!$([OH][CX3]=[OX1]);!$([O-][CX3]=[OX1])])(=[OX1])[CX3]([#6,#1])=[CX3]([!a])([!a])),$([CX3H1](=[OX1])[CX3]([#6,#1])=[CX3])]",Skin sensitization
+"[$([CX4]([OX2])([OX2])([#6,#7,#8])[CX3]([#6,#1])=[CX3]([!a])([!a])),$([CX4H1]([OX2])([OX2])[CX3]([#6,#1])=[CX3])]",Skin sensitization
+"[CX4,a!r0][CX3](=[OX1])[CH2][CX3](=[OX1])[CX4,a!r0]",Skin sensitization
+"[CX3]([H])(=[OX1])[#1,CX4,a!r0]",Skin sensitization
+"[CX4,a!r0][CX3](=[OX1])[CX4,a!r0]",Skin sensitization
+"[$([NX3][CH2][NX3]),$([NX3][CH2][OX2]),$([CX4]([F,Cl,Br,I])([$([NX3](=[OX1])=[OX1]),$([NX3+](=[OX1])[O-])])[CH2][OH1])]",Skin sensitization
+"[CX4]([OX2])([OX2])([CX4,a!r0])[CX4,a!r0]",Skin sensitization
+"[CX3]=[CX3]([#6,#1])[OX2]",Skin sensitization
+"[a!r0][$([NX3H2]),$([NX3H1][CX4,a!r0])]",Skin sensitization
+"[CX3](=[OX1])[NX3]([Cl,Br])[CX3](=[OX1])",Skin sensitization
+[Sv6X4](=[OX1])(=[OX1])[NX3H1]Cl,Skin sensitization
+"[CX4,a!r0][SX2][SX2][CX4,a!r0]",Skin sensitization
+"c1ccccc1[OX2][CX3](=[OX1])[OX2][CX4,a!r0]",Skin sensitization
+[CX4]1[CX4][OX2]1,Skin sensitization
+"[CX4,a!r0][CX3](=[OX1])[CX3](=[OX1])[#1,CX4,a!r0]",Skin sensitization
+"[$([SX2]1[CX3]([CX4,a!r0])=[CX3]([CX4,a!r0])[CX3](=[OX1])[NX3]1([CX4,a!r0])),$([sX2]1[cX3]([CX4,a!r0])[cX3]([CX4,a!r0])[cX3](=[OX1])[nX3]1([CX4,a!r0]))]",Skin sensitization
+"[CX4,a!r0][NX3H1][CX4][CX4][NX3H1][CX4,a!r0]",Skin sensitization
+"[NX4+]([CX4,a!r0])([CX4,a!r0])([CX4,a!r0])[CX4,a!r0]",Skin sensitization
+"[$(n1c([F,Cl])ncnc1),$(n1c([F,Cl])ccnc1),$(n1c([F,Cl])nccc1)]",Skin sensitization
+"[F,Cl,Br][CX3](=[OX1])[#1,*&!$([OH1])&!$([SH1])]",Skin sensitization
+"[CX3H1](=[OX1])[#1,#6]",Skin sensitization
+"[a!r0][Sv4X3](=[OX1])[$([OH]),$([O-])]",Skin sensitization
+"[$([CX3](=[OX1])[OX2][CX3](=[OX1])),$([CX3](=[OX1])[OX2][OX2][CX3](=[OX1]))]",Skin sensitization
+"[NX2]=[CX2]=[OX1,SX1]",Skin sensitization
+[NX3]1([#6])[CX4]([#6])[CX4]([#6])[CX3]1(=[OX1]),Skin sensitization
+"[NX3]1([#1,#6])[CX3](=[OX1])[CX3]([!R])=[CX3]([!R])[CX3]1(=[OX1])",Skin sensitization
+"[$(n1c([F,Cl,$([CX2]#[NX1])])nccc1),$(n1cnccc1([F,Cl,$([CX2]#[NX1])])),$(n1cncnc1([F,Cl,$([CX2]#[NX1])]))]",Skin sensitization
+[CX4][Sv6X4](=[OX1])(=[OX1])[OX2][CX4],Skin sensitization
+[CX4][OX2][Sv6X4](=[OX1])(=[OX1])[OX2][CX4],Skin sensitization
+[CX4]1([CX4])[OX2][CX4]1([CX4]),Skin sensitization
+"[Br,Cl,F,I][CX3](=[OX1])[#1,*&!$([OH1])&!$([SH1])]",Skin sensitization
+[CX3](=[OX1])[OX2][CX3](=[OX1]),Skin sensitization
+[NX3H1]1[CX4][CX4][CX3]1(=[OX1]),Skin sensitization
+[CX3](=[SX1])[SX2],Skin sensitization
+"[$([#1,#6;!$(C=C);!$(C#C)][CX3]([H])(=[OX1])),$([CX4;H1]([OX2])[OX2])]",Skin sensitization
+"[$([#6X3]1=,:[#6X3]-,:[#6X3](=[OX1])[#6X3]=,:[#6X3]-,:[#6X3]1(=[OX1])),$([#6X3]1(=[OX1])-,:[#6X3](=[OX1])-,:[#6X3]=,:[#6X3]-,:[#6X3]=,:[#6X3]1)]",Skin sensitization
+"[CX3]=[CX3][CX3](=[OX1])[$([OX2]([CX3]=[OX1])[!#1]),$([#1][CX3]=[OX1]),$([NX3H2]([CX3]=[OX1])),$([NX3]([CX3]=[OX1])),$([CX4][CX3]=[OX1])]",Skin sensitization
+[OH1]c1ccc([OH1])cc1,Skin sensitization
+[OH1]c1c([OH1])cccc1,Skin sensitization
+[OH1]c1cc([OH1])ccc1,Skin sensitization
+[OH1]c1ccc([OX2][CX4])cc1,Skin sensitization
+[OH1]c1cc([OX2][CX4])ccc1,Skin sensitization
+[OH1]c1c([OX2][CX4])cccc1,Skin sensitization
+"[CX3](=[OX1])[CX4]([#1,CX4])([#1,CX4])[CX3](=[OX1])",Skin sensitization
+[#16X2H1],Skin sensitization
+*[#16X2][#16X2]*,Skin sensitization
+[A][CX3](=[OX1])[OX2][OX2][CX3](=[OX1])[A],Skin sensitization
+[a!r0][CX3](=[OX1])[OX2][OX2][CX3](=[OX1])[a!r0],Skin sensitization
+[a!r0][CX3](=[OX1])[OX2][OX2][CX3](=[OX1])[A],Skin sensitization
+"[#6][CX3](=[OX1])[NX3]([F,Cl,Br,I])[#6]",Skin sensitization
+[#6][OX2][OX2][OH1],Skin sensitization
+[OH1]aa[OH1],Skin sensitization
+[OH1]aaaa[OH1],Skin sensitization
+"[$(c1c([OX2][CX4])c([OH1])ccc1),$(c1c([OX2][CX4])ccc([OH1])c1)]",Skin sensitization
+"[a!r0][$([NX3H2]),$([NX3H1][#6])]",Skin sensitization
+"[$([a!r0][NH1][CX3](=[OX1])),$(c1c([NX2]=[NX2][a!r0])ccc([$([NX3]([CX4])([CX4])),$([NX3H1][CX4]),$([NH2]),$([OH1])])c1)]",Skin sensitization
+"[CX4,a!r0][Sv6X4](=[OX1])(=[OX1])[F,Cl,Br,I]",Skin sensitization
+"c1c([Sv6X4](=[OX1])(=[OX1])[NX3H1][$([#1]),$([CX4]),$([a!r0])])ccc([NX3H2])c1",Skin sensitization
+[NX2]=[CX2]=[OX1],Skin sensitization
+[NX2]=[CX2]=[SX1],Skin sensitization
+[SX2][CX3](=[SX1])[NX3],Skin sensitization
+"[#6&!$([CX3]=[OX1,SX1,NX2])][NX3H1][NX3H2,$([NX3H1][#6&!$([CX3]=[OX1,SX1,NX2])])]",Skin sensitization
+[a!r0][NX3H2],"Genotoxic carcinogenicity, mutagenicity"
+"[NX3H1,SX2,OX2]1[CX4][CX4]1","Genotoxic carcinogenicity, mutagenicity"
+[NX2]=[OX1],"Genotoxic carcinogenicity, mutagenicity"
+"[$([NX3H2]-[#7]),$([NX3H2]-[#8]),$([OX2H1]-[#7]),$([OX2H1]-[#8])]","Genotoxic carcinogenicity, mutagenicity"
+[NX2]=[NX2],"Genotoxic carcinogenicity, mutagenicity"
+"[CX4][Cl,Br,I]","Genotoxic carcinogenicity, mutagenicity"
+"[$([aR3]),$([$([aR2]([aR])([aR])([aR]))].[$([aR2]([aR])([aR])([aR]))].[$([aR2]([aR])([aR])([aR]))].[$([aR2]([aR])([aR])([aR]))])]","Genotoxic carcinogenicity, mutagenicity"
+[a!r0][NX2]=[OX1],"Genotoxic carcinogenicity, mutagenicity"
+[OX1]=[NX2][OX2][CX4],"Genotoxic carcinogenicity, mutagenicity"
+"[OX1]=[NX2][NX3]([#6,#1])[#6,#1]","Genotoxic carcinogenicity, mutagenicity"
+[CX4]1[OX2][CX4]1,"Genotoxic carcinogenicity, mutagenicity"
+[CX4]1[NX3H1][CX4]1,"Genotoxic carcinogenicity, mutagenicity"
+"[$([NX2]=[NX2+]=[NX1-]),$(N=[NX2+]=N),$([NX2-]-[NX2+]#[NX1])]","Genotoxic carcinogenicity, mutagenicity"
+"[$([#6]=[NX2+]=N),$([#6]=[NX2]=[NX1]),$([#6]=[NX2+]=[NX1-]),$([#6]-[NX2+]#[NX1]),$([#6-]-[NX2+]#[NX1])]","Genotoxic carcinogenicity, mutagenicity"
+[NX3!R][NX2!R]=[NX2!R],"Genotoxic carcinogenicity, mutagenicity"
+[a!r0][NX3H1][OH1],"Genotoxic carcinogenicity, mutagenicity"
+"[Cl,Br,I][$([CX4]);!$([CX3](=[OX1,SX1,NX2]));!$([CH2][CH2][SX2,NX3])]","Genotoxic carcinogenicity, mutagenicity"
+"[Cl,Br,I][CX3](=[OX1])[#1,*&!$([OH1])&!$([SH1])]","Genotoxic carcinogenicity, mutagenicity"
+"[Cl,Br,I][CH2][CH2][SX2,NX3]","Genotoxic carcinogenicity, mutagenicity"
+[cR1H1]1[cR1H1][cR1][cR1][cR2]2[cR2]1[cR2]3[cR2]([cR1][cR1]2)[cR1][cR1][cR1H1][cR1H1]3,"Genotoxic carcinogenicity, mutagenicity"
+[cR1]1[cR1][cR1][cR1H1][cR2]2[cR2]1[cR2]3c([cR1H1][cR1H1]2)[cR1H1][cR1][cR1][cR1]3,"Genotoxic carcinogenicity, mutagenicity"
+[CX4][Sv6X4](=[OX1])(=[OX1])[OX2],"Genotoxic carcinogenicity, mutagenicity"
+[CX3]=[CX3][CX3;H1]=[OX1],"Genotoxic carcinogenicity, mutagenicity"
+"[NX3][$([NX3](=[OX1])=[OX1]),$([NX3+](=[OX1][O-]))]","Genotoxic carcinogenicity, mutagenicity"
+"[$([a!r0][NX2+]#[NX1]),$([a!r0][NX2]#[NX1])]","Genotoxic carcinogenicity, mutagenicity"
+[OX2]1[CX4][CX4][CX3]1(=[OX1]),"Genotoxic carcinogenicity, mutagenicity"
+[CX4][OX2][CX3H1]=[CX3H1],"Genotoxic carcinogenicity, mutagenicity"
+[a!r0][NX3H1]-[NX3H1][CX4],"Genotoxic carcinogenicity, mutagenicity"
+[a!r0][NX3;H1][CH3],"Genotoxic carcinogenicity, mutagenicity"
+[a!r0][NH][OX2][CX3](=[OX1]),"Genotoxic carcinogenicity, mutagenicity"
+[*R1]1[*R2]2=[*R1][*R1]=[*R1][*R1]=[*R2]2[*R1][*R2]3=[*R1][*R1]=[*R1][*R1]=[*R2]13,"Genotoxic carcinogenicity, mutagenicity"
+"[Br,Cl,F,I][CX3](=[OX1])[#1,*&!$([OH1])&!$([SH1])]","Genotoxic carcinogenicity, mutagenicity"
+[OX2;H1][CH2][NX3],"Genotoxic carcinogenicity, mutagenicity"
+"[CX3]([CX4,#1])([F,Cl,Br,I])=[CX3]([CX4,#1])[!F!Cl!Br!I]","Genotoxic carcinogenicity, mutagenicity"
+"[F,Cl,Br,I][CH2][CH2][NX3,SX2][CH2][CH2][F,Cl,Br,I]","Genotoxic carcinogenicity, mutagenicity"
+"[$([OX2]1[CX4][CX4][CX3]1(=[OX1])),$([CX4]1[CX4][CX4][Sv6;X4](=[OX1])(=[OX1])[OX2]1)]","Genotoxic carcinogenicity, mutagenicity"
+"[CX4]1[OX2,NX3][CX4]1","Genotoxic carcinogenicity, mutagenicity"
+"[CX4;!H0][Br,Cl,I]","Genotoxic carcinogenicity, mutagenicity"
+[OX1]=[NX2][OX2][CX4],"Genotoxic carcinogenicity, mutagenicity"
+"[CX3]([H])(=[OX1])[#1,#6&!$([CX3]=[CX3])]","Genotoxic carcinogenicity, mutagenicity"
+"[$([#6X3]1=,:[#6X3]-,:[#6X3](=[OX1])-,:[#6X3]=,:[#6X3]-,:[#6X3]1(=[OX1])),$([#6X3]1(=[OX1])-,:[#6X3](=[OX1])-,:[#6X3]=,:[#6X3]-,:[#6X3]=,:[#6X3]1)]","Genotoxic carcinogenicity, mutagenicity"
+[NX3;!$([NX3](=[OX1])=[OX1]);!$([NX3+](=[OX1])[O-])][NX3;!$([NX3](=[OX1])=[OX1]);!$([NX3+](=[OX1])[O-])],"Genotoxic carcinogenicity, mutagenicity"
+"[$([C,#1][NX2]=[NX2][C,#1]),$([CX3]=[NX2+]=N),$([CX3]=[NX2+]=[NX1-]),$([CX3-][NX2+]#[NX1]),$([CX3][NX2]#[NX1]),$(C[NX2]=N(=O)[*]),$(C[NX2]=[N+]([O-])[*])]","Genotoxic carcinogenicity, mutagenicity"
+"[NX2]=[CX2]=[OX1,Sv2X1]","Genotoxic carcinogenicity, mutagenicity"
+"[NX3]([C,#1])([C,#1])[CX3](=[OX1,Sv2X1])[OX2,Sv2X2]C","Genotoxic carcinogenicity, mutagenicity"
+"[$([NX3][CX3](=[Sv2X1])[NX3]),$([CX3;!$(C[OH]);!$(C[SH]);!$(C[O-]);!$(C[S-]);!$(CO[#6])](=[Sv2X1])[NX3])]",Non-genotoxic carcinogenicity
+"[$([aR3].[n,o,s]),$([$([aR2]([aR])([aR])([aR]))].[$([aR2]([aR])([aR])([aR]))].[$([aR2]([aR])([aR])([aR]))].[$([aR2]([aR])([aR])([aR]))].[n,o,s])]","Genotoxic carcinogenicity, mutagenicity"
+[#6][NX3][NX2]=[OX1],"Genotoxic carcinogenicity, mutagenicity"
+"[$([NX2!R]=[NX2!R][NX3!R]),$([NX2]=[NX2+]=[NX1-]),$([NX2]=[NX2+]=N)]","Genotoxic carcinogenicity, mutagenicity"
+"[NX3]([#1,C])([#1,C])[$([NX3+](=[OX1])[O-]),$([NX3](=O)=O)]","Genotoxic carcinogenicity, mutagenicity"
+C[CX3;H1]=[CX3;H1][OX2][#6],"Genotoxic carcinogenicity, mutagenicity"
+[a!r0][NX2]=[OX1],"Genotoxic carcinogenicity, mutagenicity"
+[O-][N+]1=CC=CC=C1,"Genotoxic carcinogenicity, mutagenicity"
+"[$(c1cccc2c1oc(=O)cc2),$(C1=CC(=O)OC2=CC=CC=C12),$(C1=CC(=O)Oc2ccccc12)]","Genotoxic carcinogenicity, mutagenicity"
+"c1ccccc1[$([Br,Cl,F,I]);!$([Br,Cl,F,I]aa[Br,Cl,F,I]);!$([Br,Cl,F,I]aaa[Br,Cl,F,I]);!$([Br,Cl,F,I]aa([OH])a([OH])a[OH]);!$([Br,Cl,F,I]aaa([OH])a([OH])a[OH]);!$([Br,Cl,F,I]aa([OH])a([OH])aa[OH])]",Non-genotoxic carcinogenicity
+"[Br,Cl,F,I][$([cR1]1[cR1][cR1][cR1][cR1][cR1]1-[cR1]2[cR1][cR1][cR1][cR1][cR1]2),$([cR1]1[cR1][cR1][cR1][cR2]2[cR2]1[cR1][cR1][cR1][cR1]2)]",Non-genotoxic carcinogenicity
+"[OR1]1[CR2]2=[CR1][CR1]=[CR1][CR1]=[CR2]2[OR1][CR2]3=[CR1][CR1]([F,Cl,Br,I])=[CR1][CR1]=[CR2]13",Non-genotoxic carcinogenicity
+"[$([a!r0][NX3;H2]),$([a!r0][NX3;H1][CH3]),$([a!r0][NX3;H1][CH2][CH3])]","Genotoxic carcinogenicity, mutagenicity"
+"a[NX3]([$([CH3]),$([CH2][CH3])])[$([CH3]),$([CH2][CH3])]","Genotoxic carcinogenicity, mutagenicity"
+"[$([a!r0][NX3;H1][CX3;H1](=[OX1])),$([a!r0][NX3;H1][CX3](=[OX1])[CH3])]","Genotoxic carcinogenicity, mutagenicity"
+"[a!r0][$([NX3+](=[OX1])[O-]),$([NX3](=O)(=O))]","Genotoxic carcinogenicity, mutagenicity"
+[a!r0][NX2]=[OX1],"Genotoxic carcinogenicity, mutagenicity"
+"[a!r0][NX3;H1][OX2][#1,#6]","Genotoxic carcinogenicity, mutagenicity"
+[NX3]([CX4])([CX4])[NX2]=[OX1],"Genotoxic carcinogenicity, mutagenicity"
+"[CX4,a!r0][CX3](=[OX1])[NX3]([CX4])[NX2]=[OX1]","Genotoxic carcinogenicity, mutagenicity"
+"[OX1]=[NX2][NX3]([CX4])[CX3](=[OX1])[NX3H1][CX4,a!r0]","Genotoxic carcinogenicity, mutagenicity"
+"[OX1]=[NX2][NX3]([CX4])[CX3](=[OX1])[OX2][CX4,a!r0]","Genotoxic carcinogenicity, mutagenicity"
+[OX1]=[NX2][NX3]([CX4])[CX2]#[NX1],"Genotoxic carcinogenicity, mutagenicity"
+[OX1]=[NX2][NX3]([OH1])[#6],"Genotoxic carcinogenicity, mutagenicity"
+"[NX3]([$([#1]),$([CX4]),$([a!r0])])([$([CX4!H0]),$([CX4][OH]),$([CX3]=[OX1])])[NX3]([$([#1]),$([CX4]),$([a!r0])])[$([#1]),$([CX4]),$([a!r0])]","Genotoxic carcinogenicity, mutagenicity"
+"[a!r0][CH2][Cl,Br,I]","Genotoxic carcinogenicity, mutagenicity"
+"[CX4]1[OX2,NX3][CX4]1","Genotoxic carcinogenicity, mutagenicity"
+[OX2]1[CX4][CX4][CX3]1(=[OX1]),"Genotoxic carcinogenicity, mutagenicity"
+"[$([CX4,a!r0][Sv6X4](=[OX1])(=[OX1])[OX2][$([CH3]),$([CH2][CH3])]),$([CX4,a!r0][OX2][Sv6X4](=[OX1])(=[OX1])[OX2][$([CH3]),$([CH2][CH3])])]","Genotoxic carcinogenicity, mutagenicity"
+"[$([CX4,a!r0][Pv5X4](=[OX1])([OX2][$([CH3]),$([CH2][CH3])])[OX2][$([CH3]),$([CH2][CH3])]),$([CX4,#1][OX2][Pv5X4](=[OX1])([OX2][CX4,#1])[OX2][$([CH3]),$([CH2][CH3])])]","Genotoxic carcinogenicity, mutagenicity"
+"[CX4][OX2][Pv5X4](=[SX1])([OX2][CX4,#1])[OX2][$([CH3]),$([CH2][CH3])]","Genotoxic carcinogenicity, mutagenicity"
+"[NX3]([#1,#6])([#1,#6])[CH2][CH2][Cl,Br,I,F]","Genotoxic carcinogenicity, mutagenicity"
+"[$([#6][OX2][CH2][CH2][Cl,Br,I]),$([#6][OX2][CH2][Cl,Br,I])]","Genotoxic carcinogenicity, mutagenicity"
+"[$([CX3](=[OX1])[CH2][Cl,Br,I]),$([CX4!H0]([OH1])[CH2][Cl,Br,I])]","Genotoxic carcinogenicity, mutagenicity"
+"[#6][NX3]([#6])[Cl,Br,I,F]","Genotoxic carcinogenicity, mutagenicity"
+"[CX3]=[CX3][CX3](=[OX1])[$([#1][CX3]=[OX1]),$([#6]([CX3]=[OX1])),$([OX2]([CX3]=[OX1])[#6]),$([NX3]([CX3]=[OX1])([#1,#6])[#1,#6])]","Genotoxic carcinogenicity, mutagenicity"
+"[CX3]=[CX3][CH2][$([Cl,Br,I]),$([OX2])]","Genotoxic carcinogenicity, mutagenicity"
+"[CX4]([H,F,Cl,Br,I])([H,F,Cl,Br,I])([H,F,Cl,Br,I])[F,Cl,Br,I]","Genotoxic carcinogenicity, mutagenicity"
+"[CX3]=[CX3H1][Cl,Br,I]","Genotoxic carcinogenicity, mutagenicity"
+"[c;R1,R2,R3]1[c;R1,R2,R3][c;R1,R2,R3][c;R2,R3]2[c;R2,R3]([c;R1,R2,R3]1)[c;R1,R2,R3][c;R1,R2,R3][c;R1,R2,R3][c;R1,R2,R3]2","Genotoxic carcinogenicity, mutagenicity"
+[NX2]=[CX2]=[OX1],"Genotoxic carcinogenicity, mutagenicity"
+[NX2]=[CX2]=[SX1],"Genotoxic carcinogenicity, mutagenicity"
+"[$([CX4,a][Sv6X4](=[OX1])(=[OX1])[OX2][CX4]),$([CX4,a][Pv5X4](=[OX1])([OX2][#1,CX4])[OX2][CX4])]","Genotoxic carcinogenicity, mutagenicity"
+"[a!r0][$([NX3+](=[OX1])[O-]),$([NX3](=[OX1])=[OX1]);!$([NX3]a(a-[!#1])a-[!#1]);!$([NX3]aa-C(=[OX1])[OH])]","Genotoxic carcinogenicity, mutagenicity"
+[O-][N+]1=CC=CC=C1,"Genotoxic carcinogenicity, mutagenicity"
+"[a!r0][$([NX3H1][CH3]),$([NX3H1][CH2][CH3]),$([NX3]([CH3])[CH3]),$([NX3]([CH3])[CH2][CH3]),$([NX3]([CH2][CH3])[CH2][CH3]);!$([NX3]a(a-[!#1])a-[!#1]);!$([NX3]aa-C(=[OX1])[OH])]","Genotoxic carcinogenicity, mutagenicity"
+"[NX3]([CX4])([#1,CX4])[NX3]([#1,CX4])[#1,CX4]","Genotoxic carcinogenicity, mutagenicity"
+"[$([CX3]([H])(=[OX1])[#1,CX4])&!$([CX3]([H])(=[OX1])[CX3]=[CX3])]","Genotoxic carcinogenicity, mutagenicity"
+[OH1][CH2][NX3],"Genotoxic carcinogenicity, mutagenicity"
+"[CX3]([CX4,#1])(Cl)=[CX3]([!F!Cl!Br!I])[CX4,#1]","Genotoxic carcinogenicity, mutagenicity"
+"[F,Cl,Br,I][CH2][CH2][NX3,SX2][CH2][CH2][F,Cl,Br,I]","Genotoxic carcinogenicity, mutagenicity"
+[#6][NX3]([#6])Cl,"Genotoxic carcinogenicity, mutagenicity"
+"[$([OX2]1[CX4][CX4][CX3]1(=[OX1])),$([CX4]1[CX4][CX4][Sv6;X4](=[OX1])(=[OX1])[OX2]1)]","Genotoxic carcinogenicity, mutagenicity"
+[CX4]1[NX3][CX4]1,"Genotoxic carcinogenicity, mutagenicity"
+"[F,Cl,Br,I][CH2][CX4,a]","Genotoxic carcinogenicity, mutagenicity"
+[NX3][CX3](=[OX1])[OX2],"Genotoxic carcinogenicity, mutagenicity"
+"[a!r0][$([NH2]),$([NX3H1][#6]),$([NX3]([#6])[#6]),$([NX3]([#6,#1])[OX2H1]),$([NX3]([#6,#1])[OX2][CX3]=[OX1]);!$([NX3]a(a-[!#1])a-[!#1]);!$([NX3]aa-C(=[OX1])[OH])]","Genotoxic carcinogenicity, mutagenicity"
+"[$([CX4]1[OX2][CX4]1),$([#6]1=[#6][#8]1)]","Genotoxic carcinogenicity, mutagenicity"
+"[$(c1([F,Cl,Br,I,$(N(=O)=O)])ncc([F,Cl,Br,I,$(N(=O)=O),$(C#N),$(C=O),$(C(F)(F)F),$(S=O)])cc1),$(c1([F,Cl,Br,I,$(N(=O)=O)])ncccc1([F,Cl,Br,I,$(N(=O)=O),$(C#N),$(C=O),$(C(F)(F)F),$(S=O)]))]",Skin sensitization
+"c1([F,Cl,Br,I,$(N(=O)=O)])ncccn1",Skin sensitization
+"c1([F,Cl,Br,I,$(N(=O)=O)])ncncc1",Skin sensitization
+"c1([F,Cl,Br,I,$(N(=O)=O)])ncc([F,Cl,Br,I,$(N(=O)=O),$(C#N),$(C=O),$(C(F)(F)F),$(S=O)])nc1",Skin sensitization
+"c1nc([F,Cl,Br,I,$(N(=O)=O)])ncn1",Skin sensitization
+"[CH2]=[OX1,SX1]",Skin sensitization
+"[CX4][CX3H1]=[OX1,SX1]",Skin sensitization
+[a][CX3H1]=[OX1],Skin sensitization
+"C(C)(C)=CC=[OX1,SX1]",Skin sensitization
+"[C;!r5]([C;!r5])=[C;!r5][C;!r5](C)=[OX1,SX1;!r5]",Skin sensitization
+"[#6]C(=[OX1,SX1])C(=[OX1,SX1])[#6]",Skin sensitization
+"[#6]C(=[OX1,SX1])[CX4]C(=[OX1,SX1])[#6]",Skin sensitization
+"[#6][$([NX2]=O),$(N=C=O),$(OC#N),$(SC#N),$(N=C=S)]",Skin sensitization
+[CH2][NH2],Skin sensitization
+[CH2][NX3]([CH3])[CH3],Skin sensitization
+"[$(CC(C)=[CH][CH2][OH]),$(CC=C(C)[CH2][OH])]",Skin sensitization
+"[CH,CH2,CH3;!$([CH2]CC=[O,S])]([F,Cl,Br,I,$(OS(=O)(=O)[#6,#1]),$(OS(=O)(=O)O[#6,#1])])[#6]1[O,N,SX2][#6]1",Skin sensitization
+"C1C(=[O,S])[O,S][CH2,CH]1",Skin sensitization
+"[$(C=C),$(C#C),a][CH2,CH][O,S][$([CH]=O),$([CH]=S),$(C(C)=O),$(C(C)=S)]",Skin sensitization
+"[$(C=C),$(C#C),a][CH2,CH][O,S][a]",Skin sensitization
+"[CH2,CH3][NX3][NX2]=[O,S]",Skin sensitization
+c1ccc2cc3ccccc3cc2c1,Skin sensitization
+c1ccc2c(c1)ccc3ccccc23,Skin sensitization
+"[CH2,CH]=[CH][$(N(=[OX1])=[OX1]),$(C=O),$(C#N),$(S=O),$(C(=O)N),$(a)]",Skin sensitization
+"[CH2]=C[$(N(=[OX1])=[OX1]),$(C=O),$(C#N),$(S=O),$(C(=O)N),$(a)]",Skin sensitization
+"aC=C[$(N(=[OX1])=[OX1]),$(C=O),$(C#N),$(S=O),$(C(=O)N),$(a)]",Skin sensitization
+"C#C[$(N(=[OX1])=[OX1]),$(C=O),$(C#N),$(S=O),$(C(=O)N),$(a)]",Skin sensitization
+"[CH2,CH]=[CH]C=C[$(N(=[OX1])=[OX1]),$(C=O),$(C#N),$(S=O),$(C(=O)N),$(a)]",Skin sensitization
+"C=C([F,Cl,Br,I])[F,Cl,Br,I]",Skin sensitization
+"c1c([O,NH2,NH])c([O,NH2,NH])ccc1",Skin sensitization
+"c1c(=[O,NH2,NH])ccc(=[O,NH2,NH])c1",Skin sensitization
+"[F,Cl,Br,I][CX3](=[OX1])[#1,*&!$([OH1])&!$([SH1])]","Reactive, unstable, toxic"
+[#6][CX3](=[OX1])n1cncc1,"Reactive, unstable, toxic"
+[#6][CX3](=[OX1])n1nnc2ccccc12,"Reactive, unstable, toxic"
+[CX3](=[OX1])[OX2][CX3](=[OX1]),"Reactive, unstable, toxic"
+"[Pv5X4](=[OX1])([F,Cl,Br,I])([#6])[#6]","Reactive, unstable, toxic"
+"[Pv5X4](=[OX1])([F,Cl,Br,I])([#8])[#6]","Reactive, unstable, toxic"
+"[Pv5X4](=[OX1])([F,Cl,Br,I])([#8])[#8]","Reactive, unstable, toxic"
+"[Pv5X4](=[OX1])([F,Cl,Br,I])([#7])[#6]","Reactive, unstable, toxic"
+"[Pv5X4]([F,Cl,Br,I])([#6])([#6])=[SX1]","Reactive, unstable, toxic"
+"[Pv5X4]([#8])([#6])([F,Cl,Br,I])(=[SX1])","Reactive, unstable, toxic"
+"[Pv5X4](=[SX1])([F,Cl,Br,I])([#16])[#6]","Reactive, unstable, toxic"
+[Pv5X4]([!#1])([!#1])([!#1])=[NX2],"Reactive, unstable, toxic"
+[NX2]=[CX2]=[OX1],"Reactive, unstable, toxic"
+[NX2]=[CX2]=[SX1],"Reactive, unstable, toxic"
+[#6][NX2]=[CX2]=[NX2][#6],"Reactive, unstable, toxic"
+[SX2][CX2]#[NX1],"Reactive, unstable, toxic"
+"[#6][Sv6X4](=[OX1])(=[OX1])[F,Cl,Br,I]","Reactive, unstable, toxic"
+[#6][Sv6X4](=[OX1])(=[OX1])[OX2][Sv6X4](=[OX1])(=[OX1])[#6],"Reactive, unstable, toxic"
+[#6][Sv6X4](=[OX1])(=[OX1])[OX2][CX4],"Reactive, unstable, toxic"
+"[#6,#1][OX2,OH1][Sv6X4](=[OX1])(=[OX1])[OX2][CX4]","Reactive, unstable, toxic"
+[Pv3X3]([#8])([#8])[#8],"Reactive, unstable, toxic"
+"[Pv3X3]([#8])([#8])[F,Cl,Br,I]","Reactive, unstable, toxic"
+"[Pv3X3]([#8])([#6])[F,Cl,Br,I]","Reactive, unstable, toxic"
+"[Pv3X3]([#6])([#6])[F,Cl,Br,I]","Reactive, unstable, toxic"
+[Pv3X3]([#6])([#6])([#6]),"Reactive, unstable, toxic"
+"[Pv3X3]([#8])([#7])[F,Cl,Br,I]","Reactive, unstable, toxic"
+"[Pv3X3]([#7])([#7])[F,Cl,Br,I]","Reactive, unstable, toxic"
+"[#16][Pv3X3]([#6])[F,Cl,Br,I]","Reactive, unstable, toxic"
+[Pv3X3]([#7])([#7])[#7],"Reactive, unstable, toxic"
+[PX4+]([#6])([#6])([#6])([#6]),"Reactive, unstable, toxic"
+"[CX3]([#6])([F,Cl,Br])=[NX2][#8]","Reactive, unstable, toxic"
+"[#6][CX3](=[SX1])[F,Cl,Br,I]","Reactive, unstable, toxic"
+"[#8][CX3](=[OX1])[F,Cl,Br,I]","Reactive, unstable, toxic"
+"[#7][CX3](=[OX1])[F,Cl,Br,I]","Reactive, unstable, toxic"
+"[#6][$([NX2+]#[CX1-]),$([NX2]#[CX1])]","Reactive, unstable, toxic"
+"[$([NX2]=[NX2+]=[NX1-]),$(N=[NX2+]=N),$([NX2-]-[NX2+]#[NX1])]","Reactive, unstable, toxic"
+"[#6,#1][CX3](=[SX1])[OX2][#6]","Reactive, unstable, toxic"
+"[#6,#1][CX3](=[OX1])[SX2][#6]","Reactive, unstable, toxic"
+[#6][CX3](=[SX1])[#6],"Reactive, unstable, toxic"
+[#6][CX3](=[SX1])[#7],"Reactive, unstable, toxic"
+[OX2][OX2],"Reactive, unstable, toxic"
+[SX2!R][SX2!R],"Reactive, unstable, toxic"
+[#6][NX2]=[OX1],"Reactive, unstable, toxic"
+"[#6][OX2][$([NX3](=[OX1])=[OX1]),$([NX3+](=[OX1])[O-])]","Reactive, unstable, toxic"
+"[#7][$([NX3](=[OX1])=[OX1]),$([NX3+](=[OX1])[O-])]","Reactive, unstable, toxic"
+[#7][NX2]=[OX1],"Reactive, unstable, toxic"
+[#6][NX2]=[NX2][#6],"Reactive, unstable, toxic"
+"[#6][$([NX2]=[NX3+]([O-])[#6]),$([NX2]=[NX3](=[OX1])[#6])]","Reactive, unstable, toxic"
+"[$([#6][NX3+]([OX1-])=[NX3+]([OX1-])[#6]),$([#6][NX3](=[OX1])=[NX3](=[OX1])[#6])]","Reactive, unstable, toxic"
+"[#6][NX3][F,Cl,Br]","Reactive, unstable, toxic"
+"[#6][Sv2X2][F,Cl,Br,I]","Reactive, unstable, toxic"
+"[#6][Sv4X3](=[OX1])[F,Cl,Br,I]","Reactive, unstable, toxic"
+"[$([NX2+]#[NX1]),$([NX2]#N)]","Reactive, unstable, toxic"
+"[CX3](=[#7])([#7])[Cl,Br,I]","Reactive, unstable, toxic"
+"[#6,#1][CX3]([H])=[OX1]","Reactive, unstable, toxic"
+[#6][CX3]=[NX2][#6],"Reactive, unstable, toxic"
+[#6][NX3;!$([NX3](=[OX1])=[OX1]);!$([NX3+](=[OX1])[O-])][NX3;!$([NX3](=[OX1])=[OX1]);!$([NX3+](=[OX1])[O-])],"Reactive, unstable, toxic"
+[CX3]=[NX2][NX3][#6],"Reactive, unstable, toxic"
+[OH1][NX3][#6],"Reactive, unstable, toxic"
+"[$([OX1-,OH1][#7X4+]([*])([*])([*])),$([OX1]=[#7X4v5]([*])([*])([*])),$([OX1]=[Nv5X3&!$([Nv5X3](=[OX1])=[OX1])](=[*])([*])),$([OX1-,OH1][#7X3+R](~[R])(~[R])),$([OX1]=[#7v5X3R](~[R])(~[R]))]","Reactive, unstable, toxic"
+N[CX4]N,"Reactive, unstable, toxic"
+[NX4+]([#6])([#6])([#6])([#6]),"Reactive, unstable, toxic"
+[SX3+]([#6])([#6])([#6]),"Reactive, unstable, toxic"
+"[#6][CX3](=[OX1])[CX4][Cl,Br,I]","Reactive, unstable, toxic"
+"[NX3][CX4][CX4][Cl,Br,I]","Reactive, unstable, toxic"
+"[Sv2X2][CX4][CX4][Cl,Br,I]","Reactive, unstable, toxic"
+[CX3](=[OX1])([#8])[CX3]=[CX3],"Reactive, unstable, toxic"
+[CX3](=[OX1])([#7])[CX3]=[CX3],"Reactive, unstable, toxic"
+[CX3](=[OX1])([#6])[CX3]=[CX3],"Reactive, unstable, toxic"
+[Sv6X4](=[OX1])(=[OX1])[CX3]=[CX3],"Reactive, unstable, toxic"
+"[CX3]=[CX3][$([NX3](=[OX1])=[OX1]),$([NX3+](=[OX1])[O-])]","Reactive, unstable, toxic"
+[NX1]#CC=C,"Reactive, unstable, toxic"
+[Pv5X4](=[OX1])([#8])([#8])[CX3]=[CX3],"Reactive, unstable, toxic"
+"[$(n1c([CX3]=[CX3])cccc1),$(n1cc([CX3]=[CX3])ccc1),$(n1ccc([CX3]=[CX3])cc1)]","Reactive, unstable, toxic"
+C1(=[OX1])C=CC(=[OX1])[NX3]1,"Reactive, unstable, toxic"
+[CX3]=[CX2]=[OX1],"Reactive, unstable, toxic"
+C=C=C,"Reactive, unstable, toxic"
+[CX4]1[OX2][CX4]1,"Reactive, unstable, toxic"
+[CX4]1[SX2][CX4]1,"Reactive, unstable, toxic"
+[CX4]1[NX3][CX4]1,"Reactive, unstable, toxic"
+[CX4]1[OX2][CX4][CX4]1,"Reactive, unstable, toxic"
+[CX4]1[SX2][CX4][CX4]1,"Reactive, unstable, toxic"
+[Sev2X2],"Reactive, unstable, toxic"
+[Si]([#8])([#6])([#6])([#6]),"Reactive, unstable, toxic"
+[Si]([#7])([#6])([#6])([#6]),"Reactive, unstable, toxic"
+"c1ccccc1([CX4][Cl,Br,I])","Reactive, unstable, toxic"
+"[F,Cl,Br,I][CX4][#8]","Reactive, unstable, toxic"
+"[F,Cl,Br,I][CX4][#16]","Reactive, unstable, toxic"
+"[F,Cl,Br,I][CX4][#7]","Reactive, unstable, toxic"
+[OX1]=[I!X1][#6],"Reactive, unstable, toxic"
+N[CX3](=[SX1])N,"Reactive, unstable, toxic"
+N[CX3](=[SX1])S,"Reactive, unstable, toxic"
+[CX3](=[SX1])(S)S,"Reactive, unstable, toxic"
+[CX3](=[SX1])([#6])S,"Reactive, unstable, toxic"
+[Sv6X4](=[OX1])([#8])([#8])[SX2][#6],"Reactive, unstable, toxic"
+[#7v4X3R],"Reactive, unstable, toxic"
+"[$([Te]~[#6]),$([As]~[#6]),$([Ge]~[#6]),$([Hg]~[#6]),$([Co]~[#6]),$([Fe]~[#6]),$([Mn]~[#6]),$([Cr]~[#6]),$([Ti]~[#6]),$([Sn]~[#6])]","Reactive, unstable, toxic"
+"[#6]1=,:[#6]C(=[OX1,SX1])N[SX2]1",Skin sensitization
+"[!$(C=C);!$(C#C)]C(=[O,SX1])[F,Cl,Br,I]",Skin sensitization
+"[!$(C=C);!$(C#C)]C(=N)[F,Cl,Br,I]",Skin sensitization
+"[!$(C=C);!$(C#C)]C(=[O,SX1,N])[O,S,N][a]",Skin sensitization
+"[!$(C=C);!$(C#C)]C(=[O,SX1,N])[O,S,N]C(=[O,SX1,N])",Skin sensitization
+"[!$(C=C);!$(C#C)]C(=[O,S,N])[O,S][$(C=C),$(C=N),$(C#C),$(C#N)]",Skin sensitization
+"[#6]1C(=[O,S])[O,N,S][#6]1",Skin sensitization
+"[C,N,O,S,a]c1[n,o,s]c2ccccc2[n,o,s]1",Skin sensitization
+"[#6]1[#6](=[N,O,S])[#7,#8,#16][#6][#7,#8,#16]1",Skin sensitization
+"[C,O]=[#6]1[#7,#8,#16][#6](=[O,N,SX1])c2ccccc12",Skin sensitization
+"[!$(C=C);!$(C#C)]C(=[O,SX1,N])[O,S,N][CX4,O,S][$(C=O),a,$(C=C),$(C#C),$(C=N),$(C#N)]",Skin sensitization
+"C1=[C,N][$(S(=O)(=O)),$(C=[N,O]),$(S=O)][C,N]=C1c2ccccc2",Skin sensitization
+"[CH2,CH]=C1C(=[OX1,SX1])**C1",Skin sensitization
+"c1c([OH,NH2,NH])c([OH,NH2,NH,$(N=N),$(N(C)C)])ccc1",Skin sensitization
+"c1c([OH,NH2,NH])ccc([OH,NH2,NH,$(N=N),$(N(C)C)])c1",Skin sensitization
+"c1c([OH,NH2,NH])cc([OH,NH2,NH,$(N(C)C)])cc1",Skin sensitization
+c1([OH])c(O[CH3])cccc1,Skin sensitization
+c1([OH])ccc(O[CH3])cc1,Skin sensitization
+c1c([OH])ccc(C=C[CH3])c1,Skin sensitization
+"C([F,Cl,Br,I])[CH2,CH][a]",Skin sensitization
+c1([OH])ccc([CH2][CH]=[CH2])cc1,Skin sensitization
+c1(O[CH3])ccc([CH2][CH]=[CH2])cc1,Skin sensitization
+[OH]c1cccc2ccccc12,Skin sensitization
+"F[CH2,CH]C(F)[$(N(=[OX1])=[OX1]),$(C=O),$(C#N),$(S=O),$(C(=O)N),$(a)]",Skin sensitization
+"Cl[CH2,CH]C(Cl)[$(N(=[OX1])=[OX1]),$(C=O),$(C#N),$(S=O),$(C(=O)N),$(a)]",Skin sensitization
+"Br[CH2,CH]C(Br)[$(N(=[OX1])=[OX1]),$(C=O),$(C#N),$(S=O),$(C(=O)N),$(a)]",Skin sensitization
+"I[CH2,CH]C(I)[$(N(=[OX1])=[OX1]),$(C=O),$(C#N),$(S=O),$(C(=O)N),$(a)]",Skin sensitization
+[CX3]=[CX2]=[OX1],Acute Aquatic Toxicity
+"[Br,Cl,F,I][CX3](=[OX1])[#1,*&!$([OH1])&!$([SH1])]",Acute Aquatic Toxicity
+"[$([#6]1[CX3](=[OX1])[OX2][CX3](=[OX1])[#6]1),$([#6]1[CX3](=[OX1])[OX2][CX3](=[OX1])[#6][#6]1)]",Acute Aquatic Toxicity
+[NX3]([CX4])([CX4])[CX3](=[OX1])Cl,Acute Aquatic Toxicity
+[NX2]=[CX2]=[OX1],Acute Aquatic Toxicity
+[NX2]=[CX2]=[SX1],Acute Aquatic Toxicity
+"[#6,#1][CX3]([H])=[OX1]",Acute Aquatic Toxicity
+"[$([#6&!$(C=[O,N,S])]1[OX2][CX3](=[OX1])[#6]1),$([#6&!$(C=[O,N,S])]1[OX2][CX3](=[OX1])[#6][#6]1)]",Acute Aquatic Toxicity
+[CX4]1[OX2][CX4]1,Acute Aquatic Toxicity
+[CX4]1[NX3][CX4]1,Acute Aquatic Toxicity
+[#6][Sv6X4!R](=[OX1])(=[OX1])[OX2!R][#6],Acute Aquatic Toxicity
+[#6][OX2!R][Sv6X4!R](=[OX1])(=[OX1])[OX2!R][#6],Acute Aquatic Toxicity
+[Pv5X4]([OX2][#6])([OX2][#6])([OX2][#6])(=[OX1]),Acute Aquatic Toxicity
+"[$([#6]1[Sv6X4](=[OX1])(=[OX1])[OX2][#6]1),$([#6]1[Sv6X4](=[OX1])(=[OX1])[OX2][#6][#6]1),$([#6]1[Sv6X4](=[OX1])(=[OX1])[OX2][#6][#6][#6]1)]",Acute Aquatic Toxicity
+"[$([#6]1[OX2][Sv6X4](=[OX1])(=[OX1])[OX2][#6][#6]1),$([#6]1[OX2][Sv6X4](=[OX1])(=[OX1])[OX2][#6][#6][#6]1)]",Acute Aquatic Toxicity
+"[F,Cl,Br,I][#6][CX3](=[OX1])[OX2H1]",Acute Aquatic Toxicity
+"[F,Cl,Br,I][#6][CX3](=[OX1])[NX3]",Acute Aquatic Toxicity
+"[$([F,Cl,Br,I]C[OX2]C),$([F,Cl,Br,I]CC[OX2]C)]",Acute Aquatic Toxicity
+"[F,Cl,Br,I][CX4][CX4][SX2]",Acute Aquatic Toxicity
+"[F,Cl,Br,I][CH2][CH2][NX3]",Acute Aquatic Toxicity
+[#6]=[#6][CX3](=[OX1])[NX3],Acute Aquatic Toxicity
+C=CC#[NX1],Acute Aquatic Toxicity
+C=C[CX3]([H])=[OX1],Acute Aquatic Toxicity
+"[#6]=[#6][$([NX3](=[OX1])=[OX1]),$([NX3+](=[OX1])[O-])]",Acute Aquatic Toxicity
+[#6]=[#6][Sv6X4](=[OX1])(=[OX1]),Acute Aquatic Toxicity
+[#6]=[#6][CX3](=[OX1])[OX2][#6],Acute Aquatic Toxicity
+[CX3]=[CX3][CX3](=[OX1])[OX2H1],Acute Aquatic Toxicity
+[#6]=[#6][CX3](=[OX1])([!#1!$([OH1])]),Acute Aquatic Toxicity
+"[#6X3]1=,:[#6X3]-,:[#6X3](=[OX1])-,:[#6X3]=,:[#6X3]-,:[#6X3]1(=[OX1])",Acute Aquatic Toxicity
+"[*!$([a])&!$(C=C)&!$(C#C)][CX4][F,Cl,Br,I]",Acute Aquatic Toxicity
+"[a!r0][F,Cl,Br,I]",Acute Aquatic Toxicity
+"[F,Cl,Br,I][CX4][CX3]=[CX3]",Acute Aquatic Toxicity
+"c[CX4][F,Cl,Br,I]",Acute Aquatic Toxicity
+"[$([#6]=[NX2+]=N),$([#6]=[NX2]=[NX1]),$([#6]=[NX2+]=[NX1-]),$([#6]-[NX2+]#[NX1]),$([#6-]-[NX2+]#[NX1])]",Acute Aquatic Toxicity
+"[$([Cu][#6]),$([Ag][#6]),$([Au][#6]),$([Zn][#6]),$([Cd][#6]),$([Hg][#6]),$([Sn][#6]),$([Pb][#6]),$([As][#6]),$([Sb][#6])]",Acute Aquatic Toxicity
+[NX4+]([CX4])([CX4])([CX4])([CX4]),Acute Aquatic Toxicity
+[SX3+]([CX4])([CX4])([CX4]),Acute Aquatic Toxicity
+II,Acute Aquatic Toxicity
+[#1][OX2][OX2][#1],Acute Aquatic Toxicity
+[Sv4X3](=[OX1]),Acute Aquatic Toxicity
+[SX2][IX1],Acute Aquatic Toxicity
+[SX2][SX2],Acute Aquatic Toxicity
+[SX2][Sv4X3](=[OX1]),Acute Aquatic Toxicity
+[SX2][Sv6X4](=[OX1])(=[OX1]),Acute Aquatic Toxicity
+[SX2][SX2][CX3](=[OX1])[OX2],Acute Aquatic Toxicity
+[OX1]=[AsX2],Acute Aquatic Toxicity
+[SX2][CX2]#[NX1],Acute Aquatic Toxicity
+"[F,Cl,Br,I][SX2]",Acute Aquatic Toxicity
+c1cc(ccc1[CH1](C(Cl)(Cl)Cl)c1ccc(cc1)Cl)Cl,Acute Aquatic Toxicity
+"[OX2,SX2][CX3](=[OX1,SX1])[NX3]",Acute Aquatic Toxicity
+[Sn][#6],Acute Aquatic Toxicity
+"[$(CC(=C[CH]1C([CH]1C(=O)OC1C(=C(C(=O)C1)CC=CC=C)C)(C)C)C),$(C(=C[CH]1C([CH]1C(=O)O[CH]1C(=C(C(=O)C1)CC=CC=C)C)(C)C)(C)C(=O)OC)]",Acute Aquatic Toxicity
+"[Pv5X4](=[SX1])([OX2][#6])([OX2,SX2][#6])([OX2,SX2][#6])",Acute Aquatic Toxicity
+"[CH,$([C](=[O!R,SX1!R])[#6])](=[O!R,SX1!R])[F,Cl,Br,I]",Potential electrophilic agents
+"[CH,$([C!R](=[O,SX1])[#6!R])](=[O,SX1])[O!R,SX2!R,NX3!R][$([a;r6]),$([a;r5]),$(C=C),$(C#C)]",Potential electrophilic agents
+"[CH,$([C!R]([O,SX2])(=[O,SX1])[#6!R])](=[O,SX1])[O!R,SX2!R][CH,$([C!R]([O,SX2])(=[O,SX1])[#6!R])]=[O,SX1]",Potential electrophilic agents
+"[NH2!R,$([NH!R](C=O)[#6!R]),$(N(C=O)([#6!R])[#6!R])]C(=O)[F,Cl,Br,I]",Potential electrophilic agents
+"[#6][Sv6X4!R](=O)(=O)[F,Cl,Br,I,$(C#N)]",Potential electrophilic agents
+"[#6]O[P!R](=O)(O[#6])[F,Cl,Br,I,$(C#N)]",Potential electrophilic agents
+"[#6]1([#1,#6])=,:[#6]([#1,#6])-,:[#6]1=O",Potential electrophilic agents
+C1C(=O)OC1,Potential electrophilic agents
+C1C(=O)SC1,Potential electrophilic agents
+C1C(=O)NC1,Potential electrophilic agents
+"C1=[O,SX2,NX2,CX3]CC(=[O,SX2])[O,SX2,NX3]1",Potential electrophilic agents
+"[#6R,#8R,#16X2R][#6R](=[O,SX1])[#8R,#16X2R][#6R]([#6,#8R,#16X2])=[#8,#16X1]",Potential electrophilic agents
+[NX2]=[CX2]=[OX1],Potential electrophilic agents
+[NX2]=[CX2]=[SX1],Potential electrophilic agents
+[#6]N=C=N[#6],Potential electrophilic agents
+[#6]N=C(S[#6])S[#6],Potential electrophilic agents
+"[CH2,$([CH][#6]),$(C([#6])[#6])]=C=O",Potential electrophilic agents
+"[$([CH2]),$([CH][#6])]=[CH,$(C[#6])][CH]=O",Potential electrophilic agents
+"[$([$([CH2]),$([CH][#6])]=[CH,$(C[#6])]C(=O)[#6]);!$([#6X3]1=,:[#6X3H][CX3](=[OX1])[#6X3]=,:[#6X3][#6X3]1(=[OX1]));!$([CX3]1(=[OX1])[CX3](=[OX1])[#6X3]=,:[#6X3H][#6X3]=,:[#6X3]1)]",Potential electrophilic agents
+"[$([CH2]),$([CH][#6])]=[CH,$(C[#6])]C(=O)O[#6]",Potential electrophilic agents
+"[$([CH2]),$([CH][#6])]=[CH,$(C[#6])]C(=O)[NH2,$([NH](C=O)[#6]),$(N(C=O)([#6])[#6])]",Potential electrophilic agents
+"[$([CH2]),$([CH][#6])]=[CH,$(C[#6])][$([NX3](=[OX1])=[OX1]),$([NX3+](=[OX1])[O-])]",Potential electrophilic agents
+"[$([CH2]),$([CH][#6])]=[CH,$(C[#6])]C#N",Potential electrophilic agents
+"[$([CH2]),$([CH][#6])]=[CH,$(C[#6])]S(=O)(=O)O[#6]",Potential electrophilic agents
+"[$([CH2]),$([CH][#6])]=[CH,$(C[#6])]S(=O)(=O)[#6]",Potential electrophilic agents
+"[$([CH2]),$([CH][#6])]=[CH,$(C[#6])][SX3](=O)[#6]",Potential electrophilic agents
+"[$([CH2]),$([CH][#6])]=[CH,$(C[#6])]C=[NX2][OH]",Potential electrophilic agents
+"[$([CH2]),$([CH][#6])]=[CH,$(C[#6])][$(c1ncccc1),$(c1ccncc1)]",Potential electrophilic agents
+"[$([CH2]),$([CH][#6])]=[CH,$(C[#6])]c1nccnc1",Potential electrophilic agents
+"[$([CH2]),$([CH][#6])]=[CH,$(C[#6])][$(c1ncncc1),$(c1ncccn1),$(c1cncnc1)]",Potential electrophilic agents
+"[$([CH2]),$([CH][#6])]=[CH,$(C[#6])][$(c1ncncn1),$(c1nncnc1),$(c1nnccn1),$(c1cnncn1),$(c1nnncc1),$(c1cnnnc1)]",Potential electrophilic agents
+"[NH2,$([NH](C=O)[#6]),$(N(C=O)([#6])[#6])]C(=O)N=NC(=O)[NH2,$([NH](C=O)[#6]),$(N(C=O)([#6])[#6])]",Potential electrophilic agents
+"[CH2,$([CH](=C)[#6])]=[CH,$(C(=C)([CH2][OH])[#6])][CH2][OH]",Potential electrophilic agents
+[#6][Sv6X4](=[OX1])(=[OX1])[CX4][CX4][OX2][Sv6X4](=[OX1])(=[OX1])[OH1],Potential electrophilic agents
+"[CH,$(C(#C)[#6])]#C[CH]=O",Potential electrophilic agents
+"[CH,$(C(#C)[#6])]#CC(=O)[#6]",Potential electrophilic agents
+"[CH,$(C(#C)[#6])]#CC(=O)O[#6]",Potential electrophilic agents
+"[CH,$(C(#C)[#6])]#CC(=O)[$([NH2]),$([NH](C=O)[#6]),$(N(C=O)([#6])[#6])]",Potential electrophilic agents
+"[CH,$(C(#C)[#6])]#C[$([NX3](=[OX1])=[OX1]),$([NX3+](=[OX1])[O-])]",Potential electrophilic agents
+"[CH,$(C(#C)[#6])]#CC#N",Potential electrophilic agents
+"[CH,$(C(#C)[#6])]#CS(=O)(=O)O[#6]",Potential electrophilic agents
+"[CH,$(C(#C)[#6])]#CS(=O)(=O)[#6]",Potential electrophilic agents
+"[CH,$(C(#C)[#6])]#C[SX3](=O)[#6]",Potential electrophilic agents
+"[CH,$(C(#C)[#6])]#C[$(c1ncccc1),$(c1ccncc1)]",Potential electrophilic agents
+"[CH,$(C(#C)[#6])]#Cc1nccnc1",Potential electrophilic agents
+"[CH,$(C(#C)[#6])]#C[$(c1ncccn1),$(c1cncnc1),$(c1ncncc1)]",Potential electrophilic agents
+"[CH,$(C(#C)[#6])]#C[$(c1ncncn1),$(c1nncnc1),$(c1nnccn1),$(c1cnncn1)]",Potential electrophilic agents
+"[CH,$(C(#C)[#6])]#C[CH2][OH]",Potential electrophilic agents
+"[$(C1(=O)[#6]=,:[#6]C(=O)[CH]=C1),$(C1(=O)C(=O)[#6]=,:[#6][CH]=C1)]",Potential electrophilic agents
+"[$(C1(=O)[#6]=,:[#6][$(C=[NH]),$(C=N[CX4])][CH]=C1),$(C1(=O)[$(C=[NH]),$(C=N[CX4])][#6]=,:[#6][CH]=C1),$(C1(=O)[$(C=[NH]),$(C=N[CX4])]C=[CH][#6]=,:[#6]1)]",Potential electrophilic agents
+"[$([CH]1=C[$(C=[NH]),$(C=N[CX4])][#6]=,:[#6][$(C=[NH]),$(C=N[CX4])]1),$([CH]1=C[$(C=[NH]),$(C=N[CX4])][$(C=[NH]),$(C=N[CX4])][#6]=,:[#6]1)]",Potential electrophilic agents
+"[$(c1([OH,$(O[CH3])])c[cH]c([OH,$(O[CH3])])cc1),$(c1([OH,$(O[CH3])])c([OH,$(O[CH3])])cc[cH]c1)]",Potential electrophilic agents
+"[$(c1([OH])c[cH]c([NH2])cc1),$(c1([OH])c([NH2])cc[cH]c1)]",Potential electrophilic agents
+"[$(c1([NH2])c[cH]c([NH2])cc1),$(c1([NH2])c([NH2])cc[cH]c1)]",Potential electrophilic agents
+"[$(C1=CC(=O)[#6]=,:[#6]C1(=[CH][CX4])),$(C1(=[CH][CX4])C(=O)[#6]=,:[#6]C=C1)]",Potential electrophilic agents
+"[$([cH]1cc(=[O,NH])cc[o,n]1),$([cH]1cc(=[O,NH])[o,n]cc1),$(c1cc(=[O,NH])[o,n][cH]c1)]",Potential electrophilic agents
+"[c;R1,R2,R3]1[c;R1,R2,R3][c;R1,R2,R3][c;R2,R3]2[c;R2,R3]([c;R1,R2,R3]1)[c;R1,R2,R3][c;R1,R2,R3][c;R1,R2,R3][c;R1,R2,R3]2",Potential electrophilic agents
+"O=C1[NH,$(N(C=O)(C=O)[#6])]C(=O)[CH,$(C(C=O)(=C)[#6])]=[CH]1",Potential electrophilic agents
+"[CH2,$([CH](=O)[CX4]),$([CH](=O)c1a(*)caaa1),$([CH](=O)c1a(*)aaa1)]=O",Potential electrophilic agents
+[#6][CH2][NX3H2],Potential electrophilic agents
+"[$(C(=C)([#6])[#6]);!$(C(=C)([#6])C=[CH2,CH])]=C[CH]=O",Potential electrophilic agents
+"C([#6])([#6])=[CH,$(C(=C)([CH2][OH])[#6])][CH2][OH]",Potential electrophilic agents
+"[CH,$(C(=O)(C=O)[CX4]),$(C(=O)(C=O)c1a(*)aaaa1),$(C(=O)(C=O)c1a(*)aaa1)](=O)[CH,$(C(=O)(C=O)[#6]);!$(C(=O)(C=O)C=[CH2,CH]);!$(C(=O)(C=O)C#C)]=O",Potential electrophilic agents
+"[CH,$(C(=O)([CX4]C=O)[CX4]),$(C(=O)([CX4]C=O)c1a(*)aaaa1),$(C(=O)([CX4]C=O)c1a(*)aaa1)](=O)[CX4][CH,$(C(=O)([CX4]C=O)[#6]);!$(C(=O)([CX4]C=O)C=[CH2,CH]);!$(C(=O)([CX4]C=O)C#C)]=O",Potential electrophilic agents
+"[$([NH2,$([NH]([CH2])[CX4])][CH2][CH2][NH2]),$([NH]1[CH2][CH2][NH][CH2][CH2]1)]",Potential electrophilic agents
+"[$([NH2,$([NH]([CH2])[CX4])][CH2][CH2][OH]),$([NH]1[CH2][CH2]O[CH2][CH2]1)]",Potential electrophilic agents
+[NH]1CC[NH1]CC1,Potential electrophilic agents
+O1CC[NH1]CC1,Potential electrophilic agents
+"[CH3,$([CH2]([F,Cl,Br,I])[#6]),$([CH]([F,Br,Cl,I])([#6])[#6]);!$([CH2,CH]C=O);!$([CH2,CH][CX4][NX3,SX2]);!$([CH2,CH][CX4][F,Cl,Br,I])][F,Cl,Br,I]",Potential electrophilic agents
+"[CH3,$([CH2](N=N)[#6]),$([CH](N=N)([#6])[#6])][NX2]=[NH,$(N(=N)[#6])]",Potential electrophilic agents
+"[#6]OS(=O)(=O)O[CH3,$([CH2](O)[#6]),$([CH](O)([#6])[#6])]",Potential electrophilic agents
+"[#6]S(=O)(=O)O[CH3,$([CH2](O)[#6]),$([CH](O)([#6])[#6])]",Potential electrophilic agents
+"[#6][O,SX2]P(=[O,SX1])([O,SX2][#6])[O,SX2][CH3,$([CH2](O)[#6]),$([CH](O)([#6])[#6])]",Potential electrophilic agents
+"[#6][O,SX2]P(=[O,SX1])([#6])[O,SX2][CH3,$([CH2](O)[#6]),$([CH](O)([#6])[#6])]",Potential electrophilic agents
+"[#6]C(=[O,SX1])[O,SX2][CH2,$([CH]([O,SX2])[#6])][c,CX3,CX2]",Potential electrophilic agents
+"[$([CH]=[O,SX1]),$(C([#6])=[O,SX1])][CH2,$([CH](C=[O,SX1])[#6])][F,Cl,Br,I]",Potential electrophilic agents
+"[CX4]O[CH2,$([CH](O)([CX4])[CX4]),$(C(O)([CX4])([CX4])[CX4])][CH2,$([CH]([F,Cl,Br,I])[#6])][F,Cl,Br,I]",Potential electrophilic agents
+"[CH,$(C(#C)[#6])]#C[$([CH2](C#C)[F,Cl,Br,I,$(C#N),$(OS(=O)(=O)O[#6]),$(OS(=O)(=O)[#6])]),$([CH](C#C)([#6])[F,Cl,Br,I,$(C#N),$(OS(=O)(=O)O[#6]),$(OS(=O)(=O)[#6])])]",Potential electrophilic agents
+"[c][$([CH2]([c])[F,Cl,Br,I,$(C#N),$(OS(=O)(=O)O[#6]),$(OS(=O)(=O)[#6])]),$([CH]([a])([#6])[F,Cl,Br,I,$(C#N),$(OS(=O)(=O)O[#6]),$(OS(=O)(=O)[#6])])]",Potential electrophilic agents
+"[CX4]O[CH2,$([CH](O)([F,Cl,Br,I])[#6])][F,Cl,Br,I]",Potential electrophilic agents
+C1OC1,Potential electrophilic agents
+C1[NX3]C1,Potential electrophilic agents
+C1[SX2]C1,Potential electrophilic agents
+C1CC(=O)O1,Potential electrophilic agents
+c1([CX3!R]=[CX3!R])ccccc1,Potential electrophilic agents
+"[NX3]C(=O)[$([NH](C=O)[NX2]=O),$(N(C=O)([#6])[NX2]=O)]",Potential electrophilic agents
+"[NX3]C(=[NH])[$([NH](C=[NH])[NX2]=O),$(N(C=[NH])([#6])[NX2]=O)]",Potential electrophilic agents
+"[a][NX3](O[$([CH](O)=O),$(C(=O)(O)[#6])])[$([CH](N)=O),$(C(=O)(N)[#6])]",Potential electrophilic agents
+"[#6]O[NX3](O[$([CH](O)=O),$(C(=O)(O)[#6])])[$([CH](N)=O),$(C(=O)(N)[#6])]",Potential electrophilic agents
+"[#6&!$([CX3]=[OX1,SX1,NX2])][SH]",Potential electrophilic agents
+[#6][SX2][SX2][#6],Potential electrophilic agents
+[#6][SX2][SX4](=O)(=O)[#6],Potential electrophilic agents
+[#6][SX2][SX3](=O)[#6],Potential electrophilic agents
+"[#6][SX2][F,Cl,Br,I]",Potential electrophilic agents
+[#6][SX2]C#N,Potential electrophilic agents
+[a][SX4](=O)(=O)[OH],Potential electrophilic agents
+"[cH,$(c(c)([sX2])[#6])]1[cH,$(c(c)(c=O)[#6])]c(=O)[nH,$(n(c=O)([sX2])[#6])][sX2]1",Potential electrophilic agents
+"[CH2,$([CH](C)([SX2])[#6])]1[CH2,$([CH](C)(C=O)[#6])]C(=O)[NH,$(N(C=O)([SX2])[#6])][SX2]1",Potential electrophilic agents
+[#6][SX4](=O)(=O)[NH]Cl,Potential electrophilic agents
+"[CH,$(C(=O)(N)[#6])](=O)[NX3]([F,Cl,Br,I])[CH,$(C(=O)(N)[#6])]=O",Potential electrophilic agents
+"C=[CH][F,Cl,Br,I]",Potential electrophilic agents
+C=[CH]OS(=O)(=O)[#6],Potential electrophilic agents
+C=[CH]OS(=O)(=O)O[#6],Potential electrophilic agents
+"C=[CH]OP(=[O,SX])(O[#6])[#6]",Potential electrophilic agents
+"C=[CH]OP(=[O,SX])(O[#6])O[#6]",Potential electrophilic agents
+"[NX3,SX2][CH2,$([CH]([NX3,SX2])([CX4])[CX4])][CH2,$([CH]([CX4])([Cl,Br,I])[CX4])][Cl,Br,I]",Potential electrophilic agents
+"[Cl,Br,I][CH2,$([CH]([Cl,Br,I])([CX4])[CX4])][CH2,$([CH]([Cl,Br,I])([CX4])[CX4])][Cl,Br,I]",Potential electrophilic agents
+"c1([$([NX3](=[OX1])=[OX1]),$([NX3+](=[OX1])[O-]),$([CH]=O),$(C#N),$(C(=O)[CH3])])c(F)c(F)c(F)c(F)c1(F)",Potential electrophilic agents
+"[$(O1COCC(Br)([$([NX3](=[OX1])=[OX1]),$([NX3+](=[OX1])[O-])])C1),$([OX2H1]CC(Br)([$([NX3](=[OX1])=[OX1]),$([NX3+](=[OX1])[O-])])C[OX2H1])]",Potential electrophilic agents
+[#7X3]1(C[OH1])C(=[OX1])[#7X3](C[OH1])C([CH3])([CH3])C1(=[OX1]),Potential electrophilic agents
+"C1(=[OX1])[NX3H1]C(=[OX1])[NX3H1][CX4]1(C[OH1])[NX3H1][CX3](=[OX1])[NX3!H0][#1,#6]",Potential electrophilic agents
+[OH1][CX4][NX3H1][CX4][CX3](=[OX1])[OX2H1],Potential electrophilic agents
+c1ccccc1[CX4][OX2][CX4][OH1],Potential electrophilic agents
+"[#6,#1][NX3H1][NX3H1][#6,#1]",Idiosyncratic toxicity (RM formation)
+"a[$([NX3](=[OX1])=[OX1]),$([NX3+](=[OX1])[O-])]",Idiosyncratic toxicity (RM formation)
+N([CX4])([CX4])C1=Nc2ccccc2[NX3H1]c3c1cccc3,Idiosyncratic toxicity (RM formation)
+"[#1,CX4!R][NX3]([#1,CX4!R])[CH2]c1ccccc1",Idiosyncratic toxicity (RM formation)
+"[#1,CX4,$(c1ccccc1)][CX2]#[CX2][NX3]([#1,CX4,$(c1ccccc1)])[#1,CX4,$(c1ccccc1)]",Idiosyncratic toxicity (RM formation)
+"[CX4]1[CX4][CX4]1[NX3]([#1,CX4,$(c1ccccc1)])[#1,CX4,$(c1ccccc1)]",Idiosyncratic toxicity (RM formation)
+"[NX3]1([CX4!R])[CX4][CX3]=[CX3](c2c([#1,#6,F,Cl,Br,I])c([#1,#6,F,Cl,Br,I])c([#1,#6,F,Cl,Br,I])c([#1,#6,F,Cl,Br,I])c2([#1,#6,F,Cl,Br,I]))[CX4][CX4]1",Idiosyncratic toxicity (RM formation)
+"[NX3]1([CX4!R])[CX4][CX4][CX4]([OH1])(c2c([#1,#6,F,Cl,Br,I])c([#1,#6,F,Cl,Br,I])c([#1,#6,F,Cl,Br,I])c([#1,#6,F,Cl,Br,I])c2([#1,#6,F,Cl,Br,I]))[CX4][CX4]1",Idiosyncratic toxicity (RM formation)
+[CX3H1](=[OX1])[NX3H1][#6],Idiosyncratic toxicity (RM formation)
+"[NX3H1]1[CX3](=[OX1])[CX4]([#1,#6])([#1,#6])[NX3H1][CX3]1(=[OX1])",Idiosyncratic toxicity (RM formation)
+"[#1,#6][CX3](=[SX1])[NX3]([#1,#6])[#1,#6]",Idiosyncratic toxicity (RM formation)
+"[#1,#6][NX3]([#1,#6])[CX3](=[SX1])[#7]",Idiosyncratic toxicity (RM formation)
+[#6][Sv6X4](=[OX1])(=[OX1])[NX3H1][CX3](=[OX1])[NX3H1][#6],Idiosyncratic toxicity (RM formation)
+"[SX2!H0][#1,#6&!$([CX3]([SH1])=[OX1,SX1,NX2])]",Idiosyncratic toxicity (RM formation)
+"[$(c1([OH1])c([OH1])cccc1),$(c1([OH1])ccc([OH1])cc1)]",Idiosyncratic toxicity (RM formation)
+"[$([#6]1(=[OX1])-,:[#6]=,:[#6]-,:[#6](=[OX1])-,:[#6]=,:[#6]1),$([#6]1(=[OX1])-,:[#6](=[OX1])-,:[#6]=,:[#6]-,:[#6]=,:[#6]1)]",Idiosyncratic toxicity (RM formation)
+"[$(c1([OH1])c([CX4]([#1,#6])[#1,#6])cccc1),$(c1([OH1])ccc([CX4]([#1,#6])[#1,#6])cc1)]",Idiosyncratic toxicity (RM formation)
+"[$([OX1]=[#6X3]1-,:[#6X3]=,:[#6X3]-,:[#6X3]=,:[#6X3]-,:[#6X3]1=[CX3]([#1,#6])[#1,#6]),$([OX1]=[#6]1-,:[#6]=,:[#6]-,:[#6](=[CX3]([#1,#6])[#1,#6])-,:[#6]=,:[#6]1)]",Idiosyncratic toxicity (RM formation)
+c1ccc([OX2]2)c([OX2][CX4H1]2[OH1])c1,Idiosyncratic toxicity (RM formation)
+"c1ccc([nX3]2([#1,#6]))c(c([CH2][#1,#6])c2)c1",Idiosyncratic toxicity (RM formation)
+c1ccc[oX2]1,Idiosyncratic toxicity (RM formation)
+c1ccc[sX2]1,Idiosyncratic toxicity (RM formation)
+"[$(c1([#1,CX4!R])c([#1,CX4!R])[nX2]c([#1,CX4!R])[sX2]1),$(c1([#1,CX4!R])c([#1,CX4!R])[nX2]c([NX3]([#1,CX4!R])[#1,CX4!R])[sX2]1)]",Idiosyncratic toxicity (RM formation)
+[SX2]1[CX3](=[OX1])[NX3H1][CX3](=[OX1])[CX4]1[#6],Idiosyncratic toxicity (RM formation)
+"[$(n1c([Cl,Br,I,F])cccc1),$(n1cccc([Cl,Br,I,F])cc1)]",Idiosyncratic toxicity (RM formation)
+"[#6][CX2]#[CX2][#1,#6]",Idiosyncratic toxicity (RM formation)
+"[$([CX4]([F,Cl,Br,I])([H,!F!Cl!Br!I])([H,!F!Cl!Br!I])[H,!F!Cl!Br!I]),$([CX4]([#6])([F,Cl,Br,I])([F,Cl,Br,I])[H,!F!Cl!Br!I])]",Idiosyncratic toxicity (RM formation)
+[#6][CX3](=[OX1])[OH1],Idiosyncratic toxicity (RM formation)
+"[$([F][CX4][$([CH2]),$([CH]),$(C[OH1])][OX2][#1,#6]),$([F][CX4][$([CH2]),$([CH]),$(C[OH1])][NX3][#6])]",Idiosyncratic toxicity (RM formation)
+"[#6]1~[#6][#7,#8,#16]1","Reactive, unstable, toxic"
+[Sv2X2H1],"Reactive, unstable, toxic"
+SS,"Reactive, unstable, toxic"
+OO,"Reactive, unstable, toxic"
+[CX3!H0]=[OX1],"Reactive, unstable, toxic"
+"[CX3](=[OX1])[Cl,Br]","Reactive, unstable, toxic"
+S(=O)(=O)O,"Reactive, unstable, toxic"
+"[CX3](=[OX1])[CX4]([F,Cl,Br,I])([F,Cl,Br,I])[F,Cl,Br,I]","Reactive, unstable, toxic"
+"[CX3](=[OX1])C[Cl,Br,I]","Reactive, unstable, toxic"
+"[CX4][Br,Cl,I]","Reactive, unstable, toxic"
+"S(=[OX1])(=[OX1])[F,Cl,Br,I]","Reactive, unstable, toxic"
+[Sv6X4](=[OX1])(=[OX1])[OH1],"Reactive, unstable, toxic"
+P,"Reactive, unstable, toxic"
+I,"Reactive, unstable, toxic"
+[Se],"Reactive, unstable, toxic"
+B,"Reactive, unstable, toxic"
+[Si],"Reactive, unstable, toxic"
+"[NX2]=[CX2]=[OX1,SX1]","Reactive, unstable, toxic"
+[CX3]=[SX1!R],"Reactive, unstable, toxic"
+"[CX3](=[OX1])CC[F,Cl,Br,I]","Reactive, unstable, toxic"
+[CX3](=[OX1])[C!H0]C[OH1],"Reactive, unstable, toxic"
+"CC([Cl,Br,I])([Cl,Br,I])C","Reactive, unstable, toxic"
+"[$([NX3](=[OX1])=[OX1]),$([NX3+](=[OX1])[O-])]cc[F,Cl,Br]","Reactive, unstable, toxic"
+"[$([NX3](=[OX1])=[OX1]),$([NX3+](=[OX1])[O-])]cccc[F,Cl,Br]","Reactive, unstable, toxic"
+"nc[F,Cl,Br]","Reactive, unstable, toxic"
+"nccc[F,Cl,Br]","Reactive, unstable, toxic"
+[#7][CX3](=[SX1])[#7],"Reactive, unstable, toxic"
+"N1C(=[OX1,SX1])NC(=[OX1,SX1])C(=C)C1(=[OX1,SX1])","Reactive, unstable, toxic"
+[CX4H2!R][CH2][CH2][CX4H2!R][CH2],"Reactive, unstable, toxic"
+C[C!R](=[OX1])[C!R](=[OX1])C,"Reactive, unstable, toxic"
+[!#1!#6]C~C[!#1!#6]C~C[!#1!#6]C~C[!#1!#6]C~C[!#1!#6]C~C[!#1!#6]C~C,"Reactive, unstable, toxic"
+"c1cccc2c1oc(=O)c([$(C=[OX1]),$(C=[SX1]),$(S=[OX1]),$(C#[NX1]),F,Cl,Br,I,$([CX4]([F,Cl,Br,I])([F,Cl,Br,I])([F,Cl,Br,I]));!$([CX3](=[OX1])[OH1])])[c!H0]2","Reactive, unstable, toxic"
+"[cH1]1[cH1]c2c3[cH1][cH1]c(cc3oc(=O)c2[cH1]c1[OX2][$([CH2]),$([CH3])])[OX2][C!H0]","Reactive, unstable, toxic"
+c1cccc2c1oc(=[OX1])[c!H0]c2,"Reactive, unstable, toxic"
+c1cccc2c1nc(=[OX1])[c!H0]c2,"Reactive, unstable, toxic"
+c1cccc2c1nc(=[NX2])[c!H0]c2,"Reactive, unstable, toxic"
+"c1([F,Cl,Br,I])cc([F,Cl,Br,I])cc2c1oc(=[NX2H1])c([CX3](=[OX1])[NH2])[c!H0]2","Reactive, unstable, toxic"
+c1cccc2c1oc(=[NX2])cc2,"Reactive, unstable, toxic"
+C1(=[OX1])NC(=[OX1])[CX3H1]=[CX3]1,"Reactive, unstable, toxic"
+[CX3!H0!R]=[CX3!R][CX3]=[OX1],"Reactive, unstable, toxic"
+[CX3!H0!R]=[CX3!R][CX2]#[NX1],"Reactive, unstable, toxic"
+C[CX3H1]=[CX3H1!R][CX3](=[OX1])C,"Reactive, unstable, toxic"
+C[CX3H1]=[CX3!R][CX2]#[NX1],"Reactive, unstable, toxic"
+"CC(=[OX1])C(=[OX1])[#6,#7]","Reactive, unstable, toxic"
+CC(=[OX1])C(=S)C,"Reactive, unstable, toxic"
+"[#6]1=,:[#6]-,:[#6]=,:[#6]2-,:[#6](=,:[#6]1)-,:[#6](=[OX1])-,:[#6]4-,:[#6]3=,:[#6]2-,:[#8]-,:[#7]=,:[#6]3-,:[#6]=,:[#6]-,:[#6]4","Reactive, unstable, toxic"
+"[#6]1-,:[#6]=,:[#6]-,:[#6]=,:[#6]2-,:[#6]1-,:[#6](=[OX1])-,:[#6]4=,:[#6]3-,:[#6]2=,:[#6](-,:[#6](=[OX1])-,:[#7]-,:[#6]3=,:[#6]-,:[#6]=,:[#6]4)O","Reactive, unstable, toxic"
+c1c([OH1])c([OH1])ccc1,"Reactive, unstable, toxic"
+[N!R][N!R],"Reactive, unstable, toxic"
+CC([OX2]C)([OX2]C)C,"Reactive, unstable, toxic"
+[CX4H1](C)([OX2]C)([OX2]),"Reactive, unstable, toxic"
+"[$(C(=[OX1])[CX2]#[NX1]),$(S(=[OX1])[CX2]#[NX1])]","Reactive, unstable, toxic"
+"[#7]1([CX3]=[OX1])-,:[#6]=,:[#7]-,:[#7]=,:[#7]1","Reactive, unstable, toxic"
+"[NX3H2][#7,#8]","Reactive, unstable, toxic"
+[NX3]([OH1])[CX4],"Reactive, unstable, toxic"
+[NX2]=[OX1],"Reactive, unstable, toxic"
+"c1([F,Cl,Br,I,$(C(C)=NO),$([CX2]#[NX1]),$([CX3]=[OX1]),$([CX4](F)(F)F),$([SX4](=[OX1])=[OX1]);!$([CX3](=[OX1])[OH1])])na([F,Cl,Br,I,$([SX4](=[OX1])(=[OX1])C)])a([!#7])a([!#7])a1","Reactive, unstable, toxic"
+N1C(=[SX1])[SX2]C(=C)[CX3]1=[OX1],"Reactive, unstable, toxic"
+"[C!R]([Cl,Br,I])[Cl,Br,I]","Reactive, unstable, toxic"
+"[N!R]=[C,N]","Reactive, unstable, toxic"
+"[$([#7+R][OX1-!R]),$([#7v5R]=[OX1!R]);!$([#7](~[O])~[O]);!$([#7]=[#7])]","Reactive, unstable, toxic"
+C[CX3H1]=[CX3!R](C(=[OX1])[!#1]~[!#1])[CX2]#[NX1],"Reactive, unstable, toxic"
+"a1c([F,Cl,Br,I])c([F,Cl,Br,I])ac([F,Cl,Br,I])a1","Reactive, unstable, toxic"
+"[CX3]1(=[!#1!#6])[CX3](=[!#1!#6])[#6X3]=,:[#6X3]-,:[#6X3]=,:[#6X3]1","Reactive, unstable, toxic"
+CC(=[!#1!#6;!R])C(=[!#1!#6;!R])C,"Reactive, unstable, toxic"
+CC(=[!#1!#6;!R])S(=[OX1])(=[OX1]),"Reactive, unstable, toxic"
+"[#6X3]1=,:[#6X3][CX3](=[!#1!#6])[#6X3]=,:[#6X3][#6X3]1(=[!#1!#6])","Reactive, unstable, toxic"
+C1C4CC9CC1CC(C4)C9,"Reactive, unstable, toxic"
+C1N4CN8CC1CN(C4)C8,"Reactive, unstable, toxic"
+c1ccc2c3c1cccc3CCC2,"Reactive, unstable, toxic"
+c1ccc2c3c1cccc3CC2,"Reactive, unstable, toxic"
+[!#1](=O)O[!#1]=O,"Reactive, unstable, toxic"
+"[C,S](=[O,S])[F,Br,Cl,I]","Reactive, unstable, toxic"
+N#CC=[C!H0],"Reactive, unstable, toxic"
+N#CC(=O),"Reactive, unstable, toxic"
+[#6][CH]=O,"Reactive, unstable, toxic"
+"[CX4,C!H0][Br,Cl,I]","Reactive, unstable, toxic"
+"[!$([C,S]=O)]N([!$([C,S]=O)])[CX4]N([!$([C,S]=O)])[!$([C,S]=O)]","Reactive, unstable, toxic"
+"[!$([C,S]=O)][NH][CX4]N([!$([C,S]=O)])[!$([C,S]=O)]","Reactive, unstable, toxic"
+"[!$([C,S]=O)][NH][CX4][NH][!$([C,S]=O)]","Reactive, unstable, toxic"
+"[#7][#8][C,S]=O","Reactive, unstable, toxic"
+"[F,Br,Cl,I]-cn","Reactive, unstable, toxic"
+"[F,Cl,Br,I][$(aa[Nv4,S!v2]),$(aaa[Nv4,S!v2]),$(aaaa[Nv4,S!v2])]","Reactive, unstable, toxic"
+[NX1]~[NX2]~[NX2],"Reactive, unstable, toxic"
+cC[NX4+],"Reactive, unstable, toxic"
+C(=O)[#6][NX4+],"Reactive, unstable, toxic"
+"[#6+,#17+,#53+,#15+,#16+]","Reactive, unstable, toxic"
+[#16][#16],"Reactive, unstable, toxic"
+[#6][CX3](!@N)=[CX3][#6],"Reactive, unstable, toxic"
+"C1[O,S,N]C1","Reactive, unstable, toxic"
+"[!#1&!#6][F,Cl,Br,I]","Reactive, unstable, toxic"
+"[C,N]=C=[C,O,N,S]","Reactive, unstable, toxic"
+C(=O)Onnn,"Reactive, unstable, toxic"
+[#7]!@-N,"Reactive, unstable, toxic"
+[NX2+]#[CX1-],"Reactive, unstable, toxic"
+[C!H0]=C(C#N)C(=O),"Reactive, unstable, toxic"
+[!c][C!H0]=CC=O,"Reactive, unstable, toxic"
+"[C!H0]=C[S,N]=O","Reactive, unstable, toxic"
+nC(=O)[#6],"Reactive, unstable, toxic"
+[NR0]-[SR0!v6],"Reactive, unstable, toxic"
+"C(=O)O[$(aa[Nv4,S!v2]),$(aaa[Nv4,S!v2]),$(aaaa[Nv4,S!v2])]","Reactive, unstable, toxic"
+"C1[O,S]CC1","Reactive, unstable, toxic"
+"CC(=O)C([F,Cl,Br,I])([F,Cl,Br,I])[F,Cl,Br,I]","Reactive, unstable, toxic"
+OO,"Reactive, unstable, toxic"
+[#6]P(=O)O[#6],"Reactive, unstable, toxic"
+"NP(=[N,O,S])","Reactive, unstable, toxic"
+O=C1C=CC(=O)C=C1,"Reactive, unstable, toxic"
+O=C1C(=O)C=CC=C1,"Reactive, unstable, toxic"
+"[#6!v4+0,#7!v3+0,#8!v2+0,#15!v3!v5+0,#16!v2!v4!v6+0]","Reactive, unstable, toxic"
+SC#N,"Reactive, unstable, toxic"
+[!#1]OS(=O)O,"Reactive, unstable, toxic"
+[#6]S(=O)(=O)O[#6],"Reactive, unstable, toxic"
+"C(=S)[O,S,N]","Reactive, unstable, toxic"
+[CR0](=O)S,"Reactive, unstable, toxic"
+[#6][Sv2H],"Reactive, unstable, toxic"
+C(=S)[!#1!H0],"Reactive, unstable, toxic"
+C(=O)N(C(=O))OC=O,"Reactive, unstable, toxic"
+FC(F)(F)S(=O),"Reactive, unstable, toxic"
+[#6!c][N!v3]=O,"Reactive, unstable, toxic"
+c12ccccc1cc3ccccc3c2,"Reactive, unstable, toxic"
+"[NR0,SR0]=[NR0]","Reactive, unstable, toxic"
+c1(cc(N)cc2)c2cccc1,"Reactive, unstable, toxic"
+[#6]P[#6],"Reactive, unstable, toxic"
+"[Cl,I]=O","Reactive, unstable, toxic"
+"[C,S,P](=O)[OH].[C,S,P](=O)[OH].[C,S,P](=O)[OH].[C,S,P](=O)[OH]","Reactive, unstable, toxic"
+[OR1][CR1][CR1][OR1][CR1][CR1][OR1],"Reactive, unstable, toxic"
+PC#N,"Reactive, unstable, toxic"
+N#CC[OH],"Reactive, unstable, toxic"
+[CX3R0](=O)[CX3R0](=O),"Reactive, unstable, toxic"
+[NR0v3]-[OR0],"Reactive, unstable, toxic"
+"[$([#6][CHR0]=[NR0]),$([#6][CR0]([#6])=[NR0])]","Reactive, unstable, toxic"
+C=C(C#N)(C#N),"Reactive, unstable, toxic"
+"[$([#7+][O-]),$([#7v5]=O);!$([#7](~[OD1])~[OD1])]","Reactive, unstable, toxic"
+[!#1]ON=O,"Reactive, unstable, toxic"
+[NX2]=O,"Reactive, unstable, toxic"
+[!#1;!#6;!#7;!#8;!#9;!#11;!#12;!#15;!#16;!#17;!#19;!#20;!#35;!#53],"Reactive, unstable, toxic"
+"P=[S,#6]","Reactive, unstable, toxic"
+c1c(F)c(F)c(F)c(F)c1(F),"Reactive, unstable, toxic"
+c12ccccc1ccc3ccccc23,"Reactive, unstable, toxic"
+c1([NH2])ccc(!@[Nv3])cc1,"Reactive, unstable, toxic"
+[P!v5],"Reactive, unstable, toxic"
+[CR0]=[CR0][CR0]=[CR0][CR0]=[CR0][CR0]=[CR0],"Reactive, unstable, toxic"
+[CX4]C(=O)O[#6][!#1],"Reactive, unstable, toxic"
+[CX4]C(=O)C,"Reactive, unstable, toxic"
+"[CX4][NX3]([CX4])c1cc([$([CX4]),$(O[CX4][CX4])])c([#7])[cH]c1","Reactive, unstable, toxic"
+[CX4][NX3]([CX4])c1c[cH]c([#7])[cH]c1,"Reactive, unstable, toxic"
+[CX4][NX3]([CX4])c1ccc(C=C)cc1,"Reactive, unstable, toxic"
+[CX4][NH]c1ccc(O[CX4])cc1,"Reactive, unstable, toxic"
+[CX4]N([CX4])c1ccc(O[CX4])cc1,"Reactive, unstable, toxic"
+"[CX4]N([CX4])c1ccc([CX4][$([OH]),$(C=[C!H0]),$(N[CX4])])cc1","Reactive, unstable, toxic"
+"[CX4]N([C!H0])c1[cH][cH]c([$([C!H0!H1]),$([C!H0][C!H0])])[cH][cH]1","Reactive, unstable, toxic"
+"[CX4]N([C!H0])c1[cH]c([CX4])c([$([C!H0!H1]),$([C!H0][C!H0])])[cH][cH]1","Reactive, unstable, toxic"
+P(=O)OP(=O),"Reactive, unstable, toxic"
+S(=O)OS=O,"Reactive, unstable, toxic"
+"C1(=C)C(=O)[#7,#8,#15,#16]N=C1","Reactive, unstable, toxic"
+C1(=S)NC(=O)C(=[#6])S1,"Reactive, unstable, toxic"
+"[#7,#8,#15,#16]~C1~[#7,#8,#15,#16]~C[#7,#8,#15,#16][CX3](=[#7,#8,#15,#16])[CX3]1(=[C!H0])","Reactive, unstable, toxic"
+C1CC(=O)NC(=O)C1,"Reactive, unstable, toxic"
+[CD1][CD2][CD2][CD2][CD2][CX4],"Reactive, unstable, toxic"
+[OH]c1c(C=NN)cccc1,"Reactive, unstable, toxic"
+[OH]c1ccc(C=NN)cc1,"Reactive, unstable, toxic"
+"[#6][#6](=[#7,#8,#15,#16])[#6](=[#7,#8,#15,#16])[#6,Sv6]","Reactive, unstable, toxic"
+O=C1[#7]c2ccccc2C1=N[#7],"Reactive, unstable, toxic"
+"[nH]1c([$([CH2]),$([C!H0]N),$([CD3]([CH2])[NH][CH2]),$([CD3]([CH2])[CD2][NH][CH2]),$([#6]=,:[#7,#8,#15,#16])])c([CX4!H0])c2[cH]cccc12","Reactive, unstable, toxic"
+"n1([CH2])c([$([CH2]),$([C!H0]N),$([CD3]([CH2])[NH][CH2]),$([CD3]([CH2])[CD2][NH][CH2]),$([#6]=,:[#7,#8,#15,#16])])c([CX4!H0])c2[cH]cccc12","Reactive, unstable, toxic"
+"[*r10,*r11,*r12,*r13,*r14,*r15,*r16,*r17,*r18,*r19,*r20,*r21,*r22,*r23,*r24,*r25,*r26,*r27,*r28,*r29,*r30]","Reactive, unstable, toxic"
+[OH]c1c([CX4][#7])cccc1,"Reactive, unstable, toxic"
+"NC(=[O,S])NC(=[O,S])NC=[O,S]","Reactive, unstable, toxic"
+C1COC(C1)C1CCCCO1,"Reactive, unstable, toxic"
+[C!H0]1NC(=O)C2CCCCC12,"Reactive, unstable, toxic"
+N1(c2[!#1]cccc2)C([CX4])=C[C!H0]=C1[CX4],"Reactive, unstable, toxic"
+"[#7,#8,#15,#16]=[#6]1-,:[#6]=,:[#6]-,:[#6](=[#7,#8,#15,#16])-,:[#6]=,:[#6]1","Reactive, unstable, toxic"
+"[#7]=C1S[CH]=C([$([CH2]),$(c:c)])N1","Reactive, unstable, toxic"
+"[#7]=C1SC([$([CH2]),$(C=O)])=C([$([CH2]),$(c:c)])N1","Reactive, unstable, toxic"
+c[CX4](c)c,"Reactive, unstable, toxic"
+"[CH2,CH3]C#C[CH2,CH3]","Reactive, unstable, toxic"
+"[CX3](=[OX1])[CX4]([#1,Cl,Br,I])([#1,Cl,Br,I])[Cl,Br,I]","Reactive, unstable, toxic"
+"[#6,#1][CX3]([H])=[OX1]","Reactive, unstable, toxic"
+"[F,Cl,Br,I][CX4][CX2]#[NX1]","Reactive, unstable, toxic"
+"[c,n]1[c,n][c,n]c2[c,n]c3[c,n][c,n][c,n][c,n]c3[c,n]c2c1","Reactive, unstable, toxic"
+"[#6]-[$([NX2]=[NX2+]=[NX1-]),$([NX2]=[NX2+]=N)]","Reactive, unstable, toxic"
+[#6]-[NX2-][NX2+]#[NX1;0],"Reactive, unstable, toxic"
+"[#7,#8,#16]1-,:[#6]=,:[#6]-,:[#7+]2=,:[#6,#7]-,:[#6,#7]=,:[#6,#7]-,:[#6,#7]=,:[#6]21","Reactive, unstable, toxic"
+c1([OH1])c([OH1])cccc1,"Reactive, unstable, toxic"
+"[NX2]=[CX2]=[OX1,SX1]","Reactive, unstable, toxic"
+"[#1,#6][CX3](=[OX1])[CX3](=[OX1])[#1,#6]","Reactive, unstable, toxic"
+C1OC1,"Reactive, unstable, toxic"
+"[C!H0]([#1,#6,#7,#8,#16])[CX4]([#1,Cl,Br,I])([#1,Cl,Br,I])[Cl,Br,I]","Reactive, unstable, toxic"
+"[CX4]([#1,Cl,Br,I])([#1,Cl,Br,I])([Cl,Br,I])[#7,#8,#16]","Reactive, unstable, toxic"
+"[CX3!H0]=[CX3]([#1,Cl,Br,I])[Cl,Br,I]","Reactive, unstable, toxic"
+"c1([F,Cl,Br,I])n[c,n][c,n][c,n][c,n]1","Reactive, unstable, toxic"
+"[CH3][CH2][CH2][CH2][CH2][CH2][CH2,CH3]","Reactive, unstable, toxic"
+"[NX3!H0]([#1,#6])[NX3!H0]([#1,#6])","Reactive, unstable, toxic"
+"[NX3]([#1,#6])([#1,#6])[NX2]=[CX3!H0]([#1,#6])","Reactive, unstable, toxic"
+"[$([OX1-][#7+]1=,:[#6,#7]-,:[#6,#7]=,:[#6,#7]-,:[#6,#7]=,:[#6,#7]1),$([OX1]=[#7v5]1=,:[#6,#7]-,:[#6,#7]=,:[#6,#7]-,:[#6,#7]=,:[#6,#7]1)]","Reactive, unstable, toxic"
+"[$([OX1-][#7+]1=,:[#6,#7]-,:[#6,#7]=,:[#6,#7]-,:[#6,#7,#8,#16]1),$([OX1]=[#7v5]1=,:[#6,#7]-,:[#6,#7]=,:[#6,#7]-,:[#6,#7,#8,#16]1)]","Reactive, unstable, toxic"
+[#15&0],"Reactive, unstable, toxic"
+[#15+],"Reactive, unstable, toxic"
+c1c(F)c(F)c(F)c(F)c1(F),"Reactive, unstable, toxic"
+[OX2][OX2],"Reactive, unstable, toxic"
+"O[F,Cl,Br,I]","Reactive, unstable, toxic"
+[Pv5X4](=[OX1])([OX2])([OX2])[#6],"Reactive, unstable, toxic"
+[#15]=O,"Reactive, unstable, toxic"
+"[#6][#7+]1=,:[#6]-,:[#6,#7]=,:[#6]-,:[#6,#7]=,:[#6]1","Reactive, unstable, toxic"
+"[#6,#7]1=,:[#6,#7]-,:[#6,#7]=,:[#7+]2-,:[#6,#7]=,:[#6,#7]-,:[#6,#7]=,:[#6,#7]-,:[#6]2=,:[#6,#7]1","Reactive, unstable, toxic"
+"[#6]1(=[OX1])-,:[#6]=,:[#6]-,:[#6](=[OX1])-,:[#6]=,:[#6]1","Reactive, unstable, toxic"
+"[Sv6X4](=[OX1])(=[OX1])([#8])[#6,#8]","Reactive, unstable, toxic"
+"[#6,#1][CX3]([H])=[SX1]","Reactive, unstable, toxic"
+"[#16][F,Cl,Br,I]","Reactive, unstable, toxic"
+"[#6&!$(C(=[OX1,SX1,NX2]))][SX2H1]","Reactive, unstable, toxic"
+"[NX3H2][CX3](=[SX1])[#1,#6,#8]","Reactive, unstable, toxic"
+"[NX3]([#1,#6,#7])([#1,#6])[CX3](=[SX1])[NX3]([#1,#6,#7])([#1,#6])","Reactive, unstable, toxic"
+"[#6][#7+]1=,:[#6]-,:[#7,#8,#16]-,:[#6]=,:[#6]1","Reactive, unstable, toxic"
+"[Br,Cl,F,I][CX3](=[OX1])[#1,*&!$([OH1])&!$([SH1])]","Reactive, unstable, toxic"
+"[#6][Sv6X4](=[OX1])(=[OX1])[F,Cl,Br,I]","Reactive, unstable, toxic"
+"[CX4][F,Cl,Br,I]","Reactive, unstable, toxic"
+[NX2]=[CX2]=[OX1],"Reactive, unstable, toxic"
+[NX2]=[CX2]=[SX1],"Reactive, unstable, toxic"
+"[$(c([F,Cl,Br,I])c[$([NX3](=[OX1])=[OX1]),$([NX3+](=[OX1])[O-])]),$(c([F,Cl,Br,I])aac[$([NX3](=[OX1])=[OX1]),$([NX3+](=[OX1])[O-])]),$(c([F,Cl,Br,I])n),$(c([F,Cl,Br,I])aan)]","Reactive, unstable, toxic"
+[CX3](=[OX1])[OX2][CX3](=[OX1]),"Reactive, unstable, toxic"
+"[$([#1,#6][CX3]([H])=[OX1]),$([#7]([#1,#6])([#1,#6])[CX3H1]=[OX1])]","Reactive, unstable, toxic"
+"[#1,#6][NX3]([#1,#6])[NX3]([#1,#6])[#1,#6]","Reactive, unstable, toxic"
+"[$(*-[NX2-]-[NX2+]#[NX1]),$(*-[NX2]=[NX2+]=[NX1-]),$(*-[NX2]=[NX2+]=N)]","Reactive, unstable, toxic"
+"[$([CX3]=[NX2+]=N),$([CX3]=[NX2]=[NX1]),$([CX3]=[NX2+]=[NX1-]),$([#6-][NX2+]#[NX1]),$([CX3][NX2]#[NX1])]","Reactive, unstable, toxic"
+[NX2]=[OX1],"Reactive, unstable, toxic"
+[NX3]1[CX4][CX4]1,"Reactive, unstable, toxic"
+[OX2]1[CX4][CX4]1,"Reactive, unstable, toxic"
+[SX2][SX2],"Reactive, unstable, toxic"
+"c1([OH1,O-])c([$([NX3](=[OX1])=[OX1]),$([NX3+](=[OX1])[O-])])cc([$([NX3](=[OX1])=[OX1]),$([NX3+](=[OX1])[O-])])cc1([$([NX3](=[OX1])=[OX1]),$([NX3+](=[OX1])[O-])])","Reactive, unstable, toxic"
+"[$([Clv7X4](=[OX1])(=[OX1])(=[OX1])[OX2,O-]),$([Iv7X4](=[OX1])(=[OX1])(=[OX1])[OX2,O-])]","Reactive, unstable, toxic"
+"[$(c1([NX3]([#1,#6])[#1,#6])ccccc1),$(c1([OH1])ccccc1)]","Reactive, unstable, toxic"
+[CX3R](=[OX1])[CX3R](=[OX1]),"Reactive, unstable, toxic"
+[CX3]([!R])([!R])=[CX3][CX3](=[OX1])[!$([OH1])!$([OX2][CH2])!$([NH2])!$([CX2]#[NX1])!a],"Reactive, unstable, toxic"
+[!#1;!#6;!#7;!#8;!#9;!#11;!#12;!#15;!#16;!#17;!#19;!#20;!#35;!#53],"Reactive, unstable, toxic"
+[!#1!#2!#5!#6!#7!#8!#9!#10!#14!#15!#16!#17!#18!#32!#33!#34!#35!#36!#51!#52!#53!#54!#84!#85!#86],Custom filters
+[!#6!#1!#7!#8!#9!#17!#35!#53!#15!#14!#16],Custom filters
+[!#1!#6!#7!#8!#16!#15!#9!#17!#35!#53],Custom filters
+C(F)(F)C(F)(F),Custom filters
+"[+,++,+3,+4,+5,+6,+7,$([#7v4]),$([#8v3])] AND NOT [$([NX2]=[NX2+]=[NX1-]),$([NX2 show full SMARTS",Extended Functional Groups (EFG)
+"[-,--,-3,-4,-5,-6,-7] AND NOT [$([NX2]=[NX2+]=[NX1-]),$([NX2]=[NX2+]=N),$([NX2-] show full SMARTS",Extended Functional Groups (EFG)
+"[$([H][CX3]([#1,#6])=[OX1]),$([#6&!$(C#N)][CX3](=[OX1])[#6&!$(C#N)])]",Extended Functional Groups (EFG)
+"[H][CX3]([#1,#6])=[OX1]",Extended Functional Groups (EFG)
+[#6&!$(C#N)][CX3](=[OX1])[#6&!$(C#N)],Extended Functional Groups (EFG)
+"[$([#1,#6][#6X3](=[SX1])[#1,#6]),$([#6]=[CX2]=[Sv2X1])]",Extended Functional Groups (EFG)
+"[#1][CX3]([#1,#6])=[SX1]",Extended Functional Groups (EFG)
+[#6&!$(C#N)][CX3](=[SX1])[#6&!$(C#N)],Extended Functional Groups (EFG)
+"[#1,#6][CX3](=[NX2][#1,#6&!$([CX3]=[OX1,SX1,NX2])])[#1,#6]",Extended Functional Groups (EFG)
+"[CX3]([#1,#6])([#1,#6])=[NX2][#7X3]([#1,#6&!$([CX3]=[OX1,SX1,NX2])])[#1,#6&!$([CX3]=[OX1,SX1,NX2])]",Extended Functional Groups (EFG)
+"[#1,#6][CX3]([#1,#6])=[NX2][NX3]([#1,#6&!$([CX3]=[OX1,SX1,NX2])])[CX3](=[OX1])[NX3]([#1,#6&!$([CX3]=[OX1,SX1,NX2])])[#1,#6&!$([CX3]=[OX1,SX1,NX2])]",Extended Functional Groups (EFG)
+"[#1,#6][CX3]([#1,#6])=[NX2][NX3]([#1,#6&!$([CX3]=[OX1,SX1,NX2])])[CX3](=[SX1])[NX3]([#1,#6&!$([CX3]=[OX1,SX1,NX2])])[#1,#6&!$([CX3]=[OX1,SX1,NX2])]",Extended Functional Groups (EFG)
+"[#1,#6][CX3]([#1,#6])=[NX2][OH1]",Extended Functional Groups (EFG)
+"[#1,#6][CX3]([#1,#6])=[NX2][OX2][#6&!$([CX3]=[OX1,SX1,NX2])]",Extended Functional Groups (EFG)
+"[OX1]=[CX2]=[CX3]([#1,#6])[#1,#6]",Extended Functional Groups (EFG)
+"[#1,#6][CX3]([#1,#6])=[CX3]([!#6!#1])[!#6!#1]",Extended Functional Groups (EFG)
+"[CH2,$([CH1][#6]),$([CX4]([#6])[#6])]([OH1])[OH1]",Extended Functional Groups (EFG)
+"[CH2,$([CH1][#6]),$([CX4]([#6])[#6])]([OH1])[OX2][#6&!$([CX3]=[OX1,SX1,NX2])]",Extended Functional Groups (EFG)
+"[CH2,$([CH1][#6]),$([CX4]([#6])[#6])]([OX2][#6&!$([CX3]=[OX1,SX1,NX2])])[OX2][#6&!$([CX3]=[OX1,SX1,NX2])]",Extended Functional Groups (EFG)
+"[CH2,$([CH1][#6]),$([CX4]([#6])[#6])]([OX2][#1,#6&!$([CX3]=[OX1,SX1,NX2])])[NX3]([#1,*])[#1,*]",Extended Functional Groups (EFG)
+"[CH2,$([CH1][#6]),$([CX4]([#6])[#6])]([NX3]([#1,*])[#1,*])[NX3]([#1,*])[#1,*]",Extended Functional Groups (EFG)
+"[CH2,$([CH1][#6]),$([CX4]([#6])[#6])]([SX2][#1,#6&!$([CX3]=[OX1,SX1,NX2])&!$(C#N)])[NX3]([#1,*])[#1,*]",Extended Functional Groups (EFG)
+"[CH2,$([CH1][#6]),$([CX4]([#6])[#6])]([SX2][#6&!$([CX3]=[OX1,SX1,NX2])&!$(C#N)])[SX2,OX2][#6&!$([CX3]=[OX1,SX1,NX2])&!$(C#N)]",Extended Functional Groups (EFG)
+"[CX3]([#1,#6])([#1,#6])=[CX3]([#1,#6])[NX3&!$([NX3](=[OX1])=[OX1])&!$([NX3+](=[OX1])[O-])]([#1,*])[#1,*]",Extended Functional Groups (EFG)
+"[CX3]([#1,#6])([#1,#6])=[CX3]([OH1])[#1,#6]",Extended Functional Groups (EFG)
+"[CX3]([#1,#6])([#1,#6])=[CX3]([OX2][#6&!$([CX3]([OX2])=[OX1,SX1,NX2,C])])[#1,#6]",Extended Functional Groups (EFG)
+"[#6&!$([CX4]([OH1])[#8,#16,#7,#15])&!$([CX3]([OH1])=[OX1,SX1,NH2,C])][OH1]",Extended Functional Groups (EFG)
+"[$([CX4][OH1])&!$(C([OH1])[#7,#8,#15,#16,F,Cl,Br,I])]",Extended Functional Groups (EFG)
+"[$([#6][CH2][OH1]),$([CH3][OH1])]",Extended Functional Groups (EFG)
+[OH1][CX4H1]([#6])[#6],Extended Functional Groups (EFG)
+[CX4]([OH1])([#6])([#6])[#6],Extended Functional Groups (EFG)
+"[CX4]([OH1])([#1,#6])([#1,#6])[CX4]([OH1])([#1,#6])([#1,#6])",Extended Functional Groups (EFG)
+"[CX4]([#1,#6])([#1,#6])([OH1])[CX4]([#1,#6])([#1,#6])[NH2,$([NH1]([CX4][CX4][OH1])[#6&!$([CX3]=[OX1,SX1,NX2,C])])]",Extended Functional Groups (EFG)
+c[OH1],Extended Functional Groups (EFG)
+"[$(c([OH1])c([OH1])),$(c([OH1])[aR1]c([OH1])),$(c1([OH1])aac([OH1])aa1)]",Extended Functional Groups (EFG)
+"[CX3]([#1,#6])([OH1])=[CX3]([#1,#6])([OH1])",Extended Functional Groups (EFG)
+"[#6&!$([CX4]([OX2])([#7,O,S,F,Cl,Br,I,P]))&!$([CX3]([OX2])=[OX1,SX1,NX2,C])][OX2][#6&!$([CX4]([OX2])([#7,O,S,F,Cl,Br,I,P]))&!$([CX3]([OX2])=[OX1,SX1,NX2,C])]",Extended Functional Groups (EFG)
+"[CX4&!$([CX4]([OX2])([#7,O,S,F,Cl,Br,I,P]))][OX2][CX4&!$([CX4]([OX2])([#7,O,S,F,Cl,Br,I,P]))]",Extended Functional Groups (EFG)
+"[CX4&!$([CX4]([OX2])([#7,O,S,F,Cl,Br,I,P]))][OX2]c",Extended Functional Groups (EFG)
+c[OX2&!$([OX2r3])]c,Extended Functional Groups (EFG)
+[*][#16X2][#16X2][*],Extended Functional Groups (EFG)
+"[#6&!$([CX3]=[OX1,SX1,NX2])][OX2][OX2][#6&!$([CX3]=[OX1,SX1,NX2])]",Extended Functional Groups (EFG)
+"[#1,#6][OX2][OX2H1]",Extended Functional Groups (EFG)
+"[$([NX4]([#1,#6])([#1,#6])([#1,#6])),$([NX3]([#1,#6])([#1,#6])),$([NX2]=[#1,#6])][$([NX4]([#1,#6])([#1,#6])([#1,#6])),$([NX3]([#1,#6])([#1,#6])),$([NX2]=[#1,#6])]",Extended Functional Groups (EFG)
+"[N&!$([NH1]([CX3]=[OX1,SX1,NX2])[OH1])&!$(N([OH1])([CX3]=[OX1,SX1,NX2])([CX3]=[OX1,SX1,NX2]))]([#1,#6])([#1,#6])[OH1]",Extended Functional Groups (EFG)
+"[NX3H2][CX4&!$([CX4]([NH2])[O,N,S,P])]",Extended Functional Groups (EFG)
+[NX3H2]c,Extended Functional Groups (EFG)
+"[NX3H1]([CX4&!$([CX4]([NX3H1])[O,S,N,P])])[CX4&!$([CX4]([NX3H1])[O,S,N,P])]",Extended Functional Groups (EFG)
+"c[NX3H1][CX4&!$([CX4]([NX3H1])[O,N,S,P])]",Extended Functional Groups (EFG)
+[NX3H1](c)c,Extended Functional Groups (EFG)
+"[NX3]([CX4&!$([CX4]([NX3])[O,S,N,P])])([CX4&!$([CX4]([NX3])[O,S,N,P])])[CX4&!$([CX4]([NX3])[O,S,N,P])]",Extended Functional Groups (EFG)
+"c[NX3]([CX4&!$([CX4]([NX3])[O,N,S,P])])[c,CX4&!$([CX4]([NX3]c)[O,S,N,P])]",Extended Functional Groups (EFG)
+[NX3](c)(c)c,Extended Functional Groups (EFG)
+"[NX4,NX4+]([#6])([#6])([#6])[#6]",Extended Functional Groups (EFG)
+"[$([OX1-,OH1][#7X4+]([*])([*])([*])),$([OX1]=[#7X4v5]([*])([*])([*])),$([OX1]=[Nv5X3&!$([Nv5X3](=[OX1])=[OX1])](=[*])([*])),$([OX1-,OH1][#7X3+R](~[R])(~[R])),$([OX1]=[#7v5X3R](~[R])(~[R]))]",Extended Functional Groups (EFG)
+"[CX4,CX3,c;!$([#6]=[OX1])][F,Cl,Br,I]",Extended Functional Groups (EFG)
+"[CX4]F AND NOT [$([CX4](F)[CX3]=[CX3]),$([CX4](F)[CX2]#[CX2]),$([CX4](F)a)]",Extended Functional Groups (EFG)
+"[CX4]Cl AND NOT [$([CX4](Cl)[CX3]=[CX3]),$([CX4](Cl)[CX2]#[CX2]),$([CX4](Cl)a)]",Extended Functional Groups (EFG)
+"[CX4]Br AND NOT [$([CX4](Br)[CX3]=[CX3]),$([CX4](Br)[CX2]#[CX2]),$([CX4](Br)a)]",Extended Functional Groups (EFG)
+"[CX4]I AND NOT [$([CX4](I)[CX3]=[CX3]),$([CX4](I)[CX2]#[CX2]),$([CX4](I)a)]",Extended Functional Groups (EFG)
+aF,Extended Functional Groups (EFG)
+aCl,Extended Functional Groups (EFG)
+aBr,Extended Functional Groups (EFG)
+aI,Extended Functional Groups (EFG)
+[!#1!#2!#5!#6!#7!#8!#9!#10!#14!#15!#16!#17!#18!#32!#33!#34!#35!#36!#51!#52!#53!#54!#84!#85!#86]~[#6],Extended Functional Groups (EFG)
+[Li][#6],Extended Functional Groups (EFG)
+[Mg][#6],Extended Functional Groups (EFG)
+"[#1,#6][CX3](=[OX1])[!#1!#6!$([SH1,SX2])]",Extended Functional Groups (EFG)
+"[#1,#6][CX3](=[OX1])[OX2H1]",Extended Functional Groups (EFG)
+"[#1,#6][CX3](=[OX1])[OX1-]",Extended Functional Groups (EFG)
+"[#1,#6][CX3](=[OX1])[OX2][#6&!$([CX3]=[OX1,SX1,NX2])]",Extended Functional Groups (EFG)
+"[#6R][CX3R](=[OX1])[OX2R][#6R&!$([CX3R]=[OX1,SX1,NX2])]",Extended Functional Groups (EFG)
+"[#1,#6][CX3](=[OX1])[NX3]([#1,#6&!$([CX3]=[OX1,SX1,NX1])])[#1,#6&!$([CX3]=[OX1,SX1,NX1])]",Extended Functional Groups (EFG)
+"[#1,#6][CX3](=[OX1])[NX3H2]",Extended Functional Groups (EFG)
+"[#1,#6][CX3](=[OX1])[NX3H1][#6&!$([CX3]=[OX1,SX1,NX2])]",Extended Functional Groups (EFG)
+"[#1,#6][CX3](=[OX1])[NX3]([#6&!$([CX3]=[OX1,SX1,NX2])])[#6&!$([CX3]=[OX1,SX1,NX2])]",Extended Functional Groups (EFG)
+"[#6R][CX3R](=[OX1])[NX3R]([#1,#6&!$([CX3]=[OX1,SX1,NX2])])[#6R&!$([CX3R]=[OX1,SX1,NX2])]",Extended Functional Groups (EFG)
+"[$([#6,#1][#6X3](=[OX1])[#7X3&!$([#7X3]([*]=[OX1,SX1])[#7X3]([*]=[OX1,SX1]))][#7X3]),$(C1(=O)[NX3][NX3]C(=O)cc1)]",Extended Functional Groups (EFG)
+"[#1,#6][CX3](=[OX1])[$([NX2]=[NX2+]=[NX1-]),$([NX2]=[NX2+]=N),$([NX2-]-[NX2+]#[NX1])]",Extended Functional Groups (EFG)
+"[#1,#6][CX3](=[OX1])[NX3][OH1]",Extended Functional Groups (EFG)
+"[#1,#6][NX2]=[CX3]([#1,#6])[NX3]([#1,#6&!$([CX3]=[OX1,SX1,NX2])])[#1,#6&!$([CX3]=[OX1,SX1,N])]",Extended Functional Groups (EFG)
+"[#1,#6][NX2]=[CX3]([#1,#6])[NX3]([#1,#6&!$([CX3]=[OX1,SX1,NX2])])[NX3]([#1,#6&!$([CX3]=[OX1,SX1,NX2])])[#1,#6&!$([CX3]=[OX1,SX1,NX2])]",Extended Functional Groups (EFG)
+"[#1,#6&!$([CX3]=[OX1,SX1])][CX2]#[NX1]",Extended Functional Groups (EFG)
+"[#1,#6][CX3](=[OX1])[F,Cl,Br,I]",Extended Functional Groups (EFG)
+"[#1,#6][CX3](=[OX1])F",Extended Functional Groups (EFG)
+"[#1,#6][CX3](=[OX1])Cl",Extended Functional Groups (EFG)
+"[#1,#6][CX3](=[OX1])Br",Extended Functional Groups (EFG)
+"[#1,#6][CX3](=[OX1])I",Extended Functional Groups (EFG)
+"[#1,#6][CX3](=[OX1])[CX2]#[NX1]",Extended Functional Groups (EFG)
+"[#1,#6][CX3](=[NX2][#1,#6])[OX2][#6&!$([CX3]=[OX1,SX1,NX2,C])]",Extended Functional Groups (EFG)
+"[#1,#6][CX3](=[NX2][#1,#6])[F,Cl,Br,I]",Extended Functional Groups (EFG)
+"[$([#1,#6][CX3](=[SX1])[!#1!#6]),$([#1,#6][CX3](=[OX1])[SX2])]",Extended Functional Groups (EFG)
+"[$([#1,#6][CX3](=[SX1])[OH1,SH1]),$([#1,#6][CX3](=[OX1])[SH1])]",Extended Functional Groups (EFG)
+"[$([#1,#6][CX3](=[SX1])[OX2,SX2][#6&!$([CX3]=[OX1,SX1,NX2])]),$([#1,#6][CX3](=[OX1])[SX2][#6&!$([CX3]=[OX1,SX1,NX2])])]",Extended Functional Groups (EFG)
+"[$([#6R][CX3R](=[SX1])[OX2R,SX2R][#6R&!$([CX3R]=[OX1,SX1,NX2])]),$([#6R][CX3R](=[OX1])[SX2R][#6R&!$([CX3R]=[OX1,SX1,NX2])])]",Extended Functional Groups (EFG)
+"[#1,#6][CX3](=[SX1])[NX3]([#1,#6&!$([CX3]=[OX1,SX1,NX1])])[#1,#6&!$([CX3]=[OX1,SX1,NX1])]",Extended Functional Groups (EFG)
+"[#6R][CX3R](=[SX1])[NX3R]([#1,#6&!$([CX3]=[OX1,SX1,NX2])])[#6R&!$([CX3R]=[OX1,SX1,NX2])]",Extended Functional Groups (EFG)
+"[#1,#6][CX3](=[NX2][#1,#6])[SX2][C&!$([CX3]=[OX1,SX1,NX2])]",Extended Functional Groups (EFG)
+"[$(c(=[OX1])[$(n[#1,#6]),o,s]),$(c(=[OX1])a[$(n[#1,#6]),o,s]),$(c(=[OX1])aa[$(n[#1,#6]),o,s]),$(c(=[OX1])aaa[$(n[#1,#6]),o,s])]",Extended Functional Groups (EFG)
+"[$(c(=[SX1])[$(n[#1,#6]),o,s]),$(c(=[SX1])a[$(n[#1,#6]),o,s]),$(c(=[SX1])aa[$(n[#1,#6]),o,s]),$(c(=[SX1])aaa[$(n[#1,#6]),o,s])]",Extended Functional Groups (EFG)
+"[$(c(=N)[$(n[#1,#6]),o,s]),$(c(=N)a[$(n[#1,#6]),o,s]),$(c(=N)aa[$(n[#1,#6]),o,s]),$(c(=N)aaa[$(n[#1,#6]),o,s])]",Extended Functional Groups (EFG)
+"[CX4&!$([CX4]([F,Cl,Br,I])([F,Cl,Br,I])([F,Cl,Br,I]))]([#1,#6&!$([CX3]=[OX1,SX1,NX2])])([!#1!#6])([!#1!#6])[!#1!#6]",Extended Functional Groups (EFG)
+"[#1,#6][CX4]([OX2][#6&!$([CX3]=[OX1,SX1,NX2,C])])([OX2][#6&!$([CX3]=[OX1,SX1,NX2,C])])[OX2][#6&!$([CX3]=[OX1,SX1,NX2,C])]",Extended Functional Groups (EFG)
+"[CH1,$([CX4][#6])]([OX2][#6&!$([CX3]=[OX1,SX1,NX2,C])])([OX2][#6&!$([CX3]=[OX1,SX1,NX2,C])])[NX3]([#1,*])[#1,*]",Extended Functional Groups (EFG)
+[#6][#6X3](=[OX1])[#8X2][#6X3](=[OX1])[#6],Extended Functional Groups (EFG)
+[CX3](=[OX1])[NX3][CX3](=[OX1]),Extended Functional Groups (EFG)
+[CX3](=[OX1])[NX3H1][CX3](=[OX1]),Extended Functional Groups (EFG)
+[CX3](=[OX1])[NX3H0][CX3](=[OX1]),Extended Functional Groups (EFG)
+"[$([Cv4X4]([!#1!#6])([!#1!#6])([!#1!#6])[!#1!#6]),$([CX3](=[!#1!#6])([!#1!#6])[!#1!#6]),$([CX2](=[!#1!#6])=[!#1!#6]),$([CX2](#[!#1!#6])[!#1!#6])]",Extended Functional Groups (EFG)
+"[$([CX3](=[OX1])([!#1!#6])[!#1!#6])&!$([CX3](=[OX1])([#7,#16X2,#15,#5])[#8X2,#16X2,#7,#15,#5])]",Extended Functional Groups (EFG)
+"[OH1][CX3](=[OX1])[OX2][#6&!$([CX3]=[OX1,SX1,NX2])]",Extended Functional Groups (EFG)
+"[#6&!$([CX3]=[OX1,SX1,NX2])][OX2][CX3](=[OX1])[OX2][#6&!$([CX3]=[OX1,SX1,NX2])]",Extended Functional Groups (EFG)
+"[#6][OX2][CX3](=[OX1])[F,Cl,Br,I]",Extended Functional Groups (EFG)
+"[$([CX3](=[SX1])([!#1!#6])[!#1!#6])&!$([CX3](=[SX1])([#7,#16X2,#15,#5])[#8X2,#16X2,#7,#15,#5]),$([CX3](=[OX1])([!#1!#6])[SX2])&!$([CX3](=[OX1])([#7,#15,#5])[#8X2,#16X2,#7,#15,#5])]",Extended Functional Groups (EFG)
+"[$([OH1,SH1][CX3](=[SX1])[OX2,SX2][#6&!$([CX3]=[OX1,SX1,NX2])]),$([OH1][CX3](=[OX1])[SX2][#6&!$([CX3]=[OX1,SX1,NX2])]),$([SH1][CX3](=[SX1,OX1])[OX2,SX2][#6&!$([CX3]=[OX1,SX1,NX2])])]",Extended Functional Groups (EFG)
+"[$([#6&!$([CX3]=[OX1,SX1,NX2])][OX2,SX2][CX3](=[SX1])[OX2,SX2][#6&!$([CX3]=[OX1,SX1,NX2])]),$([#6&!$([CX3]=[OX1,SX1,NX2])][SX2][CX3](=[OX1])[OX2,SX2][#6&!$([CX3]=[OX1,SX1,NX2])])]",Extended Functional Groups (EFG)
+"[$([#6&!$([CX3]=[OX1,SX1,NX2])][OX2,SX2][CX3](=[SX1])[F,Cl,Br,I]),$([#6&!$([CX3]=[OX1,SX1,NX2])][SX2][CX3](=[OX1])[F,Cl,Br,I])]",Extended Functional Groups (EFG)
+"[NX3]([#1,*])([#1,*])[CX3](=[OX1])[!#1!#6!#16!$([Pv5])]",Extended Functional Groups (EFG)
+[OH1][CX3](=[OX1])[NX3],Extended Functional Groups (EFG)
+"[#6][OX2][CX3](=[OX1])[NH2,NH1,NX3]",Extended Functional Groups (EFG)
+"[F,Cl,Br,I][CX3](=[OX1])[NX3]",Extended Functional Groups (EFG)
+"[$([NX3&!$([NX3]([CX3]=[SX1])[CX3]=[OX1,SX1,NX2])][CX3](=[SX1])[!#1!#6!#7!$([Pv5])]),$([NX3&!$([NX3]([CX3]=[OX1])[CX3]=[OX1,SX1,NX2])][CX3](=[OX1])[SH1,SX2])]",Extended Functional Groups (EFG)
+"[$([OH1,SH1][CX3](=[SX1])[NX3]),$([SH1][CX3](=[OX1])[NX3])]",Extended Functional Groups (EFG)
+"[$([#6][OX2,SX2][CX3](=[SX1])[NX3&!$([NX3]([CX3]=[OX1,SX1])[CX3]=[OX1,SX1])]),$([#6][SX2][CX3](=[OX1])[NX3&!$([NX3]([CX3]=[OX1,SX1])[CX3]=[OX1,SX1])])]",Extended Functional Groups (EFG)
+"[F,Cl,Br,I][CX3](=[SX1])[NX3]",Extended Functional Groups (EFG)
+"[NX3&!$([NX3]([CX3]=[OX1,SX1,NX2])([CX3]=[OX1,SX1,NX2]))]([#1,#6])([#1,#6])[CX3]([OX2])=[NX2][#1,#6]",Extended Functional Groups (EFG)
+"[NX3&!$([NX3]([CX3]=[OX1,SX1,NX2])([CX3]=[OX1,SX1,NX2]))]([#1,#6])([#1,#6])[CX3]([S&!$([SX2]([CX3]=N)C=C)])=[NX2][#1,#6]",Extended Functional Groups (EFG)
+"N[CX3](=[NX2][#1,#6])N",Extended Functional Groups (EFG)
+"[$([NX3][CX3](=[OX1])[NX3&!$([NX3]([CX3]=[OX1,SX1])[NX3][CX3]=[OX1,SX1])][NX3])&!$([NX3][CX3](=[OX1])[NX3]N=C)]",Extended Functional Groups (EFG)
+"[$([NX3][CX3](=[SX1])[NX3&!$([NX3]([CX3]=[OX1,SX1])[NX3][CX3]=[OX1,SX1])][NX3])&!$([NX3][CX3](=[SX1])[NX3]N=C)]",Extended Functional Groups (EFG)
+"[#6&!$([CX3]=[OX1,SX1])][$([NX2]=[NX2+]=[NX1-]),$(N=[NX2+]=N),$([NX2-]-[NX2+]#[NX1]),$([NX2]=[NX2]#[NX1])]",Extended Functional Groups (EFG)
+[#6][NX2]=[NX2][#6],Extended Functional Groups (EFG)
+"[#6&!$([CX3]=[OX1,SX1])][NX2+]#[NX1]",Extended Functional Groups (EFG)
+"[#6&!$([CX3]=[OX1,SX1])][$([NX2+]#[CX1-]),$([NX2]#[CX1])]",Extended Functional Groups (EFG)
+[#6][OX2][CX2]#[NX1],Extended Functional Groups (EFG)
+[#6][NX2]=[CX2]=[OX1],Extended Functional Groups (EFG)
+[#6][SX2][CX2]#[NX1],Extended Functional Groups (EFG)
+[#6][NX2]=[CX2]=[SX1],Extended Functional Groups (EFG)
+"[#1,#6&!$([CX3]=[OX1,SX1])][NX2]=[CX2]=[NX2][#1,#6&!$([CX3]=[OX1,SX1])]",Extended Functional Groups (EFG)
+"[#6,#7][NX2]=[OX1]",Extended Functional Groups (EFG)
+"[#6&!$([CX3]=[OX1,SX1])][$([NX3](=[OX1])=[OX1]),$([NX3+](=[OX1])[O-])]",Extended Functional Groups (EFG)
+"[#6&!$([CX3]=[OX1,SX1])][OX2][NX2]=[OX1]",Extended Functional Groups (EFG)
+"[#6&!$([CX3]=[OX1,SX1])][OX2][$([NX3](=[OX1])=[OX1]),$([NX3+](=[OX1])[O-])]",Extended Functional Groups (EFG)
+[!#1!#6][Sv6X4](=[OX1])(=[OX1])[!#1!#6],Extended Functional Groups (EFG)
+"[OH1,O-][Sv6X4](=[OX1])(=[OX1])[OX2,O-]",Extended Functional Groups (EFG)
+"[#6][OX2][Sv6X4](=[OX1])(=[OX1])[OH1,O-]",Extended Functional Groups (EFG)
+[#6][OX2][Sv6X4](=[OX1])(=[OX1])[OX2][#6],Extended Functional Groups (EFG)
+[#6][OX2][Sv6X4](=[OX1])(=[OX1])N,Extended Functional Groups (EFG)
+"[OH1,O-][Sv6X4](=[OX1])(=[OX1])N",Extended Functional Groups (EFG)
+N[Sv6X4](=[OX1])(=[OX1])N,Extended Functional Groups (EFG)
+"[!#1!#6][Sv6X4](=[OX1])(=[OX1])[F,Cl,Br,I]",Extended Functional Groups (EFG)
+[#6][Sv6X4](=[OX1])(=[OX1])[!#1!#6],Extended Functional Groups (EFG)
+"[#6][Sv6X4](=[OX1])(=[OX1])[OH1,O-]",Extended Functional Groups (EFG)
+[#6][Sv6X4](=[OX1])(=[OX1])[OX2][#6],Extended Functional Groups (EFG)
+[#6][Sv6X4](=[OX1])(=[OX1])N,Extended Functional Groups (EFG)
+"[#6][Sv6X4](=[OX1])(=[OX1])[F,Cl,Br,I]",Extended Functional Groups (EFG)
+"[#6][Sv6X4](=[OX1,SX1,NX2])(=[OX1,SX1,NX2])[#6]",Extended Functional Groups (EFG)
+[#6][Sv4X3](=[OX1])[#6],Extended Functional Groups (EFG)
+[#6][Sv4X3](=[OX1])[!#1!#6],Extended Functional Groups (EFG)
+"[#6][Sv4X3](=[OX1])[OH1,O-]",Extended Functional Groups (EFG)
+[#6][Sv4X3](=[OX1])[OX2][#6],Extended Functional Groups (EFG)
+"[#6][Sv4X3](=[OX1])[F,Cl,Br,I]",Extended Functional Groups (EFG)
+"[#6][Sv4X3](=[OX1])[NX3&!$([NX3][CX3]=[OX1,SX1,NX2])]",Extended Functional Groups (EFG)
+[#6][Sv2X2][!#6!#1!S],Extended Functional Groups (EFG)
+"[#6&!$([CX3]=[SX1,OX1,NX2])][Sv2X2][OH1]",Extended Functional Groups (EFG)
+"[#6&!$([CX3]=[SX1,OX1,NX2])][Sv2X2][OX2][#6]",Extended Functional Groups (EFG)
+"[#6&!$([CX3]=[SX1,OX1,NX2])][Sv2X2][F,Cl,Br,I]",Extended Functional Groups (EFG)
+"[#6&!$([CX3]=[SX1,OX1,NX2])][Sv2X2][NX3]([#6&!$([CX3]=[OX1,SX1,NX2])])[#6&!$([CX3]=[OX1,SX1,NX2])]",Extended Functional Groups (EFG)
+"[#6&!$([CX3]=[OX1,SX1,N,C])&!$(C#N)][Sv2H1]",Extended Functional Groups (EFG)
+"[C&!$([CX3]=[OX1,SX1,N,C])&!$(C#N)][Sv2H1]",Extended Functional Groups (EFG)
+c[Sv2H1],Extended Functional Groups (EFG)
+"[OX1]=[Pv5X4]([H,!#6!$([SX2])])([H,!#6!$([SX2])])[H,!#6!$([SX2])]",Extended Functional Groups (EFG)
+[OX1]=[Pv5X4]([OH1])([O])[O],Extended Functional Groups (EFG)
+[OX1]=[Pv5X4]([OX2][#6])([!#6!$([SX2])])[!#6!$([SX2])],Extended Functional Groups (EFG)
+"[OX1]=[Pv5X4]([F,Cl,Br,I])([!#6!$([SX2])])[!#6!$([SX2])]",Extended Functional Groups (EFG)
+[OX1]=[Pv5X4]([NX3])([!#6!$([SX2])])[!#6!$([SX2])],Extended Functional Groups (EFG)
+"[$([SX1]=[Pv5X4]([H,!#6])([H,!#6])[H,!#6]),$([OX1]=[Pv5X4]([SX2])([H,!#6])[H,!#6])]",Extended Functional Groups (EFG)
+"[$([SX1]=[Pv5X4]([OH1,SH1])([O,S])[O,S]),$([OX1]=[Pv5X4]([SH1])([O,S])[O,S])]",Extended Functional Groups (EFG)
+"[$([SX1]=[Pv5X4]([OX2,SX2][#6])([!#6])[!#6]),$([OX1]=[Pv5X4]([SX2][#6])([!#6])[!#6])]",Extended Functional Groups (EFG)
+"[$([SX1]=[Pv5X4]([F,Cl,Br,I])([!#6])[!#6]),$([OX1]=[Pv5X4]([F,Cl,Br,I])([SX2,SH1])[!#6])]",Extended Functional Groups (EFG)
+"[$([SX1]=[Pv5X4]([NX3])([!#6])[!#6]),$([OX1]=[Pv5X4]([NX3])([SX2,SH1])[!#6])]",Extended Functional Groups (EFG)
+[OX1]=[Pv5X4]([#6])([!#6])[!#6],Extended Functional Groups (EFG)
+[OX1]=[Pv5X4]([#6])([OH1])O,Extended Functional Groups (EFG)
+[OX1]=[Pv5X4]([#6])([OX2][#6])[!#6],Extended Functional Groups (EFG)
+[Pv3X3]([#6])([#6])[#6],Extended Functional Groups (EFG)
+[Pv5X4](=[OX1])([#6])([#6])[#6],Extended Functional Groups (EFG)
+[Bv3X3]([#6])([!#6])[!#6],Extended Functional Groups (EFG)
+"[BX3]([#6])([OH1,SH1])[O,S]",Extended Functional Groups (EFG)
+"[BX3]([#6])([OX2][#6])[H,!#6]",Extended Functional Groups (EFG)
+[CX2]#[CX2],Extended Functional Groups (EFG)
+[a!r0],Extended Functional Groups (EFG)
+c1ccccc1,Extended Functional Groups (EFG)
+[*R]~[*R&!#6]~[*R],Extended Functional Groups (EFG)
+[a!#6!r0],Extended Functional Groups (EFG)
+"[OH1][CX3](=[OX1])[CX4]([#1,#6])([#1,#6])[NH2,$([NH1]([#6])[#6])&!$([NH1](CC(=O)[OH1])[CX3]=[OX1,SX1])]",Extended Functional Groups (EFG)
+"[OH1][CX3](=[OX1])[CX4]([OH1])[#1,#6]",Extended Functional Groups (EFG)
+"[NX3]([#1,#6&!$([CX3]=[OX1,SX1,NX2,C])])([#1,#6&!$([CX3]=[OX1,SX1,NX2,C])])[CX4][CX4][NX3]([#1,#6&!$([CX3]=[OX1,SX1,NX2,C])])([#1,#6&!$([CX3]=[OX1,SX1,NX2,C])])",Extended Functional Groups (EFG)
+"[CX4]([SH1])([#1,#6])([#1,#6])[CX4]([SH1])([#1,#6])([#1,#6])",Extended Functional Groups (EFG)
+"[SH1][CX4][CX4][NX3]([#1,#6&!$([CX3]=[OX1,SX1,NX2,C])])([#1,#6&!$([CX3]=[OX1,SX1,NX2,C])])",Extended Functional Groups (EFG)
+"[OH1][CX3](=[OX1])[CX3](=[OX1])[#1,#6]",Extended Functional Groups (EFG)
+[OH1][CX3](=[OX1])[CX3]=[CX3],Extended Functional Groups (EFG)
+"[$(c([SH1])c([SH1])),$(c([SH1])[aR1]c([SH1])),$(c1([SH1])aac([SH1])aa1)]",Extended Functional Groups (EFG)
+"[$(c([OH1])c[NX3]([#1,#6])[#1,#6]),$(c([OH1])[aR1]c[NX3]([#1,#6])[#1,#6]),$(c1([OH1])aac([NX3]([#1,#6])[#1,#6])aa1)]",Extended Functional Groups (EFG)
+"[$(c([SH1])c[NX3]([#1,#6])[#1,#6]),$(c([SH1])[aR1]c[NX3]([#1,#6])[#1,#6]),$(c1([SH1])aac([NX3]([#1,#6])[#1,#6])aa1)]",Extended Functional Groups (EFG)
+"a[F,Cl,Br,I]",Extended Functional Groups (EFG)
+"[CX4][F,Cl,Br,I] AND NOT [$([CX4]([F,Cl,Br,I])[CX3]=[CX3]),$([CX4]([F,Cl,Br,I])[CX2]#[CX2]),$([CX4]([F,Cl,Br,I])a)]",Extended Functional Groups (EFG)
+"[NX3H2][c,CX4&!$([CX4]([NH2])[O,N,S,P])]",Extended Functional Groups (EFG)
+"[NX3H1]([c,CX4&!$([CX4]([NX3H1])[O,S,N,P])])[c,CX4&!$([CX4]([NX3H1])[O,S,N,P])]",Extended Functional Groups (EFG)
+"[NX3]([c,CX4&!$([CX4]([NX3])[O,S,N,P])])([c,CX4&!$([CX4]([NX3])[O,S,N,P])])[c,CX4&!$([CX4]([NX3])[O,S,N,P])]",Extended Functional Groups (EFG)
+[#6X3](=[OX1])[#8X2][#6X3](=[OX1]),Extended Functional Groups (EFG)
+[CX3]=[CX3][CX3]=[CX3],Extended Functional Groups (EFG)
+[CX3]=[CX3][CX4][CX3]=[CX3],Extended Functional Groups (EFG)
+"[F,Cl,Br,I][CX3]=[CX3]",Extended Functional Groups (EFG)
+"[CX4]([F,Cl,Br,I])([F,Cl,Br,I])([F,Cl,Br,I]) AND NOT [CX4]([F,Cl,Br,I])([F,Cl,Br,I])([F,Cl,Br,I])([F,Cl,Br,I])",Extended Functional Groups (EFG)
+"[F,Cl,Br,I][CX2]#[CX2]",Extended Functional Groups (EFG)
+"a[CX4][F,Cl,Br,I]",Extended Functional Groups (EFG)
+a[CX4]F,Extended Functional Groups (EFG)
+a[CX4]Cl,Extended Functional Groups (EFG)
+a[CX4]Br,Extended Functional Groups (EFG)
+a[CX4]I,Extended Functional Groups (EFG)
+"[#3,#11,#19,#37,#55,#87]",Extended Functional Groups (EFG)
+"[#4,#12,#20,#38,#56,#88]",Extended Functional Groups (EFG)
+"[#21,#22,#23,#24,#25,#26,#27,#28,#29,#30,#39,#40,#41,#42,#43,#44,#45,#46,#47,#48,#72,#73,#74,#75,#76,#77,#78,#79,#80,#104,#105,#106,#107,#108,#109,#110,#111,#112]",Extended Functional Groups (EFG)
+"[#57,#58,#59,#60,#61,#62,#63,#64,#65,#66,#67,#68,#69,#70,#71]",Extended Functional Groups (EFG)
+"[#89,#90,#91,#92,#93,#94,#95,#96,#97,#98,#99,#100,#101,#102,#103]",Extended Functional Groups (EFG)
+"[#13,#31,#49,#50,#81,#82,#83,#113,#114,#115,#116]",Extended Functional Groups (EFG)
+"[#5,#14,#32,#33,#51,#52,#84]",Extended Functional Groups (EFG)
+"[#1,#6,#7,#8,#15,#16,#34,#9,#17,#35,#53,#85,#117,#2,#10,#18,#36,#54,#86,#118]",Extended Functional Groups (EFG)
+"[#9,#17,#35,#53,#85,#117]",Extended Functional Groups (EFG)
+"[#2,#10,#18,#36,#54,#86,#118]",Extended Functional Groups (EFG)
+"[#8,#16,#34,#52,#84,#116]",Extended Functional Groups (EFG)
+"[#7,#15,#33,#51,#83]",Extended Functional Groups (EFG)
+"[#6,#14,#32,#50,#8,#114]",Extended Functional Groups (EFG)
+"[CX3]([#1,#6])([#1,#6])=[CX3]([SX2][#6&!$([CX3]([OX2])=[OX1,SX1,NX2,C])])[#1,#6]",Extended Functional Groups (EFG)
+"[CX3]([#1,#6])([#1,#6])=[CX3]([SH1])[#1,#6]",Extended Functional Groups (EFG)
+"[CX3]([#1,#6])([SH1])=[CX3]([#1,#6])([SH1])",Extended Functional Groups (EFG)
+[CX2]#[CX2][OH1],Extended Functional Groups (EFG)
+[CX2]#[CX2][SH1],Extended Functional Groups (EFG)
+"[$([#6X3]1=,:[#6X3]-,:[#6X3](=[OX1])-,:[#6X3]=,:[#6X3]-,:[#6X3]1(=[OX1])),$([#6X3]1(=[OX1])-,:[#6X3](=[OX1])-,:[#6X3]=,:[#6X3]-,:[#6X3]=,:[#6X3]1)]",Extended Functional Groups (EFG)
+"[$([#6X3]1=,:[#6X3]-,:[#6X3](=[SX1])-,:[#6X3]=,:[#6X3]-,:[#6X3]1(=[OX1])),$([#6X3]1(=[OX1])-,:[#6X3](=[OX1,SX1])-,:[#6X3]=,:[#6X3]-,:[#6X3]=,:[#6X3]1)]",Extended Functional Groups (EFG)
+"n1c([$(S(=O)(=O)),$(C(F)(F)(F)),$(C#N),$(N(=O)(=O)),$([N+](=O)[O-]),$(C=O)])[n;R1]c([F,Cl,Br,I])cc1([$(S(=O)(=O)),$(C(F)(F)(F)),$(C#N),$(N(=O)(=O)),$([N+](=O)[O-]),$(C=O)])",Promiscuity
+NC(COP(O)(O)=O)C(O)=O,Promiscuity
+NC(C(C)OP(O)(O)=O)C(O)=O,Promiscuity
+NC(Cc1ccc(OP(O)(O)=O)cc1)C(O)=O,Promiscuity
+S(=O)(=O)C#N,Promiscuity
+C(F)(F)(F)C(=O)S,Promiscuity
+"[n;R1]1c([F,Cl,Br,I])[c;!$(c-N)]nc([$(S(=O)(=O)),$(C(F)(F)(F)),$(C#N),$(N(=O)(=O)),$([N+](=O)[O-]),$(C=O)])[c;!$(c-N)]1",Promiscuity
+"[#6]1~[$(C(=O)),$(S(=O))]~[O,S,N]~[$(C(=O)),$(S(=O))]1",Promiscuity
+"[n,o,s]1c([$(S(=O)(=O)),$([F,Cl]),$(C(F)(F)(F)),$(C#N),$(N(=O)(=O)),$([N+](=O)[O-]),$(C(=O))])c([$(S(=O)(=O)),$([F,Cl]),$(C(F)(F)(F)),$(C#N),$(N(=O)(=O)),$([N+](=O)[O-]),$(C(=O))])nc1([Cl,Br,I])",Promiscuity
+C([N;H1]([O;D1]))=O,Promiscuity
+NC(C[S;D1])C(O)=O,Promiscuity
+"O(-S(=O)(=O))C=[$(C(S(=O)(=O))),$(C(C(F)(F)(F))),$(C(C#N)),$(C(N(=O)(=O))),$(C([N+](=O)[O-])),$(C(C(=O)));!$(C(N))]",Promiscuity
+C(=O)-C#N,Promiscuity
+C(=O)Oc1c(F)c(F)c(F)c(F)c1(F),Promiscuity
+"[C;!R]([$(S(=O)(=O)),$(C(F)(F)(F)),$(C#N),$(N(=O)(=O)),$([N+](=O)[O-]),$(C=O)])([$(S(=O)(=O)),$(C(F)(F)(F)),$(C#N),$(N(=O)(=O)),$([N+](=O)[O-]),$(C=O)])=[C;!R]([C;!R](=O))([!$([#8]);!$([#7])])",Promiscuity
+"n1c[n;R1]c([F,Cl,Br,I])[#6]([$(S(=O)(=O)),$(C(F)(F)(F)),$(C#N),$(N(=O)(=O)),$([N+](=O)[O-]),$(C=O)])c1",Promiscuity
+"[$(C(F)(F)(F)),$(C#N),$(N(=O)(=O)),$([N+](=O)[O-])]-[CH,CH2]-[Cl,Br,I,$(O(S(=O)(=O)))]",Promiscuity
+"[n;R1]1c([F,Cl,Br,I])c([$(S(=O)(=O)),$(C(F)(F)(F)),$(C#N),$(N(=O)(=O)),$([N+](=O)[O-]),$(C=O)])ncc1",Promiscuity
+"[C,c]~[#5]",Promiscuity
+"[N,n]~[S;!R;D2]~[N,n]",Promiscuity
+"[$(N(-C(=O))(-C(=O))(-S(=O))),$(n([#6](=O))([#6](=O))([#16](=O)))]",Promiscuity
+"[C;!$(C-N)](=O)n1[c;H1,$([#6]([*;!R]))]n[c;H1,$(c([*;!R]))][c;H1,$(c([*;!R]))]1",Promiscuity
+"S(=O)Oc1c([Cl,F])[cH1,$(c[F,Cl])]c([F,Cl])[cH1,$(c[F,Cl])]c1([F,Cl])",Promiscuity
+"C1~[O,S]~N1",Promiscuity
+"[S;D3](-N)(-[c,C])(-[c,C])",Promiscuity
+"[n;R1]1[c;!$(c=O)]([F,Cl,Br,I])c([$(S(=O)(=O)),$(C(F)(F)(F)),$(C#N),$(N(=O)(=O)),$([N+](=O)[O-]),$(C=O)])[c;!$(c-N)]c[c;!$(c-N)]1",Promiscuity
+"[n;R1]1[c;!$(c=O)]([F,Cl,Br,I])c[c;!$(c-N)]c([$(S(=O)(=O)),$(C(F)(F)(F)),$(C#N),$(N(=O)(=O)),$([N+](=O)[O-]),$(C=O)])[c;!$(c=O);!$(c-N)]1",Promiscuity
+"C([Cl,Br,I,$(O(S(=O)(=O)))])=C([$(S(=O)(=O)),$(C(F)(F)(F)),$(C#N),$(N(=O)(=O)),$([N+](=O)[O-]),$(C=O)])([$(S(=O)(=O)),$(C(F)(F)(F)),$(C#N),$(N(=O)(=O)),$([N+](=O)[O-]),$(C=O)])",Promiscuity
+"[$([#16&D3]),$([#16&D4])]=,:[#6]",Promiscuity
+c1c([N;D1])c([N;D1])c[cH1][cH1]1,Promiscuity
+"[$(c([C;!R;!$(C-[N,O,S]);!$(C-[H])](=O))1naaaa1),$(c([C;!R;!$(C-[N,O,S]);!$(C-[H])](=O))1naa[n,s,o]1)]",Promiscuity
+[$(C(=O));!$(C-N);!$(C-O);!$(C-S)]C(Cl)(Cl)(Cl),Promiscuity
+P~P,Promiscuity
+"[C;H2](F)C(=O)[O,N,S]",Promiscuity
+P(=O)-[O;!R]-a,Promiscuity
+"[C;X4](-[OH,NH1,NH2,SH])(-C#N)",Promiscuity
+"O=COC=[$(C(S(=O)(=O))),$(C(C(F)(F)(F))),$(C(C#N)),$(C(N(=O)(=O))),$(C([N+](=O)[O-])),$(C(C(=O)));!$(C(N))]",Promiscuity
+"[S;D2]([$(N(=C)),$(N(-S(=O)(=O))),$(N(-C(=O)))])",Promiscuity
+"C(=[#7])([Cl,Br,I,$(O(S(=O)(=O)))])",Promiscuity
+"[$(S(=O)(=O)),$(C(F)(F)(F)),$(C#N),$(N(=O)(=O)),$([N+](=O)[O-]),$(C(=O))]C#[C;!$(C-N);!$(C-n)]",Promiscuity
+"[C;!$(C-N)](=O)n1n[c;H1,$(c([*;!R]))][c;H1,$(c([*;!R]))][c;H1,$(c([*;!R]))]1",Promiscuity
+"[!#6;!#1;!#11;!#19]O(S(=O)(=O)(-[C,c]))",Promiscuity
+"[$(N(-C(=O))(-C(=O))(-C(=O))),$(n([#6](=O))([#6](=O))([#6](=O)))]",Promiscuity
+"[C,c][C;!R](=O)[N;!R][C;!R](=O)[C,c]",Promiscuity
+"[n;R1]1[c;!$(c=O);!$(c-N)][#6]([$(S(=O)(=O)),$(C(F)(F)(F)),$(C#N),$(N(=O)(=O)),$([N+](=O)[O-]),$(C=O)])c([F,Cl,Br,I])c[c;!$(c=O);!$(c-N)]1",Promiscuity
+"[#7;R1]1=,:[#7;R1]-,:[#7;R1](-C(=O))-,:[#6]=,:[#6]1",Promiscuity
+C(=O)!@C(=O),Promiscuity
+C(F)(F)(F)C(=O)O,Promiscuity
+"c1(C=O)c([Br,Cl,I])c([Br,Cl,I])c([Br,Cl,I])c([Br,Cl,I])c1(C=O)",Promiscuity
+"C([$([N+](=O)[O-]),$(N(=O)=O)])([$([N+](=O)[O-]),$(N(=O)=O)])([$([N+](=O)[O-]),$(N(=O)=O)])",Promiscuity
+"[n;R1]1c([F,Cl,Br,I])ncc([$(S(=O)(=O)),$(C(F)(F)(F)),$(C#N),$(N(=O)(=O)),$([N+](=O)[O-]),$(C=O)])c1",Promiscuity
+"[C,c][C;H1](=O)",Promiscuity
+"[N,n,O,S;!$(S(=O)(=O))]-C([Cl,Br,I,$(O(S(=O)(=O)))])(C)(C)",Promiscuity
+[S;D2](-[N;!$(N(=C));!$(N(-S(=O)(=O)));!$(N(-C(=O)))]),Promiscuity
+"[n;R1]1c([F,Cl,Br,I])ccc([$(S(=O)(=O)),$(C(F)(F)(F)),$(C#N),$(N(=O)(=O)),$([N+](=O)[O-]),$(C=O)])n1",Promiscuity
+OS(=O)(=O)(C(F)(F)(F)),Promiscuity
+O=C2CC(a3aaaaa3)Oa1aaaaa12,Promiscuity
+"[O,N,S;!$(S~O)]!@[C;H1;X4]!@[O,N,S;!$(S~O)]",Promiscuity
+C(=C)1SC(=S)NC(=O)1,Promiscuity
+"[$(N#[N+]-[N-]),$([N-]=[N+]=N)]",Promiscuity
+P(=O)ON,Promiscuity
+[N;!R]-[N;!R]-[N;!R],Promiscuity
+S(=O)(=O)N=C1C=CC(=NS(=O)(=O))C=C1,Promiscuity
+C1(Cl)(Cl)C(Cl)C(Cl)=C(Cl)C1(Cl),Promiscuity
+[Si]~[!#6],Promiscuity
+"[CH1,$(C(-[Cl,Br,I]))]1=CC(=[O,N,S;!R])C(=[O,N,S])C=[CH1,$(C(-[Cl,Br,I]))]1",Promiscuity
+O=C1OC(C)(C)OC(C1)=O,Promiscuity
+"[$(C(=O)),$(S(=O)(=O))][O,S](S(=O)(=O))",Promiscuity
+"[C;X4](-[Cl,Br,I,$(O(S(=O)(=O)[!$(N);!$([O&D1])]))])(-[c,C])(-[c,C])(-[c,C])",Promiscuity
+a-N=N-[N;H2],Promiscuity
+"C(-[Cl,Br,I])(-[Cl,Br,I])=C(-[Cl,Br,I])(-[N,O,S])",Promiscuity
+[S;D2][O;D2],Promiscuity
+"O=C(-[!N])O[$([#7;+]),$(N(C=[O,S,N])(C=[O,S,N]))]",Promiscuity
+[N;!$(N-S(=O)(=O));!$(N-C=O)]-[N;!r3;!$(N-S(=O)(=O));!$(N-C=O)]-[N;!$(N-S(=O)(=O));!$(N-C=O)],Promiscuity
+"a1[cH1]c([O,S;D1])[cH1]ac([O,S;D1])1",Promiscuity
+[$(C=N[O;D1]);!$(C=[N+])][#6][#6],Promiscuity
+"[O,N,S;!$(S~O)]!@[CH2]!@[O,S,N;!$(S~O)]",Promiscuity
+[N;X3;!$(N-S(=O)(=O));!$(N-C(F)(F)(F));!$(N-C#N);!$(N-C(=O));!$(N-C(=S));!$(N-C(=N))]-[N;X3;!$(N-S(=O)(=O));!$(N-C(F)(F)(F));!$(N-C#N);!$(N-C(=O));!$(N-C(=S));!$(N-C(=N))],Promiscuity
+[N+]#[C-],Promiscuity
+"[C,c]OS(=O)O[C,c]",Promiscuity
+"[C,N]1~[C,N]~N~1",Promiscuity
+C(=O)[O;D1].C(=O)[O;D1].C(=O)[O;D1],Promiscuity
+"[#7]1=,:[#6]-,:[#7](-C(=O)[H,!N])-,:[#6]=,:[#7]1",Promiscuity
+[$(C(=O));!$(C-N);!$(C-O);!$(C-S)]C(F)(F)(F),Promiscuity
+"c1(-O(-[C;!R](-[H,!N])(=[O,N;!R])))ccc([$(N(=O)(=O)),$([N+](=O)[O-])])cc1",Promiscuity
+P~S,Promiscuity
+C=[C;!R][C;!R]=[C;!R][C;!R]=[C;!R],Promiscuity
+"SC(=O)[O,S]",Promiscuity
+[N]=[N;!R]-[N],Promiscuity
+"[CH;!$(C=C)][Cl,Br,I,$(O(S(=O)(=O)[!$(N);!$([O&D1])]))]",Promiscuity
+[C;!R]=[N+][O;D1],Promiscuity
+"[CH&!R;!$(C-N)]=C([$(S(=O)(=O)),$(C(F)(F)(F)),$(C#N),$(N(=O)(=O)),$([N+](=O)[O-]),$(C(=O))])([$(S(=O)(=O)),$(C(F)(F)(F)),$(C#N),$(N(=O)(=O)),$([N+](=O)[O-]),$(C(=O))])",Promiscuity
+"[$(C(=O)),$(C(=S))]-[O,S]-[$(C(=O)),$(C(=S)),$(C(=[N;!R])),$(C(=N(-[C;X4])))]",Promiscuity
+"[O,N,S;!$(S~O)]!@[C;H0;X4](!@[O,N,S;!$(S~O)])(C)",Promiscuity
+P(=O)(a)(a)(a),Promiscuity
+"C1(=O)~[#6]~[#6]N1([$(S(=O)(=O)[C,c,O&D2]),$(C(F)(F)(F)),$(C#N),$(N(=O)(=O)),$([N+](=O)[O-]),$(C(=O)[C,c,O&D2])])",Promiscuity
+"O=C(-[!N])O[$(nnn),$([#7]-[#7]=[#7])]",Promiscuity
+"[F,Cl,Br,I,$(O(S(=O)(=O)))]-[CH,CH2;!$(C(F)F)]-[N,n]",Promiscuity
+[S+;X3;$(S-C);!$(S-[O;D1])],Promiscuity
+[N;!R]=[N;!R]-[N]=[*],Promiscuity
+"[CH2]1[O,S]C1",Promiscuity
+[S;D2]-[S;D2]-[S;D2],Promiscuity
+[CH2]=[C;!$(C-N);!$(C-O)]C(=O),Promiscuity
+C#N.C#N.C#N.C#N,Promiscuity
+"[CH2][Cl,Br,I,$(O(S(=O)(=O)[!$(N);!$([O&D1])]))]",Promiscuity
+"[CH1,$(C(-[Cl,Br,I]))]1=[CH1,$(C(-[Cl,Br,I]))]C(=[O,N,S])[CH1,$(C(-[Cl,Br,I]))]=[CH1,$(C(-[Cl,Br,I]))]C1(=[O,N,S])",Promiscuity
+C=P,Promiscuity
+"C1~[O,S]~[C,N,O,S]1[a,N,O,S]",Promiscuity
+"[S;!R;H0]C(=[S,O;!R])([!O;!S;!N])",Promiscuity
+C[O;D1].C[O;D1].C[O;D1].C[O;D1].C[O;D1].C[O;D1].C[O;D1],Promiscuity
+"O=[C,S]Oc1aaa([$(S(=O)(=O)),$(C(F)(F)(F)),$(C#N),$(N(=O)(=O)),$([N+](=O)[O-]),$(C(=O)O),$(C(=O)N)])aa([$(S(=O)(=O)),$(C(F)(F)(F)),$(C#N),$(N(=O)(=O)),$([N+](=O)[O-]),$(C(=O)O),$(C(=O)N)])1",Promiscuity
+"c1(-O-[C;!R](=[O,N;!R]))c([$(N(=O)(=O)),$([N+](=O)[O-])])cccc1",Promiscuity
+P([O;D1])=O.P([O;D1])=O,Promiscuity
+c([N;!+])1ccc(c2ccc([N;!+])cc2)cc1,Promiscuity
+"[N;!R]([$(S(=O)(=O)),$(C(F)(F)(F)),$(C#N),$(N(=O)(=O)),$([N+](=O)[O-]),$(C(=O))])=[N;!R]([$(S(=O)(=O)),$(C(F)(F)(F)),$(C#N),$(N(=O)(=O)),$([N+](=O)[O-]),$(C(=O))])",Promiscuity
+"[N,n;+]!@C(=O)",Promiscuity
+a-[S;X2;!R]-[C;!R](=O),Promiscuity
+[N;!R]=NC(=S)N,Promiscuity
+N-[N;X2](=O),Promiscuity
+"C(=O)Oc1c([Cl,F])[cH1,$(c[F,Cl])]c([F,Cl])[cH1,$(c[F,Cl])]c1([F,Cl])",Promiscuity
+"[CH2,CF2;R0][CH2,CF2;R0][CH2,CF2;R0][CH2,CF2;R0][CH2,CF2;R0][CH2,CF2;R0][CH2,CF2;R0][CH2,CF2;R0]",Promiscuity
+"[$(N=N=C~C=O),$(N#N-C~C=O)]",Promiscuity
+"[n;R1]1c([F,Cl,Br,I])c([$(S(=O)(=O)),$(C(F)(F)(F)),$(C#N),$(N(=O)(=O)),$([N+](=O)[O-]),$(C=O)])ccn1",Promiscuity
+[C;!R]-[C;!R]-[C;!R]-[C;!R]-[C;!R]-[C;!R]-[C;!R]-[C;!R]-[C;!R]-[C;!R],Promiscuity
+"[#6,#15,#16]1(=O)~[#6]~[#6]~[#8,#16]1",Promiscuity
+"[$(a12aaaaa1aa3a(aa(aaaa4)a4a3)a2),$(a12aaaaa1aa3a(aaa4a3aaaa4)a2),$(a12aaaaa1a(aa5)a3a(aaa4a3a5aaa4)a2)]",Promiscuity
+"C(=O)([CH,CH2][Cl,Br,I,$(O(S(=O)(=O)))])",Promiscuity
+"[#15]~[N,n]",Promiscuity
+"[N,n;H0;+;!$(N~O);!$(n~O)].[N,n;H0;+;!$(N~O);!$(n~O)]",Promiscuity
+C1(=O)~[#6]~[#6]N1,Promiscuity
+[#8]~[#8],Promiscuity
+[#6]1[#6][#6]([#6]2[#6][#6][#7;+][#6][#6]2)[#6][#6][#7;+]1,Promiscuity
+"c1c([Br,Cl,I])c([Br,Cl,I])c([Br,Cl,I])c([Br,Cl,I])c1([Br,Cl,I])",Promiscuity
+"[c,C]-[P;v3]",Promiscuity
+"a1c([O,S;D1])c([O,S;D1])a[cH1][cH1]1",Promiscuity
+"[$([C;H1]),$(C(-[F,Cl,Br,I]))]1=[$([C;H1]),$(C(-[F,Cl,Br,I]))]C(=O)[N,O,S]C(=O)1",Promiscuity
+c[N;!R;!+]=[N;!R;!+]-c,Promiscuity
+"[C+,F+,Cl+,Br+,I+,Se+]",Promiscuity
+"[$(a12aaaa4a1a3a(aaaa3aa4)aa2),$(a12aaaaa1a3a(aaa4a3aaaa4)aa2),$(a1(a(aaaa4)a4a3a2aaaa3)a2aaaa1)]",Promiscuity
+"[N,n;R;+]!@[N,n]",Promiscuity
+"S(=O)(=O)[F,Cl,Br,I]",Promiscuity
+"[Cl,Br,I].[Cl,Br,I].[Cl,Br,I].[Cl,Br,I].[Cl,Br,I].[Cl,Br,I].[Cl,Br,I]",Promiscuity
+a1[cH1]c([N;D1])[cH1]ac([N;D1])1,Promiscuity
+"O=C[F,Cl,Br,I]",Promiscuity
+"N=C=[N,O,S]",Promiscuity
+[#15;+]~[!O],Promiscuity
+"[$([N+](=O)[O-]),$(N(=O)=O)].[$([N+](=O)[O-]),$(N(=O)=O)].[$([N+](=O)[O-]),$(N(=O)=O)].[$([N+](=O)[O-]),$(N(=O)=O)]",Promiscuity
+"[C,c]S(=O)(=O)[O;D1].[C,c]S(=O)(=O)[O;D1]",Promiscuity
+"CC(=O)[$([C&H1]),$(C-F),$(C-Cl),$(C-Br),$(C-I)]=[$([C&H1]),$(C-F),$(C-Cl),$(C-Br),$(C-I)]C(=O)C",Promiscuity
+[S;!R;X2]-[S;!R;X2],Promiscuity
+"[B-,BH2,BH3,$(B(F)(F))]",Promiscuity
+"c1[S,s;+]cccc1",Promiscuity
+[#53].[#53].[#53],Promiscuity
+"c1c([O;D1])c(-[Cl,Br,I])cc(-[Cl,Br,I])c1.c1c([O;D1])c(-[Cl,Br,I])cc(-[Cl,Br,I])c1",Promiscuity
+a1(a2aa(a3aaaaa3)aa(a4aaaaa4)a2)aaaaa1,Promiscuity
+a[O;D1].a[O;D1].a[O;D1].a[O;D1].a[O;D1],Promiscuity
+"[o+,O+]",Promiscuity
+"[!C;!c;!H][F,Cl,Br,I]",Promiscuity
+a[N+]#N,Promiscuity
+"[#6;r16,r17,r18]~[#6]1~[#6]~[#6]~[#6](~[#6])~[#7]1",Promiscuity
+"c1c([O;D1])c(-[Cl,Br,I])c(-[Cl,Br,I])cc1.c1c([O;D1])c(-[Cl,Br,I])c(-[Cl,Br,I])cc1",Promiscuity
+[S;!R]-[C;!R](=[S;!R])(-[S;!R]),Promiscuity
+"[C,c][S;X3](~O)-S",Promiscuity
+"c1c([O;D1])ccc(-[Cl,Br,I])c(-[Cl,Br,I])1.c1c([O;D1])ccc(-[Cl,Br,I])c(-[Cl,Br,I])1",Promiscuity
+"[#6;!$([#6](-[N,O,S]))]1=[#6;!$([#6](-[N,O,S]))][#6](=[#6])[#6;!$([#6](-[N,O,S]))]=[#6;!$([#6](-[N,O,S]))][#6]1(=[O,N,S])",Promiscuity
+"c(-[Cl,Br,I])1c([O;D1])c(-[Cl,Br,I])ccc1.c(-[Cl,Br,I])1c([O;D1])c(-[Cl,Br,I])ccc1",Promiscuity
+"[n;R1]1c([$(S(=O)(=O)),$(C(F)(F)(F)),$(C#N),$(N(=O)(=O)),$([N+](=O)[O-]),$(C=O)])c([F,Cl,Br,I])ccn1",Promiscuity
+"[n;R1]1cc([F,Cl,Br,I])[#6]([$(S(=O)(=O)),$(C(F)(F)(F)),$(C#N),$(N(=O)(=O)),$([N+](=O)[O-]),$(C=O)])cn1",Promiscuity
+"P(O[A,a])(O[A,a])(=O)C#N",Promiscuity
+NC(C[S;D1])C([N;H1]([O;D1]))=O,Promiscuity
+"c1c(ccc(c1)N([CX4])[H,CX4])O[CX4]",PAINS compounds
+"c1c(ccc(c1)[CX4][$([#8!H0]),$([#6]=[#6!H0]),$([#7][CX4])])[#7]([CX4])[CX4]",PAINS compounds
+"[$([#6!H0][#7]([CH2,CH3])c1[cH]c([H,CH2,CH3])c([CH,CH2][C!H0])[cH][cH]1),$([#6!H0][#7]([CH2,CH3])c1[cH]c([H,CH2,CH3])c([CH3])[cH][cH]1)]",PAINS compounds
+C1(=C)C=N[!#1!#6]C1=[OX1],PAINS compounds
+[#6]1([#6](~[!#1!#6]~[#6][!#1!#6][#6]1=[!#1!#6])~[!#1!#6])=[#6!R!H0],PAINS compounds
+c1ccc(c(c1)[#8!H0])[#6]=[#7][#7],PAINS compounds
+"[!#1!#6]=[#6]1-,:[#6]=,:[#6]-,:[#6](=[!#1!#6])-,:[#6]=,:[#6]1",PAINS compounds
+[N!R]=N,PAINS compounds
+"[#6][#6](=[!#1!#6!R])[#6](=[!#1!#6!R])[#6,$(S(=O)=O)]",PAINS compounds
+N[CX4]c1c([OH1])cccc1,PAINS compounds
+N1C(=S)SC(=C)C1=O,PAINS compounds
+c1(ccc(cc1)C=N[#7])[OH1],PAINS compounds
+[OX1]=C2C(=;!@N[#7])c3c(cccc3)N2,PAINS compounds
+"[CH2,CH3]N([CH2,CH3])c1cc([H,CH2,CH3,$(O(c)[CH2][CH2,CH3])])c(-[#7])[cH]c1",PAINS compounds
+c1c(ccc(c1)[#6]=[#6])[#7]([CX4])[CX4],PAINS compounds
+"[#7]1(c2acccc2)-,:[#6]([CX4])=,:[#6]-,:[#6!H0]=,:[#6]1[CX4]",PAINS compounds
+"[#7]1(c2acccc2)-,:[#6]([CX4])=,:[#6]-,:[#6H]=,:[#6]1cc",PAINS compounds
+c1ccc(c(c1)[OH1])[OH1],PAINS compounds
+c2ccc1C(=[OX1])C(=C)C(=[OX1])c1c2,PAINS compounds
+"[cH]1[cH][cH][cH]c2[CH2]C(=[OX1])C(=C([CH2,CH3])[CH2,CH3])c12",PAINS compounds
+C1(=C)C(N=CS1)=O,PAINS compounds
+C1(C(C=C[!#1!#6]1)=C)=[!#1!#6],PAINS compounds
+C1(=C)C(=[OX1])NNC1=[OX1],PAINS compounds
+NC=!@C2C(=[OX1])c5c(cccc5)[!#1!#6]2,PAINS compounds
+c1(ccccc1)[C!H0]=!@C2C(=[OX1])c5c(cccc5)S2,PAINS compounds
+C=!@C([!#1])-&@C(=!@[!#1!#6])-&@C(=!@C)[!#1],PAINS compounds
+[#6][#6](=[#8])[#6!H0]=[#6]([#7!H0][#6])[#6](=[#8])[#8][#6],PAINS compounds
+a1aaa(aa1)[C!H0]=[C!H0]C(=[OX1])Nc2cc3c(cc2)nc(cc3)N([#6])[#6],PAINS compounds
+c([OH1])c-C(=[OX1])[C!H0]=C([#6])[#6],PAINS compounds
+"[#6][#6]=[#6]([F,Cl,Br,I])[#6](=[OX1])[#6]",PAINS compounds
+[#6](C#[#7])(C#[#7])=Cc1ccccc1,PAINS compounds
+"[#16]1C(=O)NC(=O)C1=[#6!H0][$([#6]Br),$(c[cH]c([F,Cl,Br,I])cc[F,Cl,Br,I]),$(c[cH][cH]cS[CH2,CH3]),$(ccccccccccO[CH2,CH3]),$(c2c([CH2,CH3])n([CH2,CH3])c([CH2,CH3])c2)]",PAINS compounds
+[#6]N1[CH2][CH2]N([CH2][CH2]1)[#7]=[#6!H0]ca,PAINS compounds
+n1(C)[cH1][cH1][cH1]c1C=NN,PAINS compounds
+"[#7!H0][#7]=[#6][#6]([H,#6])=[#6]([#6])-!@[#7,#8&!H0]",PAINS compounds
+"[CH2,CH3][#7]([CH2,CH3])c1[cH][cH]c([#6H]=[#7][#7][$([#6](=O)[CH2]Scn),$([#6](=O)[CH2]aan),$([#6](=O)cc[OH1]),$(cn),$([CH2][#6!H0][OH1])])[cH][cH]1",PAINS compounds
+[cH]1[cH][cH][cH]c2c1[cH]c(C(=[OX1])[N!H0]N=C)c([OH1])[cH]2,PAINS compounds
+c1ccc2C(=[OX1])[CX4]C(=[OX1])c2c1,PAINS compounds
+"cc[N!H0]N=C([CH2,CH3])[CH2]C([CH2,CH3])=N[N!H0]cc",PAINS compounds
+C(C#[NX1])(C#[NX1])C([NH2])=CC#[NX1],PAINS compounds
+"[#6]1(=[SX1])-,:[#7!H0]-,:*=,:*-,:*=,:[#6]1C#[NX1]",PAINS compounds
+"[#6]1(=,:[#6](-,:[#6](=O)-,:[#7]-,:[#6](=,:[#7]1)[!#1!#6])C#[#7])[#6]",PAINS compounds
+[N!H0]N=C(C#[NX1])C=[!#6&!R],PAINS compounds
+C(C#[NX1])(C#[NX1])=N[N!H0]c1ccccc1,PAINS compounds
+"C(C#[NX1])(C#[NX1])C([$(C#[NX1]),$(C=N)])C#[NX1]",PAINS compounds
+c1ccc4c(c1)NCC9C4C=CC9,PAINS compounds
+"c1([NH2])[cH][cH]c([#7,#8,CH2,CH3])[cH][cH]1",PAINS compounds
+"N([CH2,CH3])([CH2,CH3])c1oc(C=N[N!H0]C(=[!#1!#6]))[cH][cH]1",PAINS compounds
+c1cccc5c1c(c8c(n5)cccc8)[#7],PAINS compounds
+"C1([CH2,CH3,$(cc)])=C([H,CH2,CH3,$(C=O)])SC(N1([H,$([C!H0]),$(cc)]))=[#7!R]",PAINS compounds
+"C1([$(NC(=[OX1])cc),NH2])=C(-!@C(=[OX1])N[CH2,CH3])SC(N1[$([CH2][CH]=[CH2]),$(cc)])=[SX1]",PAINS compounds
+"[#8]1-,:[#6](-,:[#16]c4cc(ccc14)[#7,#8])=[OX1,SX1]",PAINS compounds
+[NH2]c1sc([!#1])c([!#1])c1C=[OX1],PAINS compounds
+"[H,CH2,CH3,$(cc)]c1sc([#7!H0][#6](=O)[#6])c(C(=O)[#8])c1[$(c2ccccc2),$(c3sccc3)]",PAINS compounds
+"[#16]1-,:[#6]=,:[#6]-,:[#6](=,:[#6]1)[OH1]",PAINS compounds
+"c1(c(c([cH]c([cH]1)[F,Cl,Br,I])[F,Cl,Br,I])[OH1])S(=[OX1])(=[OX1])N",PAINS compounds
+c1c(ccc(c1)[NH]S(=[OX1])=[OX1])[OH1],PAINS compounds
+"[#6]-,:[CX3](=[SX1])-,:[#6]",PAINS compounds
+"[$(c1c(c(ccc1)C(-cc)=[OX1])[NH&!$([NH][CX3]=[OX1])]),$(c1c(c(ccc1)C(-cc)=[OX1])[NH2])]",PAINS compounds
+"N(c1ccccc1)S(=[OX1])(=[OX1])c2c3n[o,s]nc3ccc2",PAINS compounds
+"[#7v4,#7+](-,:[#6]=,:[#6])=,:[#6]-[CH]=CN([CX4])[#6]",PAINS compounds
+"[CH2,CH3][#7](:,-[#6]:[#6])~[#6]-,:[#6]=,:[#6]-[#6]~[#6]:,-[#7]",PAINS compounds
+"[#7]1-,:[#6](=[#16])-,:[#16]-,:[#6X4]-,:[#6]1=[#8]",PAINS compounds
+[#6]1(=[!#1!#6!R])[#6](=[OX1])[!#1!#6]*=[#6]1,PAINS compounds
+C1(C(=[OX1])NC(=[OX1])NC1(=[OX1]))=N,PAINS compounds
+"c1ccc4c5c(cccc15)[#7]=,:[#6]-,:[#7]4",PAINS compounds
+c1ccc4c5c(cccc15)[N!H0][CX4][N!H0]4,PAINS compounds
+"[SX1]=[#6]1-,:[#6]=,:[#6]-,:[!#1!#6]-,:[#6]=,:[#6]1",PAINS compounds
+"[OX1]=CC1=C2N=C([CH2,CH3])C=C([OH1])N2N=C1",PAINS compounds
+"N~c1[n,$(c(N))][n,c!H0,$(c[N!H0])]c([N!H0,$([OX2][CH2,CH3])])nn1",PAINS compounds
+"[#7]1-,:[#6](-c2ccccc2)=,:[#6](-c3ccccc3)-,:[#7!H0]-,:[#6]1-ca",PAINS compounds
+c1(C(=[OX1])[OH1])c([N!H0]N=C)cccc1,PAINS compounds
+[NH2]C1=C(C#[NX1])[C!H0](-cc)C(C#[NX1])=C([NH2])S1,PAINS compounds
+"c1(O[CH2,CH3])c([H,CH2,CH3])[cH]c(O[CH2,CH3])c([CH2][$([N!H0]C(=[OX1])[CH2][CH2][CH2,CH3]),$([C!H0]([CH2,CH3])[N!H0]C(=[SX1])[N!H0])])[cH]1",PAINS compounds
+"[CH2,CH3](c4c([cH][cH]c([cH]4)[CH2][N!H0][CX4])O[CH2,CH3])",PAINS compounds
+"c3cc(C(=[OX1])[N!H0]c4ccccc4C(=[OX1])[OH1])cc1c3C(=[OX1])N([CH2,CH3])C1=[OX1]",PAINS compounds
+"[#6]1(=,:[#6]([NH2])-,:[#7](-c7ccccc7C(=[OX1])[OH1])-,:[#7]=,:[#6]1C=[OX1])[$(C#[NX1]),$(C=S)]",PAINS compounds
+"c12ncccc1-,:[#6]([NH2])=,:[#6](C(=[OX1])~[OX1,O-])-,:[#16]2",PAINS compounds
+C1(=[OX1])C(=[CH][NH]c2c(C(=[OX1])[OH1])cccc2)N=C(c3ccccc3)O1,PAINS compounds
+c1([OH1])ccc([N!H0]C(=[OX1])cc)c(c1)C(=[OX1])[OH1],PAINS compounds
+"c1([cH][cH]c(O[CH2,CH3])[cH]c1(C(=[OX1])[OH1]))[N!H0]cc",PAINS compounds
+"c1ccc4c(c1C(=[OX1])[OH1])[#7!H0]-,:[#6](=,:[#6]4cc)cc",PAINS compounds
+c1(oc([#6])[cH][cH]1)C(=[OX1])[N!H0]c1[cH][cH][cH][cH]c1(C(=[OX1])[OH1]),PAINS compounds
+[N!H0](cc)c5c(C(=[OX1])[OH1])ccc(n5)-cc,PAINS compounds
+c1ccccc1C(=[OX1])[N!H0]c2ccccc2C(=[OX1])[N!H0][N!H0]c3nccs3,PAINS compounds
+c1ccc4c(cc1)ccc4,PAINS compounds
+"[CH2,CH3]Occ[CH2][N!H0]c1[cH]c2n[cH]n([#6!H0])c2[cH][cH]1",PAINS compounds
+"[N!H0](c1[cH][cH]c([CH2,CH3])[cH][cH]1)[CH2][CH2]c2[cH][cH]c(O[CH2,CH3])[cH][cH]2",PAINS compounds
+"[N!H0](c1ccccc1)C([#6])([#6])c2[cH][cH]c(O[CH2,CH3])[cH][cH]2",PAINS compounds
+"[N!H0](c1[cH][cH]c([C!H0]([CH2,CH3])[CH2,CH3])[cH][cH]1)[CH2][CH2]N([CH2,CH3])[CH2,CH3]",PAINS compounds
+c1ccc2c(c1)C3=C(C([#6])([#6])N2)SSC3=*,PAINS compounds
+c1(ccc4c(C6Cc8c(C6N4)cccc8)c1)[CX4],PAINS compounds
+"c1c(ccc(N([H,CX4])([H,CX4]))c1)[CX4]c2ccc(cc2)N([H,CX4])([H,CX4])",PAINS compounds
+"[CH2,CH3][#7]([CH2,CH3])c1[cH][cH]c([#6!H0]=[#7][#7]=[#6]([#6])-cc)[cH][cH]1",PAINS compounds
+"[cH]1c([N!H0]C(=[OX1])c2ccccc2)[cH]c(N([CH2,CH3])[CH2,CH3])[cH][cH]1",PAINS compounds
+[cH]1c([cH]nc7c1[cH][cH][cH][cH]7)[CH2]N2c3c([CH2][CH2]2)[cH][cH][cH][cH]3,PAINS compounds
+c12[cH][cH][cH][cH]c1[C!H0]=[C!H0]C3C(C#[NX1])[CH2][C!H0]N23,PAINS compounds
+"[CH2,CH3]N([CH2,CH3])C1=Cc2ccccc2[CH2]1",PAINS compounds
+"[CH2,CH3]N([CH2,CH3])c1[cH][cH]c(o1)[C!H0]=CC#[NX1]",PAINS compounds
+"c12[cH][cH]c(N([CH2,CH3])[CH2,CH3])[cH]c1-,:[#6](S(=[OX1])=[OX1])=,:[#6H]-,:[#7!H0]2",PAINS compounds
+"c12[cH][cH]c([NH2])[cH]c1[cH][cH]n2[CH2,CH3]",PAINS compounds
+"c1([N!H0][CH2,CH3])[cH][cH]c2c([cH]1)[#7!H0]-,:[#6](=[OX1])-,:[#7!H0]2",PAINS compounds
+[N!H0](c1ccacc1)c2ccc([N!H0][C!H0])cc2,PAINS compounds
+[C!H0][N!H0]c1[cH][cH][cH][cH]c1[N!H0][C!H0],PAINS compounds
+"[NH2]c1c([N!H0][C!H0]([#6])[C!H0][CH2,CH3])c[cH][cH][cH]1",PAINS compounds
+n1[cH]c([NH2])[cH][cH]c1([N!H0]cc),PAINS compounds
+"[NH2]c1c([N!H0]S(=[OX1])=[OX1])[cH]c([N!H0][CH2,CH3])c([F,Cl,Br,I])[cH]1",PAINS compounds
+c1ccccc1[CH2][N!H0]c2[cH][cH]c([OH1])[cH][cH]2,PAINS compounds
+[NH2]c1c([OH1])cc(S(=[OX1])(=[OX1])[OH1])cc1,PAINS compounds
+c1([NH2])c([OH1])c(C=[OX1])[cH]c2[cH][cH][cH][cH]c12,PAINS compounds
+"[cH]1[cH][cH]c2c([cH]1)c3c(o2)[cH]c([N!H0][CH2,CH3])c(O[CH2,CH3])[cH]3",PAINS compounds
+"c2ccccc2N1C(=[OX1])C([N!H0]c2ccc(O[CH2,CH3])cc2)=C([F,Cl,Br,I])C1=[OX1]",PAINS compounds
+"[H,CH2,CH3]Oc1[cH][cH][cH][cH]c1[N!H0][CH2]c2nccn2",PAINS compounds
+"[CH2,CH3]Oc1[cH][cH]c([CH2,CH3])[cH]c1[NH][CH2]c2c([CH2,CH3,$(O[CH2,CH3])])cccc2",PAINS compounds
+"[CH2,CH3]Oc1[cH][cH][cH][cH]c1[N!H0][CH2][C!H0]([OH1])[CH2,CH3]",PAINS compounds
+"[CH2,CH3]Oc1[cH][cH][cH][cH]c1[N!H0][C!H0]([#16])C=[OX1]",PAINS compounds
+c1ccc4c(c1Oc8[cH][cH]c([cH][cH]8)[N!H0])cccc4,PAINS compounds
+[NH2]c1ncccc1O[CH2]cc,PAINS compounds
+"[NH2]c1c(N=[#6]2-,:[#6!H0]=,:[#6]~[#6]~[#6]=,:[#6]2)[cH][cH][cH][cH]1",PAINS compounds
+"[NH2]c1c(n2cccc2)[cH]c([CH2,CH3])c([CH2,CH3])[cH]1",PAINS compounds
+"n1c([NH2])c([CH2,CH3])[cH]c([CH2,CH3])c1[NH2]",PAINS compounds
+"[NH2]c1[cH][cH]c([cH][cH]1)-c2[cH]c(C=[OX1])c([CH2,CH3])o2",PAINS compounds
+c1cccc5c1cc8c(n5)nc2c(c8[#7])cccc2,PAINS compounds
+c1([cH][cH]c([NH2])[cH][cH]1)C=N[N!H0],PAINS compounds
+c1cccc5c1cc8c(c5C=N[N!H0]c2ccccc2)cccc8,PAINS compounds
+"c1(oc([H,CH2,CH3])[cH][cH]1)C(=[OX1])[N!H0]N=C([H,CH2,CH3])c2cc(*-*-*c3occc3)ccc2",PAINS compounds
+n1[cH][cH][cH][cH]c1C(=[OX1])[N!H0]N=[C!H0]c2c(O[CH2]C(=[OX1])[OH1])cccc2,PAINS compounds
+"[cH]2[cH][cH][cH]c1c2c([C!H0]=N[N!H0]([$(c3nc[cH]s3),$(c[cH][cH]),$(cncncn),$(cnnnn)]))c([H,$([OH1]),CH2,CH3])[a!c]1",PAINS compounds
+"c1(s[cH][cH]c1[H,CH2,CH3])[C!H0]=N[N!H0]c2ccccc2",PAINS compounds
+"C(c1[cH]cc([H,CX4])[cH][cH]1)(c2[cH][cH]c([H,Cl])[cH][cH]2)=[$(NO[CH2][CH2][CH2]N([CH2,CH3])[CH2,CH3]),$(NO[CH2][CH2]N([CH2,CH3])[CH2,CH3]),$(N[N!H0]C(=[NH1])[NH2]),$([#6!H0][#7])]",PAINS compounds
+"c1(oc([H,CH2,CH3])[cH][cH]1)C([H,CH2,CH3])=N[N!H0]c2nccs2",PAINS compounds
+"c1(oc([H,CH2,CH3])[cH][cH]1)C([H,CH2,CH3])=N[NH]c2ccncc2",PAINS compounds
+c1ccccc1N(c2ccccc2)N=[C!H0]c3ac([cH][cH]3)-c4cc(C(=[OX1])[OH1])ccc4,PAINS compounds
+[OH1]C(=[OX1])c1cc(ccc1)-cacC=N[N!H0]C(=[OX1])[CH2][#8],PAINS compounds
+"[cH]1[cH][cH]c2[cH][cH]c(C=N[N!H0][$(cc),$(C=[SX1])])[cH]c2c1",PAINS compounds
+"[cH]1[cH]c(O[CH2,CH3])[cH]c2C(=N[N!H0]c4[cH][cH]c(C(=[OX1])[OH1])[cH][cH]4)c3[cH]c(O[CH2,CH3])[cH][cH]c3c12",PAINS compounds
+[OH1]C(=[OX1])c1ccc(cc1)NN=[C!H0]c2ac([cH][cH]2)-c3ccccc3,PAINS compounds
+N1(c2ccccc2)N=C(C=[OX1])[CX4]C1=[OX1],PAINS compounds
+N1(c2ccccc2)N=C([N!H0]C=[OX1])[CH2]C1=[OX1],PAINS compounds
+"N1=C(c2ccccc2)[CH2]C([OH1])([CX4](F)(F)F)N1[$(cccccc),$(C(=S)cccccc)]",PAINS compounds
+"N1(c2ccccc2)N=C([CH2,CH3])[C!H0](S[#6])C1=[OX1]",PAINS compounds
+"N1(c2cccc3ccccc23)N=C([CH2,CH3])[CH2]C1=[OX1]",PAINS compounds
+"C1(=[OX1])C(=C([CH2,CH3])[N!H0][CH2][CH2][CH2,CH3])N=C(c2ccccc2)O1",PAINS compounds
+"[#7]1(c2ccccc2)[#6!H0]=[#7+,#7v4](c3ccccc3)[#6](=Nc4ccccc4)N1",PAINS compounds
+"n1(c2[cH][cH][cH][cH][cH]2)nc([CX4])c([H,C!H0])c1[OH1]",PAINS compounds
+"N=[#6]1-,:[#7!H0]-,:[#6]([N!H0])=,:[#6]([N!H0])-,:[#7]=,:[#7]1",PAINS compounds
+[N!H0](c1[cH][cH][cH][cH]c1[OH1])C2N=NC(=[#7])OC([NH2])=2,PAINS compounds
+[OH1]c2nc([OH1])ccc2,PAINS compounds
+[OH1]c2nc([NH2])acc2[CH2]C(=[OX1])[#8],PAINS compounds
+C1([N!H0])=N[C!H0](cc)[CH2]C(=[OX1])[N!H0]1,PAINS compounds
+cc-n1nc2[CH2][SX2][CH2]c2c1[N!H0]C(=[OX1])[C!H0]=[C!H0],PAINS compounds
+c1cOC2[CH2]C(=[OX1])OC12,PAINS compounds
+a1a3a(aaa1)[N!H0]N(C3=O)[#6],PAINS compounds
+"C1=CC=CC2=NC([$(C([!#1])=[C!H0]cc),$(coc)])=C(Ncc)N12",PAINS compounds
+S1C(=C(C4=C1[N!H0]C(C(=[C!H0]4)C(=[OX1])[OH1])=[OX1])[NH2])C(=[OX1])[N!H0],PAINS compounds
+"[#16]1-,:[#6]2:[#6](-,:[#6]([CH2,CH3])=,:[#6]1[CH2,CH3])c(ncn2)NN=C[#6]3=,:[#6]-,:[#6]=,:[#6]-,:[#8]3",PAINS compounds
+"[CH2]1C(=[OX1])[#7]2-,:[#7]=,:[#6]([NH2])-,:[#6]([NH2])=,:[#6]2N=C1[#6]",PAINS compounds
+"[#6]1(=,:[#6]2-,:[#7](-,:[#6](-,:[#6]=,:[#6]-,:[#7]2)=[OX1])-,:[#7]=,:[#6]1[#6]3-,:[#7]-,:[#6]=,:[#6]-,:[#6]=,:3)C#[NX1]",PAINS compounds
+c1(C(~[#8])~[#8])ccn2c(c1)cc(-cc)c2C(=[OX1])-cc,PAINS compounds
+"o1c([#6](~[#8])~[#8])cc2[cH]c(O[CH2,CH3])c(O[CH2,CH3])[cH]c12",PAINS compounds
+N1=NNN=C2C=CC=C12,PAINS compounds
+"c12[cH]sc(C=[OX1])c2-,:[#6](=[OX1])-,:[#7]-,:[#7]=,:[#6]1[NH2]",PAINS compounds
+N1=C([#6])C2=CC=CC2=C([#6])N1,PAINS compounds
+n1ccccc1C2=C(N[#6])N1C(=N2)C=CC=C1,PAINS compounds
+"c1([CH2][CH2,CH3])c([CH2,CH3])c2C(=[!#1!#6X1])N([C!H0][$(C(=O)O),$(cc)])C([H,$(S(C)[CH2,CH3])])=Nc2[a&!c;X2]1",PAINS compounds
+"[#6]1(=,:[#7]c3[cH][cH][cH][cH]c3n1[#6])[N!H0]C(=[OX1])[N!H0]c2[cH]ccc[cH]2",PAINS compounds
+[cH]1[cH]c2O[CH2]Oc2c([cH]1)[CH2]N2[CH2][CH2]cc2,PAINS compounds
+c1ccc7c(c1)nnc(n7)[CH2]C=[OX1],PAINS compounds
+"c1ccc4c(c1)nc(nc4)[N!H0]C2=NC(C=C[N!H0]2)([CH2,CH3])[CH2,CH3]",PAINS compounds
+c1ccc2nc([C!H0]=C([OH1])[#6])c([C!H0]=C([OH1])[#6])nc2a1,PAINS compounds
+c1ccc7c(c1)nc(c(n7)[CH2]C(=[OX1])cc)[CH2]C(=[OX1])cc,PAINS compounds
+c1ccc4c(c1)nc(c(n4)c2ccccc2)c7c(cccc7)[OH1],PAINS compounds
+"[CH2,CH3]Oc1[cH][cH][cH][cH]c1[N!H0]c2c3c(O[CH2,CH3])ccc(O[CH2,CH3])c3ncc2",PAINS compounds
+s1[cH][cH][cH]c1C2[N!H0]N=C(c4ccncc4)c3c(cccc3)N=2,PAINS compounds
+c1c4CCc4cc2OCOc12,PAINS compounds
+c1n([#6])c2c3ncnc3c([OH1])[cH]c2c1C=[OX1],PAINS compounds
+"[#6!H0]1=,:[#6!H0]-,:[#7]([CH2,CH3])c7c1c9[#6!H0]=,:[#6!H0]-,:[#7](c9c(c7O[CH2,CH3])O[CH2,CH3])[CH2,CH3]",PAINS compounds
+"[#7]1-,:c2c(-,:[#6](=N)c6ccccc16)cccc2",PAINS compounds
+"c1cccc9c1Oc2c(N9[CH2][CH2,CH3])cccc2",PAINS compounds
+"c13cc2ccccc2cc1-,:[#7]([CH2,CH3])-,:[#6](=[OX1])-,:[#6](-cc[N!H0][CH2,CH3])=,:[#7]3",PAINS compounds
+c1ccc4c(c1)nc8c(n4)ccc5c8cccc5,PAINS compounds
+"[#6]1=,:[#6]-,:[#6]=,:[#6]-,:*2=,:[#6]1-,:*=,:[#7+,#7v4](~cc)-,:*=,:[#6]2[H,*]",PAINS compounds
+"[#6]1~[#6]~[#6]~[#7+,#7v4]2~[#6](~[#7]1)~[#6]3~[#6]~[#6]~[#6]~[#7](-cc)~[#6]3~[#7]2",PAINS compounds
+"[CH2,CH3][SX2]c1n(-!@[CH2,CH3])c(-c2ccccc2)[cH]n1",PAINS compounds
+C1(C=[OX1])(cc)[SX2]C=N[NH]1,PAINS compounds
+"[SX1]=[#6]1-,:[#7!H0]-,:[#7]=,:[#6](c2[cH][cH]c(O[CH2,CH3])[cH][cH]2)-,:[#8]1",PAINS compounds
+[#7]=C1SC(=[#7])N=C1,PAINS compounds
+"N1([CH2,CH3])C(=S)N(-cc)C(=N-cc)C1=N-cc",PAINS compounds
+S1C(=N[N!H0])SC(=N-cc)C1=N-cc,PAINS compounds
+c1cN=CC(=CN[#6])S1,PAINS compounds
+"[CH2,CH3][SX2]c1nc(-c2o[cH][cH][cH]2)c(-c3o[cH][cH][cH]3)nn1",PAINS compounds
+"[#7]1=,:[#6]([SX2][CH2,CH3])-,:[#7]=,:[#7]-,:[#6]2=,:[#6]1-,:[#6]([CH2,CH3])=,:[#7]-,:[#7]2-c3cccccc3",PAINS compounds
+"[N!H0][#6]3=,:[#7]-,:[#6](=,:[#7]-,:[#6]7=,:[#7]-,:[#7]=,:[#6](-,:[#7]37)S[#6])[N!H0][#6]",PAINS compounds
+"n1c2ccccc2n([CH2,CH3])c1S[CH2]C(=[OX1])[N!H0]N=[C!H0][C!H0]=[C!H0]",PAINS compounds
+"c1(S[CH2]C(=[OX1])[NH]-cc)nc2[cH]c([F,Cl,Br,I])c[cH]c2[nH]1",PAINS compounds
+c1ccc2[CH2][CH2]N=C(c2c1)[SX2][CH2]C(=[OX1])c2ccccc2,PAINS compounds
+"c1cccc2c1-,:[#16]-,:[#6](C=[OX1])=,:[#6]-,:[#7]2",PAINS compounds
+"[CH2,CH3][SX2]c1nc2OC=Ncc-c2nn1",PAINS compounds
+n1nc(S[CH2]C=[OX1])nc2c1c3c(n2[CH2][CH]=[CH2])cccc3,PAINS compounds
+CC(=[OX1])[CH2][SX2]c1nc2[nH]c3[cH][cH][cH][cH]c3c2nn1,PAINS compounds
+"[#6]1=,:[#6]-,:[#6]=,:[#6]-,:[#6]2-,:[#7+,#7v4]=,:[#6]3-,:[#7](N=C(c5ccccc5)[CX4]S3)-,:[#6]12",PAINS compounds
+"c1ccc7c(c1)NC3=C(S7)SC(=C3)[CH2,CH3]",PAINS compounds
+"[cH]1[cH][cH][cH]c5N([H,CH3,$([CH2][C!H0])])c7c(~[H,$([N!H0][CX4]),$(cc)])c(~[H,$(cc)])c([H,NH2,$([OX2][CX4])])[cH]c7Sc15",PAINS compounds
+"c1ccc4c(c1)Sc8[cH][cH]c([cH]c8C(C4)N([H,CX4])([H,CX4]))[H,#8,#16X2,CX4,$(N([H,CX4])[H,CX4])]",PAINS compounds
+[CH2]1Sc2[cH][cH][cH][cH]c2C(Occ)c3[cH][cH][cH][cH]c13,PAINS compounds
+"n1c(S[C!H0])c(C#[NX1])c(c2ccc(O[Ch2,CH3])cc2)[cH]c1(cc)",PAINS compounds
+N=C1N=CNS1,PAINS compounds
+"[#6]1~[#6](~[#7]~[#7]~[#6](~[CH2,CH3])~[CH2,CH3])~[#7]~[#16]~[#6]1",PAINS compounds
+"[#7]1=,:[#7]-,:[#16]-,:[#6]=,:[#6]1-[#6]2-,:[#8]-,:[#7]=,:[#6](-cc)-,:[#7]=,:2",PAINS compounds
+[C!H0]c1nn(c3ccccc3)s2[a!c]acc12,PAINS compounds
+c1cC2=C(SNC2=S)CN1,PAINS compounds
+[OX1]=CC1=NN(cc)C(=[C!H0]cc)S1,PAINS compounds
+C(F)(F)C(=[OX1])[N!H0]c1[cH]n([CH2][CH2]O[CH2]-cc)n[cH]1,PAINS compounds
+C1Cc3ccccc3C(c5c1cccc5)=CC,PAINS compounds
+"c1ccc4c(c1)[SX2,CX4]c8ccc(cc8C4=CC)[H,Cl,CX4]",PAINS compounds
+"c1ccc4c(c1)C([#6]8=,:[#6](SC4)-,:[#16]-,:[#6]=,:[#6]8)=C",PAINS compounds
+c1ccc7c(c1)C(c2c7ccc(c2)[NH2])=[C!H0][#6],PAINS compounds
+C(=[C!H0][CH2]n1[cH]n[cH][cH]1)(-cc)-cc,PAINS compounds
+[NH2]c1nc2C(C#[NX1])=CC(=C)c2cc1C#[NX1],PAINS compounds
+C=C(C#[NX1])C(=[NH])NN,PAINS compounds
+C(C#[NX1])(C#[NX1])=C(S)S,PAINS compounds
+[OX1]=C[C!H0]=C(C#[NX1])[#6],PAINS compounds
+[OH1]C(=[OX1])c1c([OH1])[cH]c([cH][cH]1)-c2[cH][cH]c(o2)[C!H0]=C(C#[NX1])-c3nccn3,PAINS compounds
+"[#7]1([#6])-,:[#6!H0]=,:[#6!H0]-,:[#6!H0]=,:[#6]1[C!H0]=C(C#[NX1])c2nccs2",PAINS compounds
+"C1(=[OX1])C(=[C!H0][$(c2ccccc2),$(c2ccc[a!c]2)])N=C(aaa)[#16,$(Naa)]1",PAINS compounds
+N1=CC(C(N1)=S)=C,PAINS compounds
+c1(ccco1)[C!H0]=!@C2C(=[OX1])c5c(cccc5)[!#1!#6]2,PAINS compounds
+"S=[#6]1-,:[#7!H0]-,:[#6]=,:[#6]-,:[#6]2=,:[#6]1C(=[OX1])OC2=[C!H0]",PAINS compounds
+"[#7]1([#6])-,:[#6H]=,:[#6H]-,:[#6H]=,:[#6]1([CH]=C2C(=[OX1])[!#6]C=,:*2)",PAINS compounds
+[OX1]=C1C(=!@[C!H0]c3ccnc3)c2c(cccc2)N1,PAINS compounds
+"C1=,:C[O,S]C(=CC=[OX1])C1=[OX1]",PAINS compounds
+"C1(=[OX1])C(=[C!H0]c2cc([F,Cl,Br,I])ccc2O[CH2,CH3])N=C(S[CH2,CH3])S1",PAINS compounds
+"c2ccccc2C(=[OX1])[C!H0]=[#6]1-,:[#6](=[OX1])-,:[#7H]-,:[#6](=[OX1])-,:[#6](=[CH]c3ccccc3)-,:[#7!H0]1",PAINS compounds
+[OX1]=C1cc[CH2]NC1=[C!H0],PAINS compounds
+[OX1]=C1NNC(aa)=NC1=[C!H0],PAINS compounds
+"aaC([H,$(C#[NX1])])=[#6]1-,:[#6]=,:[#6]-,:[#6](=[OX1,N!R])-,:[#6]=,:[#6]1",PAINS compounds
+"S1C(=Ncc)N([H,$([CH2][CH2]O),$(cc)])C(=[OX1])C1(=[C!H0][$(cccCl),$(c[a!c])])",PAINS compounds
+"S1C(=!@N[H,$([N!H0](N)cc)])N([H,$(cnccs)])C(=[OX1])C1=[C!H0]cc[Cl,$(O[C!H0])]",PAINS compounds
+S1C(=[OX1])NC(=[SX1])C1=[C!H0]cc,PAINS compounds
+"n1ccc([C!H0]=C2C(=[OX1])NC(=[!#1!#6])N2)c1[CH2,CH3]",PAINS compounds
+[OH1][CX3](=[OX1])c1cccc(c1)cac[C!H0]=C2C(=[!#1!#6])NC(=[!#1!#6])[!#1!#6]2,PAINS compounds
+"N1=C([CH2,CH3])C(=[OX1])N=C2N1C(=[OX1])C(=[C!H0]cc)S2",PAINS compounds
+"N1([CH2,CH3])C(=S)[N!H0]C(=[C!H0]c2cc(Br)ccc2)C1(=O)",PAINS compounds
+"[CH2,CH3]N1C(=[#16,#7])[!#6]C(=[#6]2-,:[#6H]=,:[#6H]cc-,:[#7]2[CH2,CH3])C1=[OX1]",PAINS compounds
+C1([#8])OC([#6])([#8])C=C1,PAINS compounds
+cc[CH2][C!H0](C=[OX1])N1C(=[OX1])[C!H0]2[CH2]C=C[CH2][C!H0]2C1(=[OX1]),PAINS compounds
+"c1ccc4c(c1)N(C(C=C4)([CH2,CH3])[CH2,CH3])C(=[OX1])[N!H0]c3ccc(c(c3)O[CH2,CH3])O[CH2,CH3]",PAINS compounds
+"c12[cH]c(O[CH2,CH3])c(O[CH2,CH3])[cH]c1C([#6])=C([#6])S[CH2]2",PAINS compounds
+"c1(O[CH2,CH3])c(O[CH2,CH3])[cH]c2C=C[C!H0]Sc2[cH]1",PAINS compounds
+[N!H0]1N=C([N!H0])SC(-cc)=C1-cc,PAINS compounds
+"[NH2]C1=C(C#[NX1])[C!H0](cc)C([CH2,CH3])=C(C=C)O1",PAINS compounds
+"[NX3H2,OX2H1]C1=C(C#[NX1])[C!H0](cc)c2c(n(C)nc2)O1",PAINS compounds
+"[NH2][#6]1=,:[#6](C#[NX1])-,:[#6!H0](cc)-,:[#6](C#[NX1])=,:[#6](cc)-,:[#8]1",PAINS compounds
+[NH2]C1=C(C#[NX1])[C!H0](cc)c2c(ccs2)O1,PAINS compounds
+"[CH2,CH3][SX2]C1=C(C#[NX1])[C!H0](cc)C(C#[NX1])C(=O)N1",PAINS compounds
+"[NH2][#6]1=,:[#6](C#[NX1])-,:[#6!H0](c2cccs2)-,:[#6](C(=[OX1])O[#6])=,:[#6]([CH2,CH3])-,:[#8]1",PAINS compounds
+"[SX2]1C=C(C#[NX1])C([#6])(C=[OX1])C([$(C=[OX1]),$(C#[NX1])])=C1[NH2]",PAINS compounds
+[NH2]C1=C(C#[NX1])[C!H0](-cc)S[CX4]S1,PAINS compounds
+"[#7]1([H,CX4])-,:[#6]=,:[#6](C(=[OX1])ccc)-,:[#6]([#6])-,:[#6]([$(C=[OX1]),$(C#[NX1])])=,:[#6]1[CH3]",PAINS compounds
+c1(c(nc4c(c1C#[NX1])c(c(cc4)C#[NX1])[NH2])[NH2])C#[NX1],PAINS compounds
+n1c([SX2]c3c([NH2])cccc3)c(C#[NX1])c(-c2ccccc2)c(C#[NX1])c1([NH2]),PAINS compounds
+"[CH2,CH3][C!H0](C#[NX1])C(=[OX1])[#6]",PAINS compounds
+C1(C#[NX1])(C#[NX1])[C!H0](C(=[OX1])C)[C!H0]1,PAINS compounds
+C=CC(C#[NX1])(C#[NX1])C(C#[NX1])=C[NH2],PAINS compounds
+ccC(=[OX1])[N!H0]C(=[OX1])C(C#[NX1])=[C!H0][N!H0]cc,PAINS compounds
+[OX1]=S(=[OX1])C(C#[NX1])=N[N!H0],PAINS compounds
+[OX1]=C1C(C#[NX1])=NNCC1,PAINS compounds
+"C1(C([CH2,CH3])=C(C#[NX1])C(~[#8])~[#7]~[#6]1(~[#8]))=[C!H0]cc",PAINS compounds
+"[OX1]=[#6]1-,:[#6](=,:[#6]-,:[#6](-,:[#7]-,:[#7]1)C=[OX1])C#[NX1]",PAINS compounds
+"ac[#6]1=,:[#6!H0]-,:[#6](co)=,:[#6](C#[NX1])-,:[#6](=[OX1])-,:[#7!H0]1",PAINS compounds
+"N1(c2ccc(O[CH2,CH3])cc2)C(=[OX1])C(C#[NX1])=CC(n3cncc3)=N1",PAINS compounds
+c1(c2ccccc2nnc1)C(cc)C#[NX1],PAINS compounds
+"[#1,#6][C!H0](=[SX1])",PAINS compounds
+"[#6!H0]1=,:[#6]-,:[#8]-,:[#6](=,:[#6!H0]1)C(=[SX1])N5[CH2][CH2]*[CH2][CH2]5",PAINS compounds
+[CX4][N!H0]C(cc)=[C!H0]C(=S)[N!H0]c1ccccc1,PAINS compounds
+[C!H0](c1ccccc1)(c2ccccc2)C(=S)[N!H0],PAINS compounds
+[C!H0]N([C!H0])[#6]:[#6][N!H0]C(=S)[C!H0],PAINS compounds
+"c1cccnc1C(=S)[N!H0]c2ccccc2O[CH2,CH3]",PAINS compounds
+acC(=S)[N!H0][N!H0]ca,PAINS compounds
+C1=C(SC(C=C1)=S)[#7],PAINS compounds
+"ccC(=[SX1])[SX2][C!H0][CH2,CH3,$(cc)]",PAINS compounds
+"[#7]1-,:[#6](=[OX1])=,:[#6!H0]-,:[#6]([#6])-,:[#16]-,:[#6]1(=S)",PAINS compounds
+"S=CC([CH2,CH3])=C([CH2,CH3])N([CH2,CH3])[CH2,CH3]",PAINS compounds
+C1=CN(C(c5ccccc15)(C#[NX1])C(=S)S)C=[OX1],PAINS compounds
+c2ccccc2N1C(=[OX1])C(Sc3ccccc3)=[C!H0]C1=[OX1],PAINS compounds
+c1(nanc(c2o[cH][cH][cH]2)n1)S[CX4],PAINS compounds
+"[OX1]=C(N3CCSCC3)c9c([cH][cH][cH][cH]9)S[CH2,CH3]",PAINS compounds
+"c1c([N!H0][CX3](=[SX1])[N!H0][CH2][CH2][CH2]N([CH2,CH3])c2ccccc2)cccc1",PAINS compounds
+"c1c([#7!H0]C(=S)[#7!H0][CH2][CH2][#7]([CH2,CH3])c2ccccc2)cccc1",PAINS compounds
+c1(ccccc1)[N!H0]C(=[SX1])N[N!H0]C(=[OX1])c2a[a!c]cc2,PAINS compounds
+c1(ccccc1)[N!H0]C(=[SX1])N[N!H0]c2ccccc2,PAINS compounds
+c1c([N!H0]C(=[S1])[N!H0][CH2]c2ncccc2)cccc1,PAINS compounds
+C1[N!H0][N!H0]C(=[SX1])N[N!H0]1,PAINS compounds
+"c1ccccc1[N!H0]C(=[SX1])N[N!H0][#6](=,:[#7R])-,:[#7R]",PAINS compounds
+"[#6]1(=S)-,:[#7]([CH2]c2occc2)-,:[#6](cc)=,:[#7]-,:[#7!H0]1",PAINS compounds
+c1ccccc1[N!H0]C(=[SX1])[N!H0]N=Cc2ccnc2,PAINS compounds
+c1(ccoc1[C!H0])C=N[N!H0]C(=[SX1])[N!H0],PAINS compounds
+"[#6]1(=[SX1])-,:[#7]2-,:[#6]=,:[#6]-,:[#7]=,:[#7]-,:[#6]2=,:[#7][#7!H0]1",PAINS compounds
+[CX4][SX2]C(=N-aaaa)[N!H0]N=[#6],PAINS compounds
+"cc[#7]([CH2,CH3])[CH2][CH2][CH2][#7!H0]C(=S)[#7!H0]c1c([F,Cl,Br,I])[cH]c([CH2,CH3])[cH][cH]1",PAINS compounds
+o1[cH][cH][cH]c1[CH2][N!H0]C(=S)N([C!H0])[CH2]c2ccccc2,PAINS compounds
+[cH]1c([N!H0]C(=S)[N!H0][C!H0]c3oc([C!H0])[cH][cH]3)[cH]c2c(O[CH2]O2)[cH]1,PAINS compounds
+"[OX1]=C-!@n1ccc2c1-,:[#7!H0]-,:[#6](=S)-,:[#7!H0]2",PAINS compounds
+"[cH]1[cH][cH][cH]c2[cH][cH][cH]c(c12)C([CH2,CH3])=N[N!H0]C(=S)[N!H0]ccc",PAINS compounds
+c1ccccc1[N!H0]C(=S)N[N!H0][C!H0]=[C!H0]C=[OX1],PAINS compounds
+"[CH2,CH3]SC(=S)[N!H0][CH2]-cc",PAINS compounds
+S1C(=S)NC=C[CX4]1,PAINS compounds
+"[OX1]=[#6]1-,:[#16]c2cccc(O[CH2,CH3])c2-,:[#8]1",PAINS compounds
+[N!H0]1C(=S)[C!H0](C#[NX1])[C!H0](-cc)[C!H0]=C1(-cc),PAINS compounds
+"[CX4][#7+,#7v4]([CX4][OH1])=CS[C!H0]",PAINS compounds
+"[#6]1=,:[#6](C=S)-,:[#7]2-,:[#6]=,:[#6]-,:[#6]=,:[#6]-,:[#6]2=,:[#6]1",PAINS compounds
+"[CH2,CH3]N([CH2,CH3])[C!H0]=CC(=[OX1])c1c([SX2])sc([$(C#[NX1]),$(C=[OX1])])c1",PAINS compounds
+"s1[cH][cH]c(O[CH2,CH3])c1C(=[OX1])[N!H0][N!H0]",PAINS compounds
+"c1(sc([H,CH2,CH3])[cH][cH]1)C([H,CH2,CH3])C(=[OX1])[NH]c2nccs2",PAINS compounds
+S(=[OX1])(=[OX1])[N!H0]c1sc([C!H0])c([C!H0])c1(C(=[OX1])[N!H0]),PAINS compounds
+"c2ccccc2[#7!H0]c1sc([$([#6]=[#8]),$(C#[#7]),$([#6]([#8!H0])=[#6])])c([#7])c1[$(C#[#7]),$([#6](n)n)]",PAINS compounds
+"[C!H0][CH2]c1sc([N!H0]C(=[OX1])CCC=[OX1])c([$(C(=[OX1])O),$(C#[NX1])])c1[CH2,CH3]",PAINS compounds
+C=CC(=[OX1])Nc1sc(C(=[OX1])O)c([C!H0])c1(C#[NX1]),PAINS compounds
+"[#6]1=,:[#6]-,:[#16]-,:[#6](=,:[#6]1[NH2])[C!H0]=[C!H0][#6]2=,:[#6]-,:[#6]=,:[#6]-,:[#16]2",PAINS compounds
+[NH2]c1sc([NH]C(=[OX1])c3ccccc3)c(C#[NX1])c1c2aaaaa2,PAINS compounds
+cccccc-c1sc([N!H0]C(=[OX1])[#6])c(C(=[OX1])[OH1])c1,PAINS compounds
+[#6!H0][N!H0]c1sc([#6!H0])c([#6!H0])c1C(=[OX1])[N!H0]cc,PAINS compounds
+"[#6]C(=[OX1])c1cccc2cccc([OH1,NH2])c12",PAINS compounds
+"c1(sc2ccccc2c1([CH2,CH3]))C(=[OX1])[CH2][CH2,CH3]",PAINS compounds
+c1cccc5c1C(c8c5nacc8)=[OX1],PAINS compounds
+c1cccc5c1C(C8C5=N[!#1!#6]=CC8)=[OX1],PAINS compounds
+c1(cc3c(c5ccccc15)c4c(C3=[OX1])cccc4)[OH1],PAINS compounds
+c1c(cccc1)C(=[OX1])[N!H0]N=C2c3c(cccc3)c4c2cccc4,PAINS compounds
+[CX4]1C(=[OX1])NNC(=[OX1])1,PAINS compounds
+c1ccc7c(c1)C(C(=C7[#8!H0])[#6])=[OX1],PAINS compounds
+[OX1]=CC=[C!H0][OH1],PAINS compounds
+[OX1]=C[C!H0]=C([OH1])C([OH1])=[C!H0]C(=[OX1])[#6],PAINS compounds
+"[CH2,CH3]C([OH1])=C(C(=[OX1])[CH2,CH3])[C!H0]C#C",PAINS compounds
+[OX1]=C2[CX4]CC(=[OX1])c7c2cccc7,PAINS compounds
+"[#6]1([F,Cl,Br,I,$([#7v4R,#7v4R+](=,:[#6R])-,:[#6R])])=,:[#6](-!@C=N)-,:[#16]-,:[#6](=[OX1])-,:[#7]1",PAINS compounds
+"[#7v4,#7+](=,:*-,:*=,:*)-,:*=O",PAINS compounds
+"[CX4]N([CX4])c1[cH][cH]c([#6]2=,:[#7]-,:[#6]=,:[#6]-,:*2)[cH][cH]1",PAINS compounds
+"[cH]1c([N!H0]S(=[OX1])(=[OX1])c2caccc2)[cH]c(N([CH2,CH3])[CH2,CH3])[cH][cH]1",PAINS compounds
+c1([NH2])ccc(N([CX3])[CX3])cc1,PAINS compounds
+c1cc3c(cc1)N([CH2][CH2]N4C(c6c(C4=[OX1])cccc6)=[OX1])[CH2][CH2]3,PAINS compounds
+"[cH]1c([N!H0]C(=S)[N!H0]c2ccccc2)[cH]c(N([CH2,CH3])[CH2,CH3])[cH][cH]1",PAINS compounds
+"[CH2,CH3]N([CH2,CH3])c1cc2nc(S[CH2,CH3])sc2cc1",PAINS compounds
+"[CH2,CH3]N([CH2,CH3])C1=[C!H0]c2ccccc2[SX2]c3ccccc13",PAINS compounds
+"N1C=C(C=[OX1])C(-c3ccc(N([CH2,CH3])[CH2,CH3])cc3)C2=C1(~[#7]~[#6](~[#16])~[#7]~[#6]2~[#7])",PAINS compounds
+[cH]1[cH]c([N!H0][CH2]c2ccccc2)[cH]c2c1n([#6])[cH]n2,PAINS compounds
+"c2ccccc2N([C!H0])[C!H0][C!H0][C!H0][N!H0]C(=[OX1])[#6]1-,:[#6]([CH2,CH3])=,:[#6!H0]-,:[#6](=[OX1])-,:[#8]-,:[#6]([CH2,CH3])=,:1",PAINS compounds
+[NH2]c4[cH]nc(Oc5ccccc5)[cH][cH]4,PAINS compounds
+C([#16])([#7])=[C!H0]C=[C!H0]C=[OX1],PAINS compounds
+C1(=[OX1])C(C(C#[NX1])=[C!H0][#7])C([#7])C=C1,PAINS compounds
+"c1ccccc1[C!H0]NC(=[OX1])C([N!H0][CH2,CH3])=[C!H0]C(=[OX1])c2ccc(O[CH2,CH3])cc2",PAINS compounds
+"c13ccc2ccccc2c1[C!H0][CX4]NC3=[C!H0]C(=[OX1])N([CH2,CH3])[CH2,CH3]",PAINS compounds
+[OX1]=CC1=C(SC(=[#6!H0][#6])S1)C=[OX1],PAINS compounds
+C1(C(=[OX1])[CH2]C[CH2]C1(=[OX1]))=C([N!H0])C=[OX1],PAINS compounds
+C#CC(=[OX1])C#C,PAINS compounds
+"[N!H0](c1ccccc1)N=C(C(=[OX1])[CH2,CH3])[N!H0][$([N!H0]),$(cc)]",PAINS compounds
+C1(C=Nc4c(N1)cccc4)=[C!H0]C=[OX1],PAINS compounds
+c1cC(=[OX1])C=C1N=[C!H0]N([CX4])[CX4],PAINS compounds
+c1ccc4c(c1)[#6]([#6]=[#7]4)=[#7!R],PAINS compounds
+cc[C!H0]=[C!H0][C!H0]=NN=C,PAINS compounds
+"[CH2,CH3]N([CH2,CH3])[C!H0]=NC([CH2,CH3])=NN([CH2,CH3])cc",PAINS compounds
+[N!R]=C2C(=[OX1])c5c(cccc5)S2,PAINS compounds
+cc[N!R]=C2C(=[!#1!#6])c5ccccc5N2,PAINS compounds
+C1(=[!#1!#6])C(N=CS1)=O,PAINS compounds
+[#6]=[N!R]c3c([OH1])cccc3,PAINS compounds
+"c12c([cH][cH][cH][cH]1)c(c([cH][cH]2)C(=N-cc)[CH2,CH3])[OH1]",PAINS compounds
+"[#7]1([CX4])-,:[#6]([CH2,CH3])=,:[#6!H0]-,:[#6!H0]=,:[#6]1cc",PAINS compounds
+"[#7]1(C)-,:[#6!H0]=,:[#6!H0]-,:[#6!H0]=,:[#6]1[CH2][N!H0]C(=[SX1])[N!H0]",PAINS compounds
+"[#7]1(c2[cH]a[a!c]a2)-,:[#6]([CX4])=,:[#6!H0]-,:[#6!H0]=,:[#6]1[CX4]",PAINS compounds
+[cH]1[cH]n(-c2[a!c]ccc2C#[NX1])c[cH]1,PAINS compounds
+"n1(c2c[cH]c([$([NH2]),$(cn)])c[cH]2)[cH][cH][cH][cH]1",PAINS compounds
+"C1=[Nv4,N+]([#6])CC[#7]2-,:[#6]=,:[#6]-,:[#6]=,:[#6]12",PAINS compounds
+"[#7]1([CH2,CH3])-,:[#6]2=,:[#6](-,:[#6]:[#6]-,:[#6]2=[OX1])-,:[#6]=,:[#6]1[CH2,CH3]",PAINS compounds
+"[#6]1(=,:[#6]2-,:[#6](=,:[#6](-,:[#7]1C(O)=[OX1])[CH2,CH3])S[CH2]S2)[CH2,CH3]",PAINS compounds
+"[#6]1(-,:[#7!H0]-,:[#6](c2[cH][cH][cH][cH][cH]2)=,:[#6]([CH2,CH3])-,:[#6H]=,:1)C(=[OX1])[OH1]",PAINS compounds
+"[n!H0]1c(C(=[OX1])O[CH2,CH3])c([CH2,CH3])c([CH2][CH2,CH3])c1[CH2][CH2,CH3]",PAINS compounds
+"[#7]1(c2ccccc2)-,:[#6!H0]=,:[#6!H0]-,:[#6!H0]=,:[#6]1C=N[OH1]",PAINS compounds
+"[#7]1([C!H0]c2[cH][cH]c[cH][cH]2)-,:[#6]([C!H0])=,:[#6!H0]-,:[#6!H0]=,:[#6]1[C!H0]",PAINS compounds
+"[#7]1([CH2,CH3])-,:[#6]([CH2,CH3])=,:[#6](C(=[OX1])[#6])-,:[#6]=,:[#6]1-cc",PAINS compounds
+"c2ccccc2[#7][#6]1=,:[#7+,#7v4]-,:[#6](c3ccccc3)=,:[#6][#16]1",PAINS compounds
+"C1(S[#6R])=C([C!H0]([#6])[#6])SC(N1([H,CH2,CH3]))=[OX1]",PAINS compounds
+"c1ccc4c(c1)[#6]7=,:[#6]8-,:[#6]([#6]4=[OX1])=,:[#6]-,:[#6]=,:[#6]-,:[#6]8=,:[#7]-,:[#8]7",PAINS compounds
+[OX1]=C1c2ccccc2C3=C([OH1])C(=[OX1])Nc4cccc1c34,PAINS compounds
+"[!#1!#6]=[#6]1[#6]=,:[#6][#6]=,:[#6][#6]1=[!#1!#6]",PAINS compounds
+O(c2ccccc2)c3cc1nonc1cc3,PAINS compounds
+Clc2cc1nonc1cc2,PAINS compounds
+N2=Nc1n[a!c]nc1N=Ncc2,PAINS compounds
+[C!H0]1([OH1])c2n[a!c]nc2[C!H0]([OH1])C=C1,PAINS compounds
+[NH2]c1c([NH2])[cH][cH]c2nonc12,PAINS compounds
+c3ccccc3N1[C!H0][C!H0]N([C!H0][C!H0]1)S(=[OX1])(=[OX1])c4c2nsnc2ccc4,PAINS compounds
+[cH]1c([N!H0]S(=[OX1])(=[OX1])c2ccc([!#1!#6])cc2)[cH]c3c(O[CH2]O3)[cH]1,PAINS compounds
+c1c(ccc(c1)[N!H0]S(=[OX1])(=[OX1]))[N!H0]S(=[OX1])(=[OX1]),PAINS compounds
+cc[N!H0]S(=[OX1])(=[OX1])[N!H0]cc,PAINS compounds
+"[OX1]=S(=[OX1])(cc)[N!H0][#6]1=,:[#7]-,:[#6](=,:[#6]-,:[#16]1)cc",PAINS compounds
+"[CH3]c5nc([N!H0]S(c2[cH][cH]c([cH][cH]2)O[CH2][CH2][CH2,CH3])(=[OX1])(=[OX1]))[cH][cH][cH]5",PAINS compounds
+c1([cH][cH]c([NH2])[cH][cH]1)S(=[OX1])(=[OX1])[N!H0]c2[cH][cH][cH]nn2,PAINS compounds
+"S(=[OX1])(=[OX1])(c1cn([CH2,CH3])cn1)[N!H0]c2cnn([CH2]ccO[CH2,CH3])c2",PAINS compounds
+"[#7]1(c2c([N!H0]S(=[OX1])(=[OX1])c3sccc3)cccc2)-,:[#6!H0]=,:[#6!H0]-,:[#6!H0]=,:[#6!H0]1",PAINS compounds
+cc[CH]=[CH][CH]=NN([CX4])[CX4],PAINS compounds
+[#6][SX2]c1n[cH]cs1,PAINS compounds
+[N!H0]c1nc(c2cnc([NH2])s2)cs1,PAINS compounds
+"c1(ccc([CH2,CH3])cc1)-c2nc([NH2])sc2[CH3]",PAINS compounds
+"c1([N!H0][CH2]c2[cH][cH][cH]o2)nc(aaa([$(O[CH2,CH3]),CH2,CH3])aa)[cH]s1",PAINS compounds
+"[#16]1-,:[#6]([N!H0]c2c([CH2,CH3,$(cc)])cccc2)=,:[#7+,#7v4]([CH2,CH3])-,:[#6]([#6])=,:[#6H]1",PAINS compounds
+[OX1]=C[N!H0]c1c(-cc)nc([CH2]C#[NX1])s1,PAINS compounds
+[#6!H0][#7!H0]c1nc(-C2=CN=C3N2C=CS3)cs1,PAINS compounds
+"[#6]1=,:[#6]-,:[#16]-,:[#6](NNS(=[OX1])=[OX1])=,:[#7]1",PAINS compounds
+"c1ccc(C(=[OX1])[OH1])cc1[N!H0][#6]2=,:[#7]-,:[#6](=,:[#6!H0]-,:[#16]2)c3ccc([C!H0]([C!H0])[C!H0])cc3",PAINS compounds
+"[OX1]=S(=[OX1])(cc)[N!H0][N!H0][#6]1=,:[#7]-,:[#6](=,:[#6]-,:[#16]1)cc",PAINS compounds
+"n1c2c(cc5c1-,:[#7]=,:[#6](-,:[#16]5)[#7])-,:[#16]-,:[#6](=,:[#7]2)[#7]",PAINS compounds
+s1ccc(-c2csc([NH2])n2)[cH]1,PAINS compounds
+"c1([N!H0]cc[CH2,CH3])nc(c2ccncc2)[cH]s1",PAINS compounds
+"[CH2,CH3]Oc1[cH][cH]c(O[CH2,CH3])[cH]c1[N!H0]c2scc(-c3ccc(O[CH2,CH3])cc3)n2",PAINS compounds
+"c1(oc([CH2,CH3])c([CH2]Occ)[cH]1)[CX3](=[OX1])[OH1]",PAINS compounds
+"c1(oc([CH2,CH3])[cH][cH]1)[C!H0]([OH1])C#C[CX4]",PAINS compounds
+"[#6]1(-,:[#6](=,:[#6]-,:[#6]=,:[#6]-,:[#6]=,:[#6]1)[N!H0])=NC",PAINS compounds
+"[CH2,CH3]Sc1ccc(cc1)C2=CC(=[OX1])[#6]3=,:[#6]-,:[#8]-,:[#6]=,:[#6]3C([OH1])=C2",PAINS compounds
+"c1cccc3-,:[#7]([CH2,CH3])-,:[#6](=NN=[#6]2-,:[#6]=,:[#6]-,:[#6]=,:[#6]-,:[#6]=,:[#6]2)-,:[#16]-,:c13",PAINS compounds
+"N1(c2c([CH2,CH3])cccc2)C(=S)N([CH2]aaaaa)[CH2]C1=[OX1]",PAINS compounds
+N1(c2ccccc2)C(=NC=[OX1])S[CH2]C1=[OX1],PAINS compounds
+N1(c2ccccc2)C(=[OX1])S[C!H0]([CH2]C(=[OX1])[N!H0]cc)C1=[OX1],PAINS compounds
+N1(c2ccccc2)C(=[OX1])S[C!H0]([N!H0]c3c4ccccc4ccc3)C1=[OX1],PAINS compounds
+N1(c2ccccc2)C(=[OX1])S[CH2]C1=S,PAINS compounds
+N1(C(=[OX1])c2ccccc2)C(=Nc3ccccc3)S[CH2]C1=[OX1],PAINS compounds
+"o1[cH][cH][cH]c1[CH2][N!H0]c1c2ccccc2nc([N!H0]c4c([H,CH2,CH3,SX2,$(O[C!H0])])cc([H,CH2,CH3,SX2,$(O[C!H0])])c([H,CH2,CH3,SX2,$(O[C!H0])])c4)n1",PAINS compounds
+"n1c(N([CH2,CH3])[CH2,CH3])nc(N([CH2,CH3])[CH2,CH3])nc1N([C!H0])C=[OX1]",PAINS compounds
+"[CH2,CH3][CH2]S[CH2][#6]1=,:[#6]-,:[#7!H0]-,:[#6]=,:[#7]1",PAINS compounds
+[C!H0]1(n2[cH]n[cH][cH]2)c3[cH]c(Br)[cH][cH]c3[CH2][CH2]c4[cH][cH][cH][cH]c14,PAINS compounds
+[cH]1c(C(=[OX1])[OH1])[cH][cH]c2C(=[OX1])N(c3c[cH]c([#8])c[cH]3)C(=[OX1])c12,PAINS compounds
+[cH]1[cH][cH][cH]c9[cH]c([cH][cH]c19)[N!H0][N!H0]C=[OX1],PAINS compounds
+"c1ccc4c5c(cccc15)-,:[#6]=,:[#7]-,:[#7!H0]4",PAINS compounds
+"c1ccc4c5c(cccc15)-,:[#7]=,:[#7]-,:[#7]4",PAINS compounds
+"c1cc3c4c(c1)cccc4C(=CC3=[OX1])O[CH2,CH3]",PAINS compounds
+[#7]c1ccc2c3c1cccc3C(=[OX1])C=C2C(F)(F)(F),PAINS compounds
+c1(ccc4c5c(cccc15)C(C=C4)=[#7])[#7],PAINS compounds
+"c1(O[C!H0])[cH][cH]c2c3[cH][cH]c(O[CH2,CH3])[cH]c3-,:[#6](=[OX1])-,:[#8]c2c1",PAINS compounds
+"c1([CH2][C!H0]=[CH2])cccc2-,:[#6!H0]=,:[#6](C(=[OX1])[N!H0]cc)-,:[#6](=[OX1])-,:[#8]c12",PAINS compounds
+C1(C=Nc4c(O1)ccc(Cl)c4)=[OX1],PAINS compounds
+c1c2C(c3ccccc3)=[C!H0]C(=[OX1])Oc2cc(O[CH2]coc)c1,PAINS compounds
+"c1cc2c(o1)cc(Br)c3[#8]-,:[#6](=[OX1])-,:[#6]=,:[#6!H0]c23",PAINS compounds
+"c1ccc2c(c1)[#6]=,:[#6](C(=[OX1])[N!H0]c3c(Br)con3)-,:[#6](=[OX1])-,:[#8]2",PAINS compounds
+"c1c([F,Cl,Br,I])cc2c(c1[F,Cl,Br,I])OC(=[N!H0])C(C(=[OX1])[NH2])=[C!H0]2",PAINS compounds
+"c1cccc2[#6!H0]=,:[#6](C(=[OX1])[N!H0]c3scc(-cs[c!H0])n3)-,:[#6](=[OX1])-,:[#8]c12",PAINS compounds
+[#8]C(=[OX1])[CH2][SX2]C(=NC#[NX1])[N!H0]c1ccccc1,PAINS compounds
+[OX1]=C1CCC2C3C(=[OX1])CC4CCCC4C3CCC2=C1,PAINS compounds
+[CH3]C([CH3])([CH3])c1[cH]c(C([CH3])([CH3])[CH3])c(O[C!H0][#7])c[cH]1,PAINS compounds
+[CH3]C([CH3])([CH3])c1c([OH1])c(C([CH3])([CH3])([CH3]))[cH]c([CH2]c2[cH][cH]c([OH1])cc2)[cH]1,PAINS compounds
+c1([OH1])ccc([OH1])c(c1)C(=!@C[#7])C=[OX1],PAINS compounds
+"[CH2,CH3][#6]1=,:[#7]-,:[#7]=,:[#7]-,:[#7]1c2[cH][cH]c(O[CH3])[cH][cH]2",PAINS compounds
+"c1ccc4c(c1)COC(N4C(=[OX1])[CH2,CH3])(C(=[OX1])[OH1])[CH2,CH3]",PAINS compounds
+[CX4]c1[cH][cH]c(C(=[OX1])[N!H0][C!H0]([CH2][CH2]S[CH3])C(=[OX1])[OH1])[cH][cH]1,PAINS compounds
+"c1([N!H0]C(=[OX1])[CH2][CH2]-cc)[cH][cH]c([CH2,CH3])c([N!H0]C(=[OX1])[CH2][CH2]-cc)[cH]1",PAINS compounds
+"c1([N!H0]C(=[OX1])[N!H0][CH2][CH2][CH2,CH3])c([CH2,CH3])[cH]c(Br)[cH]c1[CH2,CH3]",PAINS compounds
+"c1(c([cH]c5c([cH]1)c([cH]c([cH]5)c3[cH][cH]c(c([cH]3)O[CH2,CH3])O[CH2,CH3])[N!H0][CH3])O[CH2,CH3])O[CH2,CH3]",PAINS compounds
+"c1([cH]c(O[CH2,CH3])c(O[CH2,CH3])[cH][cH]1)C(=[OX1])[CH2]N([CH2,CH3])c2ccc([CH2,CH3])cc2",PAINS compounds
+[N!Ho](c1[cH][cH]c(O[CH3])c(O[C!H0])[cH]1)C(=[OX1])[N!H0][CH2][CH2][CH2]N([CH3])cc,PAINS compounds
+C1([CH2][CH2]1)(C(=[OX1])[N!H0]c2ccc(O[CH2][#8])cc2)S(=[OX1])(=[OX1])-cc,PAINS compounds
+"c3c([CH2,CH3])c([CH2,CH3])oc3[CH2]N[CH2][C!H0](O[CH2,CH3])[CH2]Oc1ccc2c(O[CH2]O2)c1",PAINS compounds
+"c1c2c(cc5c1cccc5)-,:[#7!H0]-,:[#6](=,:[#7]2)COC(=[OX1])c8cc(cc(c8)[NH2])[NH2]",PAINS compounds
+"c1(c2ccccc2)nc(N([CH2,CH3])[CH2][CH2]NC(=[OX1])c3c(C(=[OX1])[OH1])cccc3)sn1",PAINS compounds
+"[OX1]=C(c1[cH]c(O[CH3])nc(O[CH3])[cH]1)[N!H0][C!H0]([CH2,CH3])[CH2,CH3]",PAINS compounds
+"[#7]1(-c2[cH][cH][cH][cH]c2C(=[OX1])[N!H0][C!H0]([CH2,CH3])[CH2]O-cc)-,:[#6!H0]=,:[#6!H0]-,:[#6!H0]=,:[#6!H0]1",PAINS compounds
+"c1([C!H0]([CH2,CH3])[CH2][CH2]N[CH2]c2[n!H0]ccc2)nc(-c3ccccc3)[c!H0]s1",PAINS compounds
+C1(cc)=C(cc)[CH2][C!H0](C(=[OX1])[#6])[C!H0](C(=[OX1])[OH1])[CH2]1,PAINS compounds
+C(cc)(cc)(cc)SccC(=[OX1])[OH1],PAINS compounds
+"c1(C([CX4])([CX4])[N!H0]C(=[OX1])N([CH2][CH2,CH3])[CH2][CH2][CH2][CH2]-cc)[cH][cH][cH]c(C(=[CH2])[CH2,CH3])[cH]1",PAINS compounds
+n1c(c2ccccc2)c(c3ccccc3)n(N=!@[#6])c1[NH2],PAINS compounds
+C(c1ccc([OH1])cc1)(c2ccc([OH1])cc2)OS(=[OX1])=[OX1],PAINS compounds
+"[#6]1=,:[#6]([NH2])-,:[#7]-,:[#7]=,:[#6]1-[#6]2=,:[#6]([CH2,CH3])-,:[#8]-,:[#6!H0]=,:[#6!H0]2",PAINS compounds
+"[#16]1-,:[#6]=,:[#6]-,:[#7]=,:[#6]1-[#6]6-,:[#6!H0]=,:[#7]-,:[#7!H0]-,:[#6]([NH2])=,:6",PAINS compounds
+"c12[cH][cH][cH][cH]c1-,:[#6]([CH2,CH3])=,:[#6](-cc)-,:[#7]2-!@cc",PAINS compounds
+"c1c[cH]c2O[CH2]N(ccO[CH2,CH3])[CH2]c2[cH]1",PAINS compounds
+"[cH]1c([#8])c([#8])[cH]c2c1O[CH2]N([CH2,CH3])[CH2]2",PAINS compounds
+"c1ccccc1N([CH2,CH3])[C!H0]=[C!H0]C=!@[C!H0][C!H0]=CC=&@Nc2ccccc2",PAINS compounds
+"[C!H0](c1[cH][cH]c(Cl)[cH][cH]1)(c2[cH][cH]c(Cl)[cH][cH]2)O[CH2][CH2][CH2][#6]3-,:[#7]([CH3])-,:[#6!H0]=,:[#6!H0]-,:[#7]=,:3",PAINS compounds
+"cc[N!H0]C(=[OX1])[#6]1-,:[#7]=,:[#7]-,:[#16]-,:[#6]([N!H0]cc)=,:1",PAINS compounds
+[OH1][CX3](=[OX1])[CX4H1]([CX4H2]-C~[#6])([CX4H2]-C~[#6]),Developmental and mitochondrial toxicity
+"[$([OH1][CX3](=[OX1])c1[cH][cH]c(-c2c[cH]c3[cH]c([H,CX4])c([H,CX4])[cH]c3[cH]2)[cH][cH]1),$([OH1][CX3](=[OX1])c1[cH]c2[cH]cc(-c3[cH]c([H,CX4])c([H,CX4])[cH][cH]3)[cH]c2[cH][cH]1)]",Developmental and mitochondrial toxicity
+"[CH2,CH3][N!H0]C=N[N!H0][#6]1=,:[#7]-,:[#6](-cc)=,:[#6!H0]-,:[#16]1",PAINS compounds
+"[H,CH2,CH3][#7]1-,:[#6]([CH2,CH3,$([a!c](:[#6]-,:[#7])),$([C!H0][#7]),$([C!H0]([CH2,CH3])[N!H0][CH2,CH3]),$([C!H0]([CH2,CH3])[CH2][N!H0][CH2,CH3])])=,:[#6]([CX4!H0])-,:c2[cH]cccc12",PAINS compounds
+"a1aaa(aa1)[C!H0]=[C!H0]C(=[OX1])[N!H0][N!H0][#6]2=,:[#7]-,:[#7]=,:[#7]-,:[#7]2[#6]",PAINS compounds
+[!#6!#1]1~*~*~1,Extended Functional Groups (EFG)
+[!#6!#1]1~[#6]~[#6]~1,Extended Functional Groups (EFG)
+[!#6!#1]1-[#6]-[#6]-1,Extended Functional Groups (EFG)
+"[$([!#1!#6]1~[#6]=[#6]~1),$([!#1!#6]1=[#6]~[#6]~1)]",Extended Functional Groups (EFG)
+[!#6!#1]1~[!#6!#1]~[#6]~1,Extended Functional Groups (EFG)
+[!#6!#1]1-[!#6!#1]-[#6]-1,Extended Functional Groups (EFG)
+"[$([!#1!#6]1=[!#1!#6]~[#6]~1),$([!#1!#6]1~[!#6!#1]=[#6]~1)]",Extended Functional Groups (EFG)
+[!#6!#1]1~[!#6!#1]~[!#6!#1]~1,Extended Functional Groups (EFG)
+[!#6!#1]1-[!#6!#1]-[!#6!#1]-1,Extended Functional Groups (EFG)
+[!#1!#6]1~[!#1!#6]=[!#1!#6]~1,Extended Functional Groups (EFG)
+[!#6!#1;R1]1~[*R1]~[*R1]~1,Extended Functional Groups (EFG)
+[!#6!#1;R1]1~[#6&R1]~[#6&R1]~1,Extended Functional Groups (EFG)
+[!#6!#1;R1]1-[#6&R1]-[#6&R1]-1,Extended Functional Groups (EFG)
+[#7R1]1-[#6R1]-[#6R1]-1,Extended Functional Groups (EFG)
+[#8R1]1-[#6R1]-[#6R1]-1,Extended Functional Groups (EFG)
+[#16X2R1]1-[#6R1]-[#6R1]-1,Extended Functional Groups (EFG)
+"[$([!#1!#6;R1]1~[#6R1]=[#6R1]~1),$([!#1!#6;R1]1=[#6R1]~[#6R1]~1)]",Extended Functional Groups (EFG)
+"[$([#7R1]1-[#6R1]=[#6R1]-1),$([#7R1]1=[#6R1]-[#6R1]-1)]",Extended Functional Groups (EFG)
+[#7R1]1-[#6R1]=[#6R1]-1,Extended Functional Groups (EFG)
+[#7R1]1=[#6R1]-[#6R1]-1,Extended Functional Groups (EFG)
+[#8R1]1-[#6R1]=[#6R1]-1,Extended Functional Groups (EFG)
+[#16X2R1]1-[#6R1]=[#6R1]-1,Extended Functional Groups (EFG)
+[!#6!#1;R1]1~[!#6!#1;R1]~[#6R1]~1,Extended Functional Groups (EFG)
+[!#6!#1;R1]1-[!#6!#1;R1]-[#6R1]-1,Extended Functional Groups (EFG)
+[#7R1]1-[#7R1]-[#6R1]-1,Extended Functional Groups (EFG)
+[#8R1]1-[#8R1]-[#6R1]-1,Extended Functional Groups (EFG)
+[#8R1]1-[#7R1]-[#6R1]-1,Extended Functional Groups (EFG)
+[#16X2R1]1-[#7R1]-[#6R1]-1,Extended Functional Groups (EFG)
+"[$([!#1!#6;R1]1=[!#1!#6;R1]~[#6R1]~1),$([!#1!#6;R1]1~[!#6!#1;R1]=[#6R1]~1)]",Extended Functional Groups (EFG)
+[#7R1]1-[#7R1]=[#6R1]-1,Extended Functional Groups (EFG)
+[#7R1]1=[#7R1]-[#6R1]-1,Extended Functional Groups (EFG)
+[#7R1]1=[#6R1]-[#8R1]-1,Extended Functional Groups (EFG)
+[#7R1]1=[#6R1]-[#16X2R1]-1,Extended Functional Groups (EFG)
+[!#6!#1;R1]1~[!#6!#1;R1]~[!#6!#1;R1]~1,Extended Functional Groups (EFG)
+[!#6!#1;R1]1-[!#6!#1;R1]-[!#6!#1;R1]-1,Extended Functional Groups (EFG)
+[#7R1]1-[#7R1]-[#7R1]-1,Extended Functional Groups (EFG)
+[#8R1]1-[#8R1]-[#8R1]-1,Extended Functional Groups (EFG)
+[#16X2R1]1-[#16X2R1]-[#16X2R1]1,Extended Functional Groups (EFG)
+[#8R1]1-[#7R1]-[#7R1]1,Extended Functional Groups (EFG)
+[#8R1]1-[#8R1]-[#7R1]1,Extended Functional Groups (EFG)
+[#16X2R1]1-[#7R1]-[#7R1]1,Extended Functional Groups (EFG)
+[#16X2R1]1-[#16X2R1]-[#7R1]1,Extended Functional Groups (EFG)
+[!#1!#6;R1]1-[!#6!#1;R1]=[!#6!#1;R1]1,Extended Functional Groups (EFG)
+[#7R1]1-[#7R1]=[#7R1]1,Extended Functional Groups (EFG)
+[#7R1]1=[#7R1]-[#8R1]1,Extended Functional Groups (EFG)
+[#7R1]1=[#7R1]-[#16X2R1]1,Extended Functional Groups (EFG)
+"[$([!#6!#1]1~[!#6!#1]~[#6]~[#6]~1),$([!#6!#1]1~[#6]~[!#6!#1]~[#6]~1)]",Extended Functional Groups (EFG)
+"[$([!#6!#1]1-[!#6!#1]-[#6]-[#6]-1),$([!#6!#1]1-[#6]-[!#6!#1]-[#6]-1)]",Extended Functional Groups (EFG)
+"[$([!#6!#1]1=[!#6!#1]~[#6]~[#6]~1),$([!#6!#1]1~[!#6!#1]=[#6]~[#6]~1),$([!#6!#1]1~[!#6!#1]~[#6]=[#6]~1),$([!#6!#1]1=[#6]~[!#6!#1]~[#6]~1)]",Extended Functional Groups (EFG)
+[!#6!#1]1~[!#6!#1]~[!#6!#1]~[#6]~1,Extended Functional Groups (EFG)
+[!#6!#1]1-[!#6!#1]-[!#6!#1]-[#6]-1,Extended Functional Groups (EFG)
+"[$([!#6!#1]1=[!#6!#1]~[!#6!#1]~[#6]~1),$([!#6!#1]1~[!#6!#1]~[!#6!#1]=[#6]~1)]",Extended Functional Groups (EFG)
+[!#6!#1]1~[!#6!#1]~[!#6!#1]~[!#6!#1]~1,Extended Functional Groups (EFG)
+[!#6!#1]1-[!#6!#1]-[!#6!#1]-[!#6!#1]-1,Extended Functional Groups (EFG)
+[!#6!#1]1=[!#6!#1]~[!#6!#1]~[!#6!#1]~1,Extended Functional Groups (EFG)
+[!#6!#1;R1]1~[*R1]~[*R1]~[*R1]~1,Extended Functional Groups (EFG)
+[!#6!#1;R1]1~[#6R1]~[#6R1]~[#6R1]~1,Extended Functional Groups (EFG)
+[!#6!#1;R1]1-[#6R1]-[#6R1]-[#6R1]-1,Extended Functional Groups (EFG)
+[#7R1]1-[#6R1]-[#6R1]-[#6R1]-1,Extended Functional Groups (EFG)
+[#8R1]1-[#6R1]-[#6R1]-[#6R1]-1,Extended Functional Groups (EFG)
+[#16X2R1]1-[#6R1]-[#6R1]-[#6R1]-1,Extended Functional Groups (EFG)
+"[$([!#6!#1;R1]1=[#6R1]~[#6R1]~[#6R1]~1),$([!#6!#1;R1]1~[#6R1]=[#6R1]~[#6R1]~1)]",Extended Functional Groups (EFG)
+"[$([#7R1]1=[#6R1]-[#6R1]-[#6R1]-1),$([#7R1]1-[#6R1]=[#6R1]-[#6R1]-1)]",Extended Functional Groups (EFG)
+[#7R1]1=[#6R1]-[#6R1]-[#6R1]-1,Extended Functional Groups (EFG)
+[#7R1]1-[#6R1]=[#6R1]-[#6R1]-1,Extended Functional Groups (EFG)
+[#7R1]1=[#6R1][#6R1]=[#6R1]1,Extended Functional Groups (EFG)
+[#8R1]1[#6R1]=[#6R1][#6R1]1,Extended Functional Groups (EFG)
+[#16X2R1]1[#6R1]=[#6R1][#6R1]1,Extended Functional Groups (EFG)
+"[$([!#6!#1;R1]1~[!#6!#1;R1]~[#6R1]~[#6R1]~1),$([!#6!#1;R1]1~[#6R1]~[!#6!#1;R1]~[#6R1]~1)]",Extended Functional Groups (EFG)
+"[$([!#6!#1;R1]1-[!#6!#1;R1]-[#6R1]-[#6R1]-1),$([!#6!#1;R1]1-[#6R1]-[!#6!#1;R1]-[#6R1]-1)]",Extended Functional Groups (EFG)
+"[$([NR1]1[CR1][CR1][NR1]1),$([NR1]1[CR1][NR1][CR1]1)]",Extended Functional Groups (EFG)
+[NR1]1[CR1][CR1][NR1]1,Extended Functional Groups (EFG)
+[NR1]1[CR1][NR1][CR1]1,Extended Functional Groups (EFG)
+"[$([OR1]1[OR1][CR1][CR1]1),$([OR1]1[CR1][OR1][CR1]1)]",Extended Functional Groups (EFG)
+[OR1]1[OR1][CR1][CR1]1,Extended Functional Groups (EFG)
+[OR1]1[CR1][OR1][CR1]1,Extended Functional Groups (EFG)
+"[$([SX2R1]1[SX2R1][CR1][CR1]1),$([SX2R1]1[CR1][SX2R1][CR1]1)]",Extended Functional Groups (EFG)
+[SX2R1]1[SX2R1][CR1][CR1]1,Extended Functional Groups (EFG)
+[SX2R1]1[CR1][SX2R1][CR1]1,Extended Functional Groups (EFG)
+"[$([!#6!#1;R1]1=[!#6!#1;R1]~[#6R1]~[#6R1]~1),$([!#6!#1;R1]1~[!#6!#1;R1]=[#6R1]~[#6R1]~1),$([!#6!#1;R1]1~[!#6!#1;R1]~[#6R1]=[#6R1]~1),$([!#6!#1;R1]1=[#6R1]~[!#6!#1;R1]~[#6R1]~1)]",Extended Functional Groups (EFG)
+"[$([#7]1=,:[#7]-,:[#6]-,=,:[#6]-,:1),$([#7]1-,:[#7]=,:[#6]-,:[#6]-,=,:1),$([#7]1-,:[#7]-,:[#6]=,:[#6]-,=,:1),$([#7]1=,:[#6]-,:[#7]-,=,:[#6]-,:1)]",Extended Functional Groups (EFG)
+"[#8R1]1-,:[#8R1]-,:[#6R1]=,:[#6R1]-,:1",Extended Functional Groups (EFG)
+"[#16R1]1-,:[#16R1]-,:[#6R1]=,:[#6R1]-,:1",Extended Functional Groups (EFG)
+[!#6!#1]1~[#6]~[#6]~[#6]~1,Extended Functional Groups (EFG)
+[!#6!#1]1-[#6]-[#6]-[#6]-1,Extended Functional Groups (EFG)
+"[$([!#6!#1]1=[#6]~[#6]~[#6]~1),$([!#6!#1]1~[#6]=[#6]~[#6]~1)]",Extended Functional Groups (EFG)
+"[$([#7R1]1-[#7R1]=[#6R1]-1),$([#7R1]1=[#7R1]-[#6R1]-1)]",Extended Functional Groups (EFG)
+"[$([!#1!#6]1=[!#1!#6]-[#6]1),$([!#1!#6]1-[!#6!#1]=[#6]1)]",Extended Functional Groups (EFG)
+[!#6!#1]1~*~*~*~1,Extended Functional Groups (EFG)
+[!#6!#1]1~*~*~*~*~1,Extended Functional Groups (EFG)
+[!#6!#1]1~[#6]~[#6]~[#6]~[#6]~1,Extended Functional Groups (EFG)
+[!#6!#1]1CCCC1,Extended Functional Groups (EFG)
+"[$([!#6!#1]1=CCCC1),$([!#6!#1]1C=CCC1),$([!#6!#1]1CC=CC1),$([!#6!#1]1=CC=CC1);!$(n1cccc1)]",Extended Functional Groups (EFG)
+[a!#6]1cccc1,Extended Functional Groups (EFG)
+"[$([!#6!#1]1~[!#6!#1]~[#6]~[#6]~[#6]~1),$([!#6!#1]1~[#6]~[!#6!#1]~[#6]~[#6]~1)]",Extended Functional Groups (EFG)
+"[$([!#6!#1]1[!#6!#1]CCC1),$([!#6!#1]1C[!#6!#1]CC1)]",Extended Functional Groups (EFG)
+"[$([!#6!#1]1=[!#6!#1]C-,=CC1),$([!#6!#1]1[!#6!#1]=CCC1),$([!#6!#1]1[!#6!#1]C=CC1),$([!#6!#1]1=C[!#6!#1]-,=CC1),$([!#6!#1]1C[!#6!#1]CC=1),$([!#6!#1]1C[!#6!#1]C=C1)]",Extended Functional Groups (EFG)
+"[$([a!#6]1[a!#6]ccc1),$([a!#6]1c[a!#6]cc1)]",Extended Functional Groups (EFG)
+"[$([!#6!#1]1~[!#6!#1]~[!#6!#1]~[#6]~[#6]~1),$([!#6!#1]1~[!#6!#1]~[#6]~[!#6!#1]~[#6]~1)]",Extended Functional Groups (EFG)
+"[$([!#6!#1]1[!#6!#1][!#6!#1]CC1),$([!#6!#1]1[!#6!#1]C[!#6!#1]C1)]",Extended Functional Groups (EFG)
+"[$([a!#6]1[a!#6][a!#6]cc1),$([a!#6]1[a!#6]c[a!#6]c1)]",Extended Functional Groups (EFG)
+[!#6!#1]1~[!#6!#1]~[!#6!#1]~[!#6!#1]~[#6]~1,Extended Functional Groups (EFG)
+[!#6!#1]1-[!#6!#1]-[!#6!#1]-[!#6!#1]C1,Extended Functional Groups (EFG)
+"[$([!#6!#1]1=[!#6!#1][!#6!#1]-,=[!#6!#1][#6]1),$([!#6!#1]1[!#6!#1]=[!#6!#1][!#6!#1][#6]1),$([!#6!#1]1[!#6!#1][!#6!#1][!#6!#1][#6]=1)]",Extended Functional Groups (EFG)
+[a!#6]1[a!#6][a!#6][a!#6]c1,Extended Functional Groups (EFG)
+[!#6!#1]1~[!#6!#1]~[!#6!#1]~[!#6!#1]~[!#6!#1]~1,Extended Functional Groups (EFG)
+[!#6!#1]1-[!#6!#1]-[!#6!#1]-[!#6!#1]-[!#6!#1]-1,Extended Functional Groups (EFG)
+[!#6!#1]1=[!#6!#1]-[!#6!#1]-[!#6!#1]-[!#6!#1]-1,Extended Functional Groups (EFG)
+[a!#6]1[a!#6][a!#6][a!#6][a!#6]1,Extended Functional Groups (EFG)
+[!#6!#1;R1]1~[*R1]~[*R1]~[*R1]~[*R1]~1,Extended Functional Groups (EFG)
+[!#6!#1;R1]1~[#6R1]~[#6R1]~[#6R1]~[#6R1]~1,Extended Functional Groups (EFG)
+[!#6!#1;R1]1[CR1][CR1][CR1][CR1]1,Extended Functional Groups (EFG)
+[NR1]1[CR1][CR1][CR1][CR1]1,Extended Functional Groups (EFG)
+[OR1]1[CR1][CR1][CR1][CR1]1,Extended Functional Groups (EFG)
+[SR1]1[CR1][CR1][CR1][CR1]1,Extended Functional Groups (EFG)
+"[$([!#6!#1;R1]1=[CR1][CR1][CR1][CR1]1),$([!#6!#1;R1]1[CR1]=[CR1][CR1][CR1]1),$([!#6!#1;R1]1[CR1][CR1]=[CR1][CR1]1),$([!#6!#1;R1]1=[CR1][CR1]=[CR1][CR1]1);!$(n1cccc1)]",Extended Functional Groups (EFG)
+"[$([NR1]1=[CR1][CR1][CR1][CR1]1),$([NR1]1[CR1]=[CR1][CR1][CR1]1),$([NR1]1[CR1][CR1]=[CR1][CR1]1)]",Extended Functional Groups (EFG)
+[NR1]1=[CR1][CR1][CR1][CR1]1,Extended Functional Groups (EFG)
+[NR1]1[CR1]=[CR1][CR1][CR1]1,Extended Functional Groups (EFG)
+[NR1]1[CR1][CR1]=[CR1][CR1]1,Extended Functional Groups (EFG)
+"[$([OR1]1[CR1]=[CR1][CR1][CR1]1),$([OR1]1[CR1][CR1]=[CR1][CR1]1)]",Extended Functional Groups (EFG)
+[OR1]1[CR1]=[CR1][CR1][CR1]1,Extended Functional Groups (EFG)
+[OR1]1[CR1][CR1]=[CR1][CR1]1,Extended Functional Groups (EFG)
+"[$([SR1]1[CR1]=[CR1][CR1][CR1]1),$([SR1]1[CR1][CR1]=[CR1][CR1]1)]",Extended Functional Groups (EFG)
+[SR1]1[CR1]=[CR1][CR1][CR1]1,Extended Functional Groups (EFG)
+[SR1]1[CR1][CR1]=[CR1][CR1]1,Extended Functional Groups (EFG)
+[a!#6;R1]1[cR1][cR1][cR1][cR1]1,Extended Functional Groups (EFG)
+[nR1]1[cR1][cR1][cR1][cR1]1,Extended Functional Groups (EFG)
+[oR1]1[cR1][cR1][cR1][cR1]1,Extended Functional Groups (EFG)
+[sR1]1[cR1][cR1][cR1][cR1]1,Extended Functional Groups (EFG)
+[cR1]1[cR1][cR1][cR1][cR2]2[nR1][cR1][cR1][cR2]12,Extended Functional Groups (EFG)
+[cR1]1[cR1][cR1][cR1][cR2]2[oR1][cR1][cR1][cR2]12,Extended Functional Groups (EFG)
+[cR1]1[cR1][cR1][cR1][cR2]2[sR1][cR1][cR1][cR2]12,Extended Functional Groups (EFG)
+"[$([!#6!#1;R1]1~[!#6!#1;R1]~[#6R1]~[#6R1]~[#6R1]~1),$([!#6!#1;R1]1~[#6R1]~[!#6!#1;R1]~[#6R1]~[#6R1]~1)]",Extended Functional Groups (EFG)
+"[$([!#6!#1;R1]1[!#6!#1;R1][CR1][CR1][CR1]1),$([!#6!#1;R1]1[CR1][!#6!#1;R1][CR1][CR1]1)]",Extended Functional Groups (EFG)
+"[$([NR1]1[NR1][CR1][CR1][CR1]1),$([NR1]1[CR1][NR1][CR1][CR1]1)]",Extended Functional Groups (EFG)
+[NR1]1[NR1][CR1][CR1][CR1]1,Extended Functional Groups (EFG)
+[NR1]1[CR1][NR1][CR1][CR1]1,Extended Functional Groups (EFG)
+"[$([OR1]1[OR1][CR1][CR1][CR1]1),$([OR1]1[CR1][OR1][CR1][CR1]1)]",Extended Functional Groups (EFG)
+[OR1]1[OR1][CR1][CR1][CR1]1,Extended Functional Groups (EFG)
+[OR1]1[CR1][OR1][CR1][CR1]1,Extended Functional Groups (EFG)
+"[$([SR1]1[SR1][CR1][CR1][CR1]1),$([SR1]1[CR1][SR1][CR1][CR1]1)]",Extended Functional Groups (EFG)
+[SR1]1[SR1][CR1][CR1][CR1]1,Extended Functional Groups (EFG)
+[SR1]1[CR1][SR1][CR1][CR1]1,Extended Functional Groups (EFG)
+"[$([NR1]1=[NR1][CR1][CR1][CR1]1),$([NR1]1[NR1]=[CR1][CR1][CR1]1),$([NR1]1[NR1][CR1]=[CR1][CR1]1)]",Extended Functional Groups (EFG)
+[NR1]1=[NR1][CR1][CR1][CR1]1,Extended Functional Groups (EFG)
+[NR1]1[NR1]=[CR1][CR1][CR1]1,Extended Functional Groups (EFG)
+"[$([NR1]1=[CR1][NR1][CR1][CR1]1),$([NR1]1[CR1][NR1]=[CR1][CR1]1),$([NR1]1[CR1][NR1][CR1]=[CR1]1)]",Extended Functional Groups (EFG)
+[NR1]1=[CR1][NR1][CR1][CR1]1,Extended Functional Groups (EFG)
+[NR1]1[CR1][NR1]=[CR1][CR1]1,Extended Functional Groups (EFG)
+[NR1]1[CR1][NR1][CR1]=[CR1]1,Extended Functional Groups (EFG)
+"[$([OR1]1[OR1][CR1]=[CR1][CR1]1),$([OR1]1[CR1][OR1][CR1]=[CR1]1)]",Extended Functional Groups (EFG)
+[OR1]1[OR1][CR1]=[CR1][CR1]1,Extended Functional Groups (EFG)
+[OR1]1[CR1][OR1][CR1]=[CR1]1,Extended Functional Groups (EFG)
+"[$([SR1]1[SR1][CR1]=[CR1][CR1]1),$([SR1]1[CR1][SR1][CR1]=[CR1]1)]",Extended Functional Groups (EFG)
+[SR1]1[SR1][CR1]=[CR1][CR1]1,Extended Functional Groups (EFG)
+[SR1]1[CR1][SR1][CR1]=[CR1]1,Extended Functional Groups (EFG)
+"[$([a!#6;R1]1[a!#6;R1][cR1][cR1][cR1]1),$([a!#6;R1]1[cR1][a!#6;R1][cR1][cR1]1)]",Extended Functional Groups (EFG)
+"[$([nR1]1[nR1][cR1][cR1][cR1]1),$([nR1]1[cR1][nR1][cR1][cR1]1)]",Extended Functional Groups (EFG)
+[nR1]1[nR1][cR1][cR1][cR1]1,Extended Functional Groups (EFG)
+[nR1]1[cR1][nR1][cR1][cR1]1,Extended Functional Groups (EFG)
+"[$([oR1]1[nR1][cR1][cR1][cR1]1),$([oR1]1[cR1][nR1][cR1][cR1]1)]",Extended Functional Groups (EFG)
+[oR1]1[nR1][cR1][cR1][cR1]1,Extended Functional Groups (EFG)
+[oR1]1[cR1][nR1][cR1][cR1]1,Extended Functional Groups (EFG)
+"[$([sR1]1[nR1][cR1][cR1][cR1]1),$([sR1]1[cR1][nR1][cR1][cR1]1)]",Extended Functional Groups (EFG)
+[sR1]1[nR1][cR1][cR1][cR1]1,Extended Functional Groups (EFG)
+[sR1]1[cR1][nR1][cR1][cR1]1,Extended Functional Groups (EFG)
+"[$([!#6!#1;R1]1~[!#6!#1;R1]~[!#6!#1;R1]~[#6R1]~[#6R1]~1),$([!#6!#1;R1]1~[!#6!#1;R1]~[#6R1]~[!#6!#1;R1]~[#6R1]~1)]",Extended Functional Groups (EFG)
+"[$([!#6!#1;R1]1[!#6!#1;R1][!#6!#1;R1][CR1][CR1]1),$([!#6!#1;R1]1[!#6!#1;R1][CR1][!#6!#1;R1][CR1]1)]",Extended Functional Groups (EFG)
+"[$([NR1]1[NR1][NR1][CR1][CR1]1),$([NR1]1[NR1][CR1][NR1][CR1]1)]",Extended Functional Groups (EFG)
+[NR1]1[NR1][NR1][CR1][CR1]1,Extended Functional Groups (EFG)
+[NR1]1[NR1][CR1][NR1][CR1]1,Extended Functional Groups (EFG)
+"[$([OR1]1[OR1][OR1][CR1][CR1]1),$([OR1]1[OR1][CR1][OR1][CR1]1)]",Extended Functional Groups (EFG)
+[OR1]1[OR1][OR1][CR1][CR1]1,Extended Functional Groups (EFG)
+[OR1]1[OR1][CR1][OR1][CR1]1,Extended Functional Groups (EFG)
+"[$([SR1]1[SR1][SR1][CR1][CR1]1),$([SR1]1[SR1][CR1][SR1][CR1]1)]",Extended Functional Groups (EFG)
+[SR1]1[SR1][SR1][CR1][CR1]1,Extended Functional Groups (EFG)
+[SR1]1[SR1][CR1][SR1][CR1]1,Extended Functional Groups (EFG)
+"[$([NR1]1=[NR1][NR1][CR1][CR1]1),$([NR1]1[NR1][NR1][CR1][CR1]=1),$([NR1]1[NR1][NR1][CR1]=[CR1]1)]",Extended Functional Groups (EFG)
+"[$([NR1]1=[NR1][CR1][NR1][CR1]1),$([NR1]1[NR1]=[CR1][NR1][CR1]1),$([NR1]1[NR1][CR1]=[NR1][CR1]1)]",Extended Functional Groups (EFG)
+[OR1]1[OR1][OR1][CR1]=[CR1]1,Extended Functional Groups (EFG)
+[SR1]1[SR1][SR1][CR1]=[CR1]1,Extended Functional Groups (EFG)
+"[$([a!#6;R1]1[a!#6;R1][a!#6;R1][cR1][cR1]1),$([a!#6;R1]1[a!#6;R1][cR1][a!#6;R1][cR1]1)]",Extended Functional Groups (EFG)
+"[$([nR1]1[nR1][nR1][cR1][cR1]1),$([nR1]1[nR1][cR1][nR1][cR1]1)]",Extended Functional Groups (EFG)
+[nR1]1[nR1][nR1][cR1][cR1]1,Extended Functional Groups (EFG)
+[nR1]1[nR1][cR1][nR1][cR1]1,Extended Functional Groups (EFG)
+"[$([oR1]1[nR1][nR1][cR1][cR1]1),$([oR1]1[nR1][cR1][nR1][cR1]1),$([oR1]1[nR1][cR1][cR1][nR1]1),$([oR1]1[cR1][nR1][nR1][cR1]1)]",Extended Functional Groups (EFG)
+[oR1]1[nR1][nR1][cR1][cR1]1,Extended Functional Groups (EFG)
+[oR1]1[nR1][cR1][nR1][cR1]1,Extended Functional Groups (EFG)
+[oR1]1[nR1][cR1][cR1][nR1]1,Extended Functional Groups (EFG)
+[oR1]1[cR1][nR1][nR1][cR1]1,Extended Functional Groups (EFG)
+[!#6!#1;R1]1~[!#6!#1;R1]~[!#6!#1;R1]~[!#6!#1;R1]~[#6R1]~1,Extended Functional Groups (EFG)
+[!#6!#1;R1]1-[!#6!#1;R1]-[!#6!#1;R1]-[!#6!#1;R1][CR1]1,Extended Functional Groups (EFG)
+[NR1]1[NR1][NR1][NR1][CR1]1,Extended Functional Groups (EFG)
+[OR1]1[OR1][OR1][OR1][CR1]1,Extended Functional Groups (EFG)
+[SR1]1[SR1][SR1][SR1][CR1]1,Extended Functional Groups (EFG)
+"[$([!#6!#1;R1]1=[!#6!#1;R1][!#6!#1;R1]-,=[!#6!#1;R1][#6R1]1),$([!#6!#1;R1]1[!#6!#1;R1]=[!#6!#1;R1][!#6!#1;R1][#6R1]1),$([!#6!#1;R1]1[!#6!#1;R1][!#6!#1;R1][!#6!#1;R1][#6R1]=1)]",Extended Functional Groups (EFG)
+[a!#6;R1]1[a!#6;R1][a!#6;R1][a!#6;R1][cR1]1,Extended Functional Groups (EFG)
+[nR1]1[nR1][nR1][nR1][cR1]1,Extended Functional Groups (EFG)
+"[$([oR1]1[nR1][nR1][nR1][cR1]1),$([oR1]1[nR1][nR1][cR1][nR1]1)]",Extended Functional Groups (EFG)
+[oR1]1[nR1][nR1][nR1][cR1]1,Extended Functional Groups (EFG)
+[oR1]1[nR1][nR1][cR1][nR1]1,Extended Functional Groups (EFG)
+"[$([sR1]1[nR1][nR1][nR1][cR1]1),$([sR1]1[nR1][nR1][cR1][nR1]1)]",Extended Functional Groups (EFG)
+[sR1]1[nR1][nR1][nR1][cR1]1,Extended Functional Groups (EFG)
+[sR1]1[nR1][nR1][cR1][nR1]1,Extended Functional Groups (EFG)
+[!#6!#1;R1]1~[!#6!#1;R1]~[!#6!#1;R1]~[!#6!#1;R1]~[!#6!#1;R1]~1,Extended Functional Groups (EFG)
+[!#6!#1;R1]1-[!#6!#1;R1]-[!#6!#1;R1]-[!#6!#1;R1]-[!#6!#1;R1]-1,Extended Functional Groups (EFG)
+[NR1]1[NR1][NR1][NR1][NR1]1,Extended Functional Groups (EFG)
+[OR1]1[OR1][OR1][OR1][OR1]1,Extended Functional Groups (EFG)
+[SR1]1[SR1][SR1][SR1][SR1]1,Extended Functional Groups (EFG)
+[!#6!#1;R1]1=[!#6!#1;R1]-[!#6!#1;R1]-[!#6!#1;R1]-[!#6!#1;R1]-1,Extended Functional Groups (EFG)
+[a!#6;R1]1[a!#6;R1][a!#6;R1][a!#6;R1][a!#6;R1]1,Extended Functional Groups (EFG)
+[nR1]1[nR1][nR1][nR1][nR1]1,Extended Functional Groups (EFG)
+[!#6!#1]1~*~*~*~*~*~1,Extended Functional Groups (EFG)
+[!#6!#1]1~[#6]~[#6]~[#6]~[#6]~[#6]~1,Extended Functional Groups (EFG)
+[!#6!#1]1CCCCC1,Extended Functional Groups (EFG)
+"[$([!#1!#6]1=C~C~C~C~C~1),$([!#1!#6]1~C=C~C~C~C~1),$([!#1!#6]1~C~C=C~C~C~1);!$([a!c]1ccccc1)]",Extended Functional Groups (EFG)
+[a!c]1ccccc1,Extended Functional Groups (EFG)
+"[$([!#6!#1]1~[!#6!#1]~[#6]~[#6]~[#6]~[#6]~1),$([!#6!#1]1~[#6]~[!#6!#1]~[#6]~[#6]~[#6]~1),$([!#6!#1]1~[#6]~[#6]~[!#6!#1]~[#6]~[#6]~1)]",Extended Functional Groups (EFG)
+"[$([!#6!#1]1[!#6!#1]CCCC1),$([!#6!#1]1C[!#6!#1]CCC1),$([!#6!#1]1CC[!#6!#1]CC1)]",Extended Functional Groups (EFG)
+"[$([a!c]1[a!c]cccc1),$([a!c]1c[a!c]ccc1),$([a!c]1cc[a!c]cc1)]",Extended Functional Groups (EFG)
+"[$([!#6!#1]1~[!#6!#1]~[!#6!#1]~[#6]~[#6]~[#6]~1),$([!#6!#1]1~[!#6!#1]~[#6]~[!#6!#1]~[#6]~[#6]~1),$([!#6!#1]1~[#6]~[!#6!#1]~[#6]~[!#6!#1]~[#6]~1)]",Extended Functional Groups (EFG)
+"[$([!#6!#1]1[!#6!#1][!#6!#1]CCC1),$([!#6!#1]1[!#6!#1]C[!#6!#1]CC1),$([!#6!#1]1C[!#6!#1]C[!#6!#1]C1)]",Extended Functional Groups (EFG)
+"[$([a!c]1[a!c][a!c]ccc1),$([a!c]1[a!c]c[a!c]cc1),$([a!c]1c[a!c]c[a!c]c1)]",Extended Functional Groups (EFG)
+"[$([!#6!#1]1~[!#6!#1]~[!#6!#1]~[!#6!#1]~[#6]~[#6]~1),$([!#6!#1]1~[!#6!#1]~[!#6!#1]~[#6]~[!#6!#1]~[#6]~1),$([!#6!#1]1~[!#6!#1]~[#6]~[!#6!#1]~[!#6!#1]~[#6]~1)]",Extended Functional Groups (EFG)
+"[$([!#6!#1]1[!#6!#1][!#6!#1][!#6!#1]CC1),$([!#6!#1]1[!#6!#1][!#6!#1]C[!#6!#1]C1),$([!#6!#1]1[!#6!#1]C[!#6!#1][!#6!#1]C1)]",Extended Functional Groups (EFG)
+"[$([a!c]1[a!c][a!c][a!c]cc1),$([a!c]1[a!c][a!c]c[a!c]c1),$([a!c]1[a!c]c[a!c][a!c]c1)]",Extended Functional Groups (EFG)
+[!#6!#1]1~[!#6!#1]~[!#6!#1]~[!#6!#1]~[!#6!#1]~[#6]~1,Extended Functional Groups (EFG)
+[!#6!#1]1-[!#6!#1]-[!#6!#1]-[!#6!#1]-[!#6!#1]-C-1,Extended Functional Groups (EFG)
+[a!c]1[a!c][a!c][a!c][a!c]c1,Extended Functional Groups (EFG)
+[!#6!#1]1-[!#6!#1]-[!#6!#1]-[!#6!#1]-[!#6!#1]-[!#6!#1]-1,Extended Functional Groups (EFG)
+[$([!#6!#1]1=[!#6!#1]~[!#6!#1]~[!#6!#1]~[!#6!#1]~[!#6!#1]~1);!$([a!c]1[a!c][a!c][a!c][a!c][a!c]1)],Extended Functional Groups (EFG)
+[a!c]1[a!c][a!c][a!c][a!c][a!c]1,Extended Functional Groups (EFG)
+[!#6!#1;R1]1~[*R1]~[*R1]~[*R1]~[*R1]~[*R1]~1,Extended Functional Groups (EFG)
+[!#6!#1;R1]1~[#6R1]~[#6R1]~[#6R1]~[#6R1]~[#6R1]~1,Extended Functional Groups (EFG)
+[!#6!#1;R1]1[CR1][CR1][CR1][CR1][CR1]1,Extended Functional Groups (EFG)
+[NR1]1[CR1][CR1][CR1][CR1][CR1]1,Extended Functional Groups (EFG)
+[OR1]1[CR1][CR1][CR1][CR1][CR1]1,Extended Functional Groups (EFG)
+[SR1]1[CR1][CR1][CR1][CR1][CR1]1,Extended Functional Groups (EFG)
+"[$([!#1!#6;R1]1=[CR1]~[CR1]~[CR1]~[CR1]~[CR1]~1),$([!#1!#6;R1]1~[CR1]=[CR1]~[CR1]~[CR1]~[CR1]~1),$([!#1!#6;R1]1~[CR1]~[CR1]=[CR1]~[CR1]~[CR1]~1);!$([a!c]1ccccc1)]",Extended Functional Groups (EFG)
+"[$([NR1]1=[CR1][CR1][CR1][CR1][CR1]1),$([NR1]1[CR1]=[CR1][CR1][CR1][CR1]1),$([NR1]1[CR1][CR1]=[CR1][CR1][CR1]1)]",Extended Functional Groups (EFG)
+"[$([NR1]1=[CR1][CR1]-,=[CR1]-,=[CR1][CR1]1),$([NR1]1[CR1]=[CR1][CR1][CR1]-,=[CR1]-,=1),$([NR1]1[CR1]=[CR1][CR1]=[CR1][CR1]1)]",Extended Functional Groups (EFG)
+"[OR1]1[CR1]=[CR1][CR1]-,=[CR1]-,=[CR1]1",Extended Functional Groups (EFG)
+"[SR1]1[CR1]=[CR1][CR1]-,=[CR1]-,=[CR1]1",Extended Functional Groups (EFG)
+[a!c;R1]1[cR1][cR1][cR1][cR1][cR1]1,Extended Functional Groups (EFG)
+[nR1]1[cR1][cR1][cR1][cR1][cR1]1,Extended Functional Groups (EFG)
+"[$([!#6!#1;R1]1~[!#6!#1]~[#6R1]~[#6R1]~[#6R1]~[#6R1]~1),$([!#6!#1;R1]1~[#6R1]~[!#6!#1]~[#6R1]~[#6R1]~[#6R1]~1),$([!#6!#1;R1]1~[#6R1]~[#6R1]~[!#6!#1]~[#6R1]~[#6R1]~1)]",Extended Functional Groups (EFG)
+"[$([!#6!#1;R1]1[!#6!#1;R1][CR1][CR1][CR1][CR1]1),$([!#6!#1;R1]1[CR1][!#6!#1;R1][CR1][CR1][CR1]1),$([!#6!#1;R1]1[CR1][CR1][!#6!#1;R1][CR1][CR1]1)]",Extended Functional Groups (EFG)
+"[$([NR1]1[NR1][CR1][CR1][CR1][CR1]1),$([NR1]1[CR1][NR1][CR1][CR1][CR1]1),$([NR1]1[CR1][CR1][NR1][CR1][CR1]1)]",Extended Functional Groups (EFG)
+"[$([OR1]1[OR1][CR1][CR1][CR1][CR1]1),$([OR1]1[CR1][OR1][CR1][CR1][CR1]1),$([OR1]1[CR1][CR1][OR1][CR1][CR1]1)]",Extended Functional Groups (EFG)
+"[$([SR1]1[SR1][CR1][CR1][CR1][CR1]1),$([SR1]1[CR1][SR1][CR1][CR1][CR1]1),$([SR1]1[CR1][CR1][SR1][CR1][CR1]1)]",Extended Functional Groups (EFG)
+[NR1]1[CR1][CR1][OR1][CR1][CR1]1,Extended Functional Groups (EFG)
+"[$([OR1]1[OR1][CR1]=[CR1][CR1]=[CR1]1),$([OR1]1[CR1]=[CR1][OR1][CR1]=[CR1]1)]",Extended Functional Groups (EFG)
+"[$([a!c;R1]1[a!c;R1][cR1][cR1][cR1][cR1]1),$([a!c;R1]1[cR1][a!c;R1][cR1][cR1][cR1]1),$([a!c;R1]1[cR1][cR1][a!c;R1][cR1][cR1]1)]",Extended Functional Groups (EFG)
+[nR1]1[nR1][cR1][cR1][cR1][cR1]1,Extended Functional Groups (EFG)
+[nR1]1[cR1][nR1][cR1][cR1][cR1]1,Extended Functional Groups (EFG)
+[nR1]1[cR1][cR1][nR1][cR1][cR1]1,Extended Functional Groups (EFG)
+"[$([!#6!#1;R1]1~[!#6!#1;R1]~[!#6!#1;R1]~[#6R1]~[#6R1]~[#6R1]~1),$([!#6!#1;R1]1~[!#6!#1;R1]~[#6R1]~[!#6!#1;R1]~[#6R1]~[#6R1]~1),$([!#6!#1;R1]1~[#6R1]~[!#6!#1;R1]~[#6R1]~[!#6!#1;R1]~[#6R1]~1)]",Extended Functional Groups (EFG)
+"[$([!#6!#1;R1]1[!#6!#1;R1][!#6!#1;R1][CR1][CR1][CR1]1),$([!#6!#1;R1]1[!#6!#1;R1][CR1][!#6!#1;R1][CR1][CR1]1),$([!#6!#1;R1]1[CR1][!#6!#1;R1][CR1][!#6!#1;R1][CR1]1)]",Extended Functional Groups (EFG)
+"[$([NR1]1[NR1][NR1][CR1][CR1][CR1]1),$([NR1]1[NR1][CR1][NR1][CR1][CR1]1),$([NR1]1[CR1][NR1][CR1][NR1][CR1]1)]",Extended Functional Groups (EFG)
+"[$([OR1]1[OR1][OR1][CR1][CR1][CR1]1),$([OR1]1[OR1][CR1][OR1][CR1][CR1]1),$([OR1]1[CR1][OR1][CR1][OR1][CR1]1)]",Extended Functional Groups (EFG)
+"[$([SR1]1[SR1][SR1][CR1][CR1][CR1]1),$([SR1]1[SR1][CR1][SR1][CR1][CR1]1),$([SR1]1[CR1][SR1][CR1][SR1][CR1]1)]",Extended Functional Groups (EFG)
+"[$([a!c;R1]1[a!c;R1][a!c;R1][cR1][cR1][cR1]1),$([a!c;R1]1[a!c;R1][cR1][a!c;R1][cR1][cR1]1),$([a!c;R1]1[cR1][a!c;R1][cR1][a!c;R1][cR1]1)]",Extended Functional Groups (EFG)
+"[$([nR1]1[nR1][nR1][cR1][cR1][cR1]1),$([nR1]1[nR1][cR1][nR1][cR1][cR1]1),$([nR1]1[cR1][nR1][cR1][nR1][cR1]1)]",Extended Functional Groups (EFG)
+"[$([!#6!#1;R1]1[!#6!#1;R1][!#6!#1;R1][!#6!#1;R1][CR1][CR1]1),$([!#6!#1;R1]1[!#6!#1;R1][!#6!#1;R1][CR1][!#6!#1;R1][CR1]1),$([!#6!#1;R1]1[!#6!#1;R1][CR1][!#6!#1;R1][!#6!#1;R1][CR1]1)]",Extended Functional Groups (EFG)
+"[$([NR1]1[NR1][NR1][NR1][CR1][CR1]1),$([NR1]1[NR1][CR1][NR1][NR1][CR1]1),$([NR1]1[NR1][NR1][CR1][NR1][CR1]1)]",Extended Functional Groups (EFG)
+"[$([OR1]1[OR1][OR1][OR1][CR1][CR1]1),$([OR1]1[OR1][CR1][OR1][OR1][CR1]1)]",Extended Functional Groups (EFG)
+"[$([SR1]1[SR1][SR1][SR1][CR1][CR1]1),$([SR1]1[SR1][CR1][SR1][SR1][CR1]1)]",Extended Functional Groups (EFG)
+"[$([a!c;R1]1[a!c;R1][a!c;R1][a!c;R1][cR1][cR1]1),$([a!c;R1]1[a!c;R1][a!c;R1][cR1][a!c;R1][cR1]1),$([a!c;R1]1[a!c;R1][cR1][a!c;R1][a!c;R1][cR1]1)]",Extended Functional Groups (EFG)
+"[$([nR1]1[nR1][nR1][nR1][cR1][cR1]1),$([nR1]1[nR1][nR1][cR1][nR1][cR1]1),$([nR1]1[nR1][cR1][nR1][nR1][cR1]1)]",Extended Functional Groups (EFG)
+[!#6!#1;R1]1~[!#6!#1;R1]~[!#6!#1;R1]~[!#6!#1;R1]~[!#6!#1;R1]~[#6R1]~1,Extended Functional Groups (EFG)
+[!#6!#1;R1]1-[!#6!#1;R1]-[!#6!#1;R1]-[!#6!#1;R1]-[!#6!#1;R1]-[CR1]-1,Extended Functional Groups (EFG)
+[a!c;R1]1[a!c;R1][a!c;R1][a!c;R1][a!c;R1][cR1]1,Extended Functional Groups (EFG)
+[nR1]1[nR1][nR1][nR1][nR1][cR1]1,Extended Functional Groups (EFG)
+[!#6!#1;R1]1~[!#6!#1;R1]~[!#6!#1;R1]~[!#6!#1;R1]~[!#6!#1;R1]~[!#6!#1;R1]~1,Extended Functional Groups (EFG)
+[!#6!#1;R1]1-[!#6!#1;R1]-[!#6!#1;R1]-[!#6!#1;R1]-[!#6!#1;R1]-[!#6!#1;R1]-1,Extended Functional Groups (EFG)
+[$([!#6!#1;R1]1=[!#6!#1;R1]~[!#6!#1;R1]~[!#6!#1;R1]~[!#6!#1;R1]~[!#6!#1;R1]~1);!$([a!c]1[a!c][a!c][a!c][a!c][a!c]1)],Extended Functional Groups (EFG)
+[a!c;R1]1[a!c;R1][a!c;R1][a!c;R1][a!c;R1][a!c;R1]1,Extended Functional Groups (EFG)
+[nR1]1[nR1][nR1][nR1][nR1][nR1]1,Extended Functional Groups (EFG)
+[!#6!#1]1~[!#6!#1]~[!#6!#1]~[!#6!#1]~[!#6!#1]~[!#6!#1]~1,Extended Functional Groups (EFG)
+"[$([SR1]1[SR1][CR1]=[CR1][CR1]=[CR1]1),$([SR1]1[CR1]=[CR1][SR1][CR1]=[CR1]1)]",Extended Functional Groups (EFG)
+[NR1]1[NR1][NR1][NR1][NR1][CR1]1,Extended Functional Groups (EFG)
+[OR1]1[OR1][OR1][OR1][OR1][CR1]1,Extended Functional Groups (EFG)
+[SR1]1[SR1][SR1][SR1][SR1][CR1]1,Extended Functional Groups (EFG)
+"[!#8!#7!#16][CX3]([!#8!#7!#16])=[CX3]([!#8!#7!#16])[!#8!#7!#16] AND NOT [$([CX3]=[CX2]=[CX3]),$([CX3]=[CX3][CX3]=[CX3]),$([CX3]=[CX3][CX4][CX3]=[CX3])]",Extended Functional Groups (EFG)
+[CX3]=[CX2]=[CX3],Extended Functional Groups (EFG)
+"[CX3]=[CX3][CX4][F,Cl,Br,I]",Extended Functional Groups (EFG)
+[CX3]=[CX3][CX4]F,Extended Functional Groups (EFG)
+[CX3]=[CX3][CX4]Cl,Extended Functional Groups (EFG)
+[CX3]=[CX3][CX4]Br,Extended Functional Groups (EFG)
+[CX3]=[CX3][CX4]I,Extended Functional Groups (EFG)
+F[CX3]=[CX3],Extended Functional Groups (EFG)
+Cl[CX3]=[CX3],Extended Functional Groups (EFG)
+Br[CX3]=[CX3],Extended Functional Groups (EFG)
+I[CX3]=[CX3],Extended Functional Groups (EFG)
+F[CX2]#[CX2],Extended Functional Groups (EFG)
+Cl[CX2]#[CX2],Extended Functional Groups (EFG)
+I[CX2]#[CX2],Extended Functional Groups (EFG)
+Br[CX2]#[CX2],Extended Functional Groups (EFG)
+"[CX4&!$([CX4]([SX2])([#7,O,S,F,Cl,Br,I,P]))][SX2][CX4&!$([CX4]([SX2])([#7,O,S,F,Cl,Br,I,P]))]",Extended Functional Groups (EFG)
+"[CX4&!$([CX4]([SX2])([#7,O,S,F,Cl,Br,I,P]))][SX2]c",Extended Functional Groups (EFG)
+c[SX2&!$([SX2r3])]c,Extended Functional Groups (EFG)
+c([OH1])c([OH1]),Extended Functional Groups (EFG)
+c([OH1])[aR1]c([OH1]),Extended Functional Groups (EFG)
+c1([OH1])aac([OH1])aa1,Extended Functional Groups (EFG)
+c([SH1])c([SH1]),Extended Functional Groups (EFG)
+c([SH1])[aR1]c([SH1]),Extended Functional Groups (EFG)
+c1([SH1])aac([SH1])aa1,Extended Functional Groups (EFG)
+"c([OH1])c[NX3]([#1,#6])[#1,#6]",Extended Functional Groups (EFG)
+"c([OH1])[aR1]c[NX3]([#1,#6])[#1,#6]",Extended Functional Groups (EFG)
+"c1([OH1])aac([NX3]([#1,#6])[#1,#6])aa1",Extended Functional Groups (EFG)
+"c([SH1])c[NX3]([#1,#6])[#1,#6]",Extended Functional Groups (EFG)
+"c([SH1])[aR1]c[NX3]([#1,#6])[#1,#6]",Extended Functional Groups (EFG)
+"c1([SH1])aac([NX3]([#1,#6])[#1,#6])aa1",Extended Functional Groups (EFG)
+"[CX2]#[CX2][OX2][#6&!$([CX4]([OX2])([#7,O,S,F,Cl,Br,I,P]))&!$([CX3]([OX2])=[OX1,SX1,NX2,C])]",Extended Functional Groups (EFG)
+"[CX2]#[CX2][SX2][#6&!$([CX4]([OX2])([#7,O,S,F,Cl,Br,I,P]))&!$([CX3]([OX2])=[OX1,SX1,NX2,C])]",Extended Functional Groups (EFG)
+"[#1,#6&!$([CX3]=[OX1,SX1,NX2])][OX2][CX3](=[OX1])[OX2][#6&!$([CX3]=[OX1,SX1,NX2])]",Extended Functional Groups (EFG)
+"[#6][OX2][Sv6X4](=[OX1])(=[OX1])[OH1,OX1-,$([OX2][#6])]",Extended Functional Groups (EFG)
+[OX1]=[Pv5X4]([NX3])([#6])[!#6!$([SX2])],Extended Functional Groups (EFG)
+"[OX1]=[Pv5X4]([F,Cl,Br,I])([#6])[!#6!$([SX2])]",Extended Functional Groups (EFG)
+[#6][OX2H],Biodegradable compounds
+[CX3H1](=O)[#6],Biodegradable compounds
+[!$(C=O);$([C&!a])][OX2&H0][!$(C=O);$([C&!a])],Nonbiodegradable compounds
+"[$([NX3,NX4+][CX4H]([*])[CX3](=[OX1])[O,N]),$([$([$([NX3H2,NX4H3+]),$([NX3H](C)(C))][CX4H2][CX3](=[OX1])[OX2H,OX1-,N])])]",Biodegradable compounds
+"[$([a][F,Cl,I])]",Nonbiodegradable compounds
+"[$([a]N(~O)~O),$([a]N([#1])[*]),$([a]N([#1])[!#1])]",Nonbiodegradable compounds
+"[$([#16X4](=[OX1])(=[OX1])([a])[OX2H,OX1H0-]),$([#16X4+2]([OX1-])([OX1-])([a])[OX2H,OX1H0-])]",Nonbiodegradable compounds
+[$([!R&N]=[!R&N])],Nonbiodegradable compounds
+[N]#[C]~[AR0]~[AR0]~[AR0]~[AR0]~[AR0]~[AR0]~[AR0]~[AR0],Nonbiodegradable compounds
+[$(C1OC1)],Nonbiodegradable compounds
+[#6][CX3](=O)[$([OX2H0]([#6])[#6])],Biodegradable compounds
+[CX3H2](=O),Biodegradable compounds
+"[$([C;!R]([C])([C])[C])] AND [#6][F,Cl,Br,I]",Nonbiodegradable compounds
+[C][C](=O)[C],Nonbiodegradable compounds
+"[$([a&R]([OX2H])[a&R]([OX2H])),$([a&R]([OX2H])a[a&R]([OX2H])),$([a&R]([OX2H])aa[a&R]([OX2H]))]",Nonbiodegradable compounds
+[C]#[N],Biodegradable compounds
+[$(NN=O)],Nonbiodegradable compounds
+[$(n1ccccc1)],Nonbiodegradable compounds
+[$([C]([CH3])([CH3])([CH3])([*]))],Nonbiodegradable compounds
+[!R&NX3&H0],Nonbiodegradable compounds
+"[$(n1nnccc1),$(n1ncncc1),$(n1cncnc1)]",Nonbiodegradable compounds
+[$([*]C(F)(F)F)],Nonbiodegradable compounds
+[$([C&H2]=[C])] > 1 AND NOT [$([*]~C([!#1])~[*])],Nonbiodegradable compounds
+c1cccc2c1c3c(c5CNCOc25)cco3,AlphaScreen-FHs
+"[OX1,N]=[#6]1-,:[#6]=,:[#6]2-,:[#16X2,#8X2]-,:[#6]3=,:[#6]-,:[#6](=,:[#6]-,:[#6]=,:[#6]3-,:[#7]=,:[#6]2-,:[#6]=,:[#6]1)",AlphaScreen-FHs
+"[#6]2=,:[#6]3-,:[#6]4=,:[#6](-,:[#6]=,:[#6]-,:[#6]=,:[#6]4)-,:[#6](=O)-,:[#6]4=,:[#6]3-,:[#6](=,:[#6]-,:[#6]=,:[#6]4)[#7]-,:[#6]2=O",AlphaScreen-FHs
+"[c,n]1cnn2c([NH])cnc12",AlphaScreen-FHs
+"[#6R1]1-,:[#6R1](=[OX1])c2ccccc2-,:[#6]([NX3])=,:1",AlphaScreen-FHs
+[CX4]1c2ccccc2[NX3]([CX4][CX4][CX4][NX3])[CX4]1,AlphaScreen-FHs
+"[$(c1[nv3X2][c,n][c,n,s][c,n]1),$(c2[nv3X2][c,n][c,n][c,n][c,n]2)]-[$(c1[nv3X2][c,n][c,n,s][c,n]1),$(c2[nv3X2][c,n][c,n][c,n][c,n]2)]",Alphascreen-His-FH
+"[$([NX3][CH2]c1ncnc([NX3])c1),$([NX3][CH2]c1nccc([NX3])n1)]",Alphascreen-His-FH
+"[$([NX3]([H,CX4!H0!R])([H,CX4!H0!R])[C!H0!R]c1[nv3X2]n([H,CH3])cc1),$([NX3]([H,CX4!H0!R])([H,CX4!H0!R])[C!H0!R]c1[nv3X2]ccn1[H,CH3])]",Alphascreen-His-FH
+"c1cccnc1[CH2!R][NX3!R]([H,CH3])[CH2!R]",Alphascreen-His-FH
+"[nv3X2]c([c,s,n])[CX4][NX3]([H,C])[CX4]c([c,s,n])[nv3X2,nv3X3H1]",Alphascreen-His-FH
+[nv3X2]1cncc1[CX4][CX4][NH2],Alphascreen-His-FH
+[nv3X3]1c(-c[nv3X2])c[nv3X2]c1,Alphascreen-His-FH
+c([nv3X2])(c)[NX3H1!R]c([nv3X2])(c),Alphascreen-His-FH
+"[$(c1[nX2][c,n][c,n][c,n]1),$([cr6][nX2r6])][CX4H2!R][$(c2[nX2][c,n][c,n][c,n]2),$([cr6][nX2r6])]",Alphascreen-His-FH
+c1ccc[nv3X2]c1[#6](~[#7])~[#7],Alphascreen-His-FH
+"[SX2]-[#6R1]2=,:[#7R1]-,:[#6R1]=,:[#6R1]-,:[#7R2]3-,:[#6R1](=O)-,:[#7R1]-,:[#7R1]=,:[#6R2]23",Alphascreen-His-FH
+"[$([cr5][n,s;r5][n,o;r5]),$([cr5]([nr5])[s,o,n;r5])][Nv3X3H1!R][CX3!R](=[OX1])[$([cr5][nv3X2r5]),$(c1ncccc1),$(c1c([OX2][CH3])cccc1)]",Alphascreen-His-FH
+"[$(c1nnc[o,n]1),$(c1nccs1)][Nv3X3H!R][C!R](=[OX1])[CX4!H0]([H,CX4])[SX2,n]cc",Alphascreen-His-FH
+C1=C([OH1])[NX3][CX3](=[OX1])[NX3][CX3]1(=[OX1]),Alphascreen-His-FH
+"[H,C][OX2]c1c([CX4][NX3])ccc2cccnc21",Alphascreen-His-FH
+c1cccc2[NX3][CX4][CX3](=[OX1])[OX2]c12,Alphascreen-His-FH
+"[OX1]=[CX3]1C([F,Cl,Br,I])=C([F,Cl,Br,I])[CX3](=[OX1])C([F,Cl,Br,I])=C1[F,Cl,Br,I]",Alphascreen-His-FH
+nc[nv3X3Hr5]c[CX4]c[nv3X2],Alphascreen-His-FH
+[OH][CX3](=[OX1])c1ncccc1,Chelating agents
+"[OH][CX3](=[OX1])[#6]1-,:[$([#7X3+]-[OX1-]),$([#7v5X3]=[OX1])]=,:[#6]-,:[#6]=,:[#6]-,:[#6]=,:1",Chelating agents
+c1cccc2c1ccc([OH])n2,Chelating agents
+"[#6]1=,:[#6]-,:[#6]=,:[#6]([OH])-,:[#6]2=,:[#6]1-,:[#6]=,:[#6]-,:[#6]=,:[$([#7X3+]-[OX1-]),$([#7v5X3]=[OX1])]2",Chelating agents
+c1ccc([OH])c2c1cccn2,Chelating agents
+c1ccc([SH])c2c1cccn2,Chelating agents
+c1ccc([CX3](=[OX1])[OH])c2c1cccn2,Chelating agents
+[NH2]c1nc([NH2])cc([OH])n1,Chelating agents
+[SH]c1nc([OH])ccn1,Chelating agents
+[OH]c1nc([SH])ccn1,Chelating agents
+[SH]c1nc([CH3])cc([CH3])n1,Chelating agents
+[SH]c1nc([CX4])cc([CX4])n1,Chelating agents
+[OH]c1nc([OH])cc([CH3])n1,Chelating agents
+[OH]c1nc([OH])cc([CX4])n1,Chelating agents
+[NH2]c1ncnc2c1nc[nH]2,Chelating agents
+[NH2]c1ncnc2c1nc[nX3]2,Chelating agents
+"[CH3]c1nc([OH])cc([OH,CH3])n1",Chelating agents
+"[CX4]c1nc([OH])cc([OH,CX4])n1",Chelating agents
+"O=[#6]1-,:[#6]([OH])=,:[#6]-,:[#8]-,:[#6]=,:[#6]-,:1",Chelating agents
+"S=[#6]1-,:[#6]([OH])=,:[#6]-,:[#8]-,:[#6]=,:[#6]-,:1",Chelating agents
+"O=[#6]1-,:[#8]-,:[#6]=,:[#6]-,:[#6]=,:[#6]([OH])-,:1",Chelating agents
+"O=[#6]1-,:[#7]([OH])-,:[#6]=,:[#6]-,:[#6]=,:[#6]-,:1",Chelating agents
+"S=[#6]1-,:[#7]([OH])-,:[#6]=,:[#6]-,:[#6]=,:[#6]-,:1",Chelating agents
+"O=[#6]1-,:[#6]([OH])=,:[#6]([CX4])-,:[#7]([CX4])-,:[#6]=,:[#6]-,:1",Chelating agents
+"O=[#6]1-,:[#7]([H,CH3])-,:[#6]=,:[#6]-,:[#6]=,:[#6]-,:1([OH])",Chelating agents
+"O=[#6]1-,:[#7X3]-,:[#6]=,:[#6]-,:[#6]=,:[#6]-,:1([OH])",Chelating agents
+"S=[#6]1-,:[#6]([OH])=,:[#6]([CX4])-,:[#7]([CX4])-,:[#6]=,:[#6]-,:1",Chelating agents
+"S=[#6]1-,:[#7]([CH3])-,:[#6]=,:[#6]-,:[#6]=,:[#6]-,:1([OH])",Chelating agents
+"S=[#6]1-,:[#7]([CX4])-,:[#6]=,:[#6]-,:[#6]=,:[#6]-,:1([OH])",Chelating agents
+[OH]c1ccccc1[CX3](=[OX1])[OH],Chelating agents
+[OH]c1ccccc1[CX3](=[OX1])[NH2],Chelating agents
+[CX4][CX3](=[OX1])[NX3H1][OH],Chelating agents
+[CX4][CX3](=[OX1])[NX3][OH],Chelating agents
+[nX3H]1cccc1C(=[OX1])[OH],Chelating agents
+[nX3]1cccc1C(=[OX1])[OH],Chelating agents
+c1ccnc(c1)C[NX3H]Cc2ccccn2,Chelating agents
+c1ccnc(c1)C[NX3]Cc2ccccn2,Chelating agents
+C1C[NX3H1]CC[NX3H1]CC[NX3H1]1,Chelating agents
+C1C[NX3]CC[NX3]CC[NX3]1,Chelating agents
+"c1ccc2c(c1)-,:[#6](=O)-,:[#6]=,:[#6](-,:[#6]2=O)[OH]",Chelating agents
+c1cnc(cc1[CX4][OH])c2cc(ccn2)[CX4][OH],Chelating agents
+c1cc2c(nc1)c3c(cccn3)cc2,Chelating agents
+c1ccc(c(c1)[OH])[OH],Chelating agents
+"c1ccc(c(c1)[OH,SH])[OX2][CX4]",Chelating agents
+"[OH][#6]1=,:[#6]-,:[#6]=,:[#6]-,:[#6]=,:[#6]-,:[#6]1=[OX1]",Chelating agents
+c1ccc2c(c1)ccc(c2[OH])[OH],Chelating agents
+c1ccc2cc(c(cc2c1)[OH])[OH],Chelating agents
+c1cc(c(c(c1)[NH2])[OH])C(=[OX1])[OH],Chelating agents
+c1cc(c(c(c1)[OH])[OH])C(=[OX1])[OH],Chelating agents
+c1ccc(c(c1)c2nc3ccccc3o2)[OH],Chelating agents
+c1ccc(c(c1)c2nc3ccccc3s2)[OH],Chelating agents
+[CH3]c1ccc(cc1)[Sv6X4](=[OX1])(=[OX1])[NX3H2],Chelating agents
+[CX4]c1ccc(cc1)[Sv6X4](=[OX1])(=[OX1])[NX3H2],Chelating agents
+"C[CX3](=[OX1])[CX4!H0]([H,CX4,Cl])[CX3](=[OX1])C",Chelating agents
+C[CX3](=[OX1])[CX4][CX3](=[OX1])C,Chelating agents
+"[!#1!#2!#5!#6!#7!#8!#9!#10!#14!#15!#16!#17!#18!#32!#33!#34!#35!#36!#51!#52!#53!#54!#84!#85!#86]~[#6,#7,#8,#16]",Custom filters
+[#6] >0,Custom filters
+[Pt],Custom filters
+[N;!R][C;!R](=O)[!#7] OR [N;!R][C;!R](=O)[N;!R],Custom filters
+"[Br,Cl,F,I][CX3](=[OX1])[#1,*&!$([OH1])&!$([SH1])]",Non-genotoxic carcinogenicity
+[OX2;H1][CH2][NX3],Non-genotoxic carcinogenicity
+"[CX3]([CX4,#1])([F,Cl,Br,I])=[CX3]([CX4,#1])[!F!Cl!Br!I]",Non-genotoxic carcinogenicity
+"[F,Cl,Br,I][CH2][CH2][NX3,SX2][CH2][CH2][F,Cl,Br,I]",Non-genotoxic carcinogenicity
+"[$([OX2]1[CX4][CX4][CX3]1(=[OX1])),$([CX4]1[CX4][CX4][Sv6;X4](=[OX1])(=[OX1])[OX2]1)]",Non-genotoxic carcinogenicity
+"[CX4]1[OX2,NX3][CX4]1",Non-genotoxic carcinogenicity
+"[CX4;!H0][Br,Cl,I]",Non-genotoxic carcinogenicity
+[OX1]=[NX2][OX2][CX4],Non-genotoxic carcinogenicity
+[CX3](=[OX1])[CX3H1]=[CX3],Non-genotoxic carcinogenicity
+"[CX3]([H])(=[OX1])[#1,#6&!$([CX3]=[CX3])]",Non-genotoxic carcinogenicity
+"[$([#6X3]1=,:[#6X3]-,:[#6X3](=[OX1])-,:[#6X3]=,:[#6X3]-,:[#6X3]1(=[OX1])),$([#6X3]1(=[OX1])-,:[#6X3](=[OX1])-,:[#6X3]=,:[#6X3]-,:[#6X3]=,:[#6X3]1)]",Non-genotoxic carcinogenicity
+[NX3;!$([NX3](=[OX1])=[OX1]);!$([NX3+](=[OX1])[O-])][NX3;!$([NX3](=[OX1])=[OX1]);!$([NX3+](=[OX1])[O-])],Non-genotoxic carcinogenicity
+"[$([C,#1][NX2]=[NX2][C,#1]),$([CX3]=[NX2+]=N),$([CX3]=[NX2+]=[NX1-]),$([CX3-][NX2+]#[NX1]),$([CX3][NX2]#[NX1]),$(C[NX2]=N(=O)[*]),$(C[NX2]=[N+]([O-])[*])]",Non-genotoxic carcinogenicity
+"[NX2]=[CX2]=[OX1,Sv2X1]",Non-genotoxic carcinogenicity
+"[NX3]([C,#1])([C,#1])[CX3](=[OX1,Sv2X1])[OX2,Sv2X2]C",Non-genotoxic carcinogenicity
+"[$([aR3].[n,o,s]),$([$([aR2]([aR])([aR])([aR]))].[$([aR2]([aR])([aR])([aR]))].[$([aR2]([aR])([aR])([aR]))].[$([aR2]([aR])([aR])([aR]))].[n,o,s])]",Non-genotoxic carcinogenicity
+[NH2]C1=C(C#[NX1])[C!H0](-cc)C(C#[NX1])=C([NH2])S1,AlphaScreen-GST-FHs
+"[#16X2]1-,:[#6X3]([CX2]#[NX1])=,:[#6X3]([CX2]#[NX1])-,:[#16X2]-,:[#6X3]([CX2]#[NX1])=,:[#6X3]1([CX2]#[NX1])",AlphaScreen-GST-FHs
+"[OX1,SX1]=[#6X3]1c2c([nX2][cX3,nX2,nX3][cX3,nX2,nX3][cX3,nX2,nX3]2)[c,n]2c1[cX3!$([#6X3]=[A])][cX3!$([#6X3]=[A])][cX3!$([#6X3]=[A])][cX3!$([#6X3]=[A])]2",AlphaScreen-GST-FHs
+"[SX1]=[#6X3]1-,:[#7X3H1]-,:[#7X2,#6X3!$([#6X3]=[A])]=,:[#7X2,#6X3!$([#6X3]=[A])]-,:[#7X2,#6X3!$([#6X3]=[A])]=,:[#6X3]1([CX2]#[NX1])",AlphaScreen-GST-FHs
+"[OX1]=[#6X3]1-,:[#6X3]=,:[#6X3]-,:[#6X3]([CX2]#[NX1])=,:[#6X3]2-,:[#7X3]([CX4][CX4]([OX2H1])[CX4][NX3H1]c5ccccc5)-,:[#6]3ccccc3-,:[#7X3]12",AlphaScreen-GST-FHs
+[SX2]1C(=C(C4=C1[NX3!H0]C(C(=[C!H0]4)C(=[OX1])[OX2H1])=[OX1])[NX3H2])C(=[OX1])[NX3!H0],AlphaScreen-GST-FHs
+"[OX2]1[CX3]([NX3H2])=[CX3]([CX2]#[NX1])[CX4][#6X3]2[#6X3](=[OX1])-,:[#7X3H1]-,:[#6X3]=,:[#6X3]-,:[#6X3]12",AlphaScreen-GST-FHs
+"[$([#8]1-,:[#6](-,:[#16]c4cc(ccc14)[#7,#8])=[OX1,SX1]),$([#8]1-,:[#6](-,:[#16]c4ccc(cc14)[#7,#8])=[OX1,SX1])]",AlphaScreen-GST-FHs
+"[#6X3]1-,:[#6X3]=,:[#6X3]-,:[#6X3]=,:[#6X3]2-,:[#6X3]1-,:[#6X3](=[OX1])-,:[#6X3]3-,:[nX3]4-,:[#6X3](-,:[#6X3]=,:[#6X3]-,:[#6X3]=,:[#6X3]4)=,:[#6X3]-,:[#6X3]3-,:[#6X3]2=[OX1]",AlphaScreen-GST-FHs
+[OX1]=[CX3]1[CX4][CX4][CX4][CX3]2=[CX3]1[CX4](c5ccc([OX2H1])c([OX2H1])c5)[NX3]c3ccc4[nX2]cccc4c23,AlphaScreen-GST-FHs
+"[#7X2]1=,:[#6X3]-,:[#6X3](-,:[#6X3](-,:[#7X3]1)=[SX1,OX1])=,:[#6X3H1](-,:[#7X3H1])",AlphaScreen-GST-FHs
+c1[#16+]cccc1,AlphaScreen-GST-FHs
+"[OX1,SX1]=[#6X3]1[#7X3](-,:[#7X2]=,:[#6X3][NX3H1][#6])-,:[cX3!$([#6X3]=[A])]=,:[#7X2]-,:[cX3!$([#6X3]=[A])]=,:[cX3!$([#6X3]=[A])]1",AlphaScreen-GST-FHs
+"[OX1]=[#6X3]1-,:[#6X3]2scc-,:[#6X3]2-,:[#7X3]3-,:[#6X3](=,:[#7X2]-,:[#7X2]=,:[#6X3]3[CX4])-,:[#7X3]1[CX4H3]",AlphaScreen-GST-FHs
+"[OX1,SX1]=[#6X3]1[#7X3]-,:[#6X3!$([#6X3]=[A])](-[NX3])=,:[#7X2]-,:[#6X3]2([nX2][#6X3!$([#6X3]=[A])][#6X3!$([#6X3]=[A])][#6X3!$([#6X3]=[A])]c12)",AlphaScreen-GST-FHs
+"[#6X3]1(=[OX1,SX1])-,:[#7X3H1]-,:[#6X3](=[OX1,SX1])-,:[#7X3,#7X2]~[#6X3]([#7X2,#7X3;R1])-,:[#6X3]1[sX2r5R1,nX2r5R1,$([nx2r6R1]([cX3])[cX3])]",AlphaScreen-GST-FHs
+"[OX1,SX1]=[#6X3]1-,:[#7X3H1]-,:[#6X4]-,:[#7X3H1]-,:[#6]2-,:[#16X2,#8X2]-,:[#6]3[CX4][NX3,CX4][CX4][CX4]-,:[#6]3-,:[#6]12",AlphaScreen-GST-FHs
+"[#7X3]1-,:[#6X3](=[OX1,SX1])-,:[#6X3](=[OX1,SX1])-,:[NX3]-,:[#6X3]2[cX3!$([#6X3]=[A])][cX3]([NX3H1][CX3]=[OX1])[cX3!$([#6X3]=[A])][cX3!$([#6X3]=[A])][cX3]12",AlphaScreen-GST-FHs
+"s1[c,nX2][c,nX2](-c(c)[nX2,nX3,sX2])[nX2]c1",AlphaScreen-GST-FHs
+o1nc([CX4])nc1[CX4H2][SX4](=[OX1])(=[OX1])[CX4H2][CX3](=[OX1])[NX3!H0],AlphaScreen-GST-FHs
+"[#6]1-,:[#6]=,:[#6]-,:[#6X3](=[OX1])-,:[#6]([OX2H1])=,:[#6]-,:[#6]=,:1",AlphaScreen-GST-FHs
+[sX2]1[cX3]([NX3H1][CX3](=[OX1])-c)[cX3]([CX3](=[OX1])[OX2][CX4H3])[cX3][cX3]1,AlphaScreen-GST-FHs
+[nX2]1[cX3](-[cX3])[sX2][cX3][cX3]1[CX3](=[OX1])[NX3H2],AlphaScreen-GST-FHs
+"[NX1]#[CX2][CX4H2][SX2]c1n[c,n][c,n][c,n]n1",AlphaScreen-GST-FHs
+c1[nX2]c[nX2][nX3]1[CX4][CX4][NX3]([CX4])-c2cc[nX2]c(-c3cc[nX2]cc3)[nX2]2,AlphaScreen-GST-FHs
+"[nX2R1][c,n;R2]1[c,n;R2]([c,n;R1])[c,n][c,n][c,n;R2]([c,n;R1])[nR2]1[nX2R1]",AlphaScreen-GST-FHs
+"[NX1]#[CX2]c1[c!$([#6]=[OX1])]n[n,c!$([#6]=[OX1])]2[c,n][c!$([#6]=[OX1])][c!$([#6]=[OX1])]nc12",AlphaScreen-GST-FHs
+[NX3H2]c1ncnc2ncccc21,AlphaScreen-GST-FHs
+[NX3H1]1[CX4][CX4][CX4][CX4]([NX3H1][CX4][CX4]A-c)[CX4]1,AlphaScreen-GST-FHs
+"[$([NX3]([CX4,H])([CX4,H])[CX4]),$([OX2]([H,CX4])[CX4])][CX4!H0][CX4H2][NX3H1]c[nX2r6R1][nX2,nX3][nX2,cX3;R1][cX3,nX2][cX3,nX2][sX2,cX3][cX3]",AlphaScreen-GST-FHs
+"[X4;R2]12(-,:;@[#6X3]-,:;@[#6X3]-,:;@[#7X3]-,:;@[#6X3]-,:;@1)-,:;@[#16X2]-,:;@[#6X3]=,:;@[#7X2]-,:;@[#7X3]-,:;@2",AlphaScreen-GST-FHs
+[#16;X3v3+0],Custom filters
+"N[F,Cl,Br,I]",Custom filters
+"[+,-]",Custom filters
+"[$([CX3H2]=[CX3H1]),$([CX3H1]=[CX3H1]),$([CX3H2]=[CX3H0]),$([CX3H1]=[CX3H0]),$([CX3H0]=[CX3H0])]",UNIFAC
+[OX2H1!$([OX2H1][CX4H3])!$([OX2H1]-c)!$([OX2H1][CX3]=[OX1])!$([OX2H1][CX4H2][CX4H2][OX2H1])!$([OX2H1][CX4H2][CX4H2][OX2H0!R])!$([OX2H1][CX4H2][CX4H1][OX2H0!R])!$([OX2H1][CX4H1][CX4H2][OX2H0!R])],UNIFAC
+[CX4H3][OX2H1],UNIFAC
+[OX2H2],UNIFAC
+"[$([CX4H3][CX3](=[OX1])[#6]),$([CX4H2][CX3H0](=[OX1])[#6])]",UNIFAC
+[CX3H1]([#6])=[OX1],UNIFAC
+"[$([CX4H3][CX3](=[OX1])[OX2][#6]),$([CX4H2][CX3](=[OX1])[OX2][#6])]",UNIFAC
+[CX3H1](=[OX1])[OX2][#6],UNIFAC
+"[$([CX4H3][NX3H2]),$([CX4H2][NX3H2]),$([CX4H1][NX3H2])]",UNIFAC
+"[$([CX4H3][NX3!$([NX3]([CX4H3])([CH3,CH2])[CX3]=[OX1])]([#6])[#6]),$([CX4H2][NX3!$([NX3]([CX4H2])([CH3,CH2])[CX3]=[OX1])!$([NX3][CX4H3])]([#6])[#6])]",UNIFAC
+"[$([CX4H3][CX2]#[NX1]),$([CX4H2][CX2]#[NX1])]",UNIFAC
+"[$([CX3H0](=[OX1])[OX2H1]),$([CX3H1](=[OX1])[OX2H1])]",UNIFAC
+"[$([CX4H2!$([CX4H2](Cl)Cl)]Cl),$([CX4H1!$([CX4H1]([Cl])F)!$([CX4H1]([Cl])(F)F)]([!Cl])([!Cl])[Cl]),$([CX4H0]([!Cl!F])([!Cl!F])([!Cl!F])[Cl])]",UNIFAC
+"[$([CX4H2]([Cl])[Cl]),$([CX4H1]([!Cl!F])([Cl])[Cl]),$([CX4H0]([Cl])([Cl])([!Cl!F])[!Cl!F])]",UNIFAC
+"[$([CX4H1]([Cl])([Cl])[Cl]),$([CX4H0]([!Cl!F])([Cl])([Cl])[Cl])]",UNIFAC
+[CX4]([Cl])([Cl])([Cl])[Cl],UNIFAC
+"[$([CX4H3][$([NX3+](=[OX1])([O-])),$([NX3](=O)=O)]),$([CX4H2][$([NX3+](=[OX1])([O-])),$([NX3](=O)=O)]),$([CX4H1][$([NX3+](=[OX1])([O-])),$([NX3](=O)=O)])]",UNIFAC
+[SX1]=[CX2]=[SX1],UNIFAC
+"[$([CX4H3][SX2H1]),$([CX4H2][SX2H1])]",UNIFAC
+"[OX2]1-,:[#6X3]=,:[#6X3]-,:[#6X3]=,:[#6X3]([CX3H1]=[OX1])-,:1",UNIFAC
+[OX2H1][CX4H2][CX4H2][OX2H1],UNIFAC
+[I],UNIFAC
+[Br!$([Br][cR])],UNIFAC
+"[$([CX2H1]#[CX2H0]),$([CX2H0]#[CX2H0])]",UNIFAC
+[CX4H3][Sv4X3](=[OX1])[CX4H3],UNIFAC
+[CX3H2]=[CX3H1][CX2]#[NX1],UNIFAC
+[Cl][CX3]=[CX3],UNIFAC
+"[$([CX3H1](=[OX1])[NX3]([CX4H3])[CX4H3]),$([CX3H1](=[OX1])[NX3]([CX4H2])[CX4H2])]",UNIFAC
+"[$([CX4](F)(F)(F)[!Cl!F]),$([CX4](F)(F)([!F!Cl!H])([!F!Cl!H])),$([CX4](F)([!F!Cl!H])([!F!Cl!H])([!F!Cl!H]))]",UNIFAC
+[#6!$([CX4H3])!$([CX4H2])][CX3](=[OX1])[OX2][#6],UNIFAC
+"[$([SiX4H3]),$([SiX4H2]([!$([OX2])])([!$([OX2])])),$([SiX4H1]([!$([OX2])])([!$([OX2])])([!$([OX2])])),$([SiX4H0]([!$([OX2])])([!$([OX2])])([!$([OX2])])([!$([OX2])]))]",UNIFAC
+"[$([SiX4H2][OX2]),$([SiX4H1][OX2]),$([SiX4H0][OX2])]",UNIFAC
+[CX4H2]1[NX3]([CX4H3])[CX3](=[OX1])[CX4H2][CX4H2]1,UNIFAC
+"[$([OX2H0!R][CX4H2][CX4H2][OX2H1]),$([OX2H0!R][CX4H1][CX4H2][OX2H1]),$([OX2H0!R][CX4H2][CX4H1][OX2H1])]",UNIFAC
+[OX2]1[CX4H2][CX4H2][NX3H1][CX4H2][CX4H2]1,UNIFAC
+"[$([CX4H2][Sv6X4](=[OX1])(=[OX1])[CX4H2]),$([CX4H2][Sv6X4](=[OX1])(=[OX1])[CX4H1])]",UNIFAC
+"[$([CX4H2]1[OX2][CX4H2]1),$([CX4H2]1[OX2][CX4H1]1),$([CX4H2]1[OX2][CX4H0]1),$([CX4H1]1[OX2][CX4H1]1),$([CX4H1]1[OX2][CX4H0]1),$([CX4H0]1[OX2][CX4H0]1)]",UNIFAC
+[CX3](=[OX1])[OX2][CX3](=[OX1]),UNIFAC
+[CX3H2]=[CX3H1],UNIFAC
+[CX3H1]=[CX3H1],UNIFAC
+[CX3H2]=[CX3H0],UNIFAC
+[CX3H1]=[CX3H0],UNIFAC
+[CX3H0]=[CX3H0],UNIFAC
+[cR]-[CX4H1],UNIFAC
+[OX2H1!$([OX2H1][CX4H3])!$([OX2H1]-c)!$([OX2H1][CX3]=[OX1])!$([OX2H1][CX4H2][CX4H2][OX2H1])!$([OX2H1][CX4H2][CX4H2][OX2H0!R])!$([OX2H1][CX4H2][CX4H1][OX2H0!R])!$([OX2H1][CX4H1][CX4H2][OX2H0!R])],UNIFAC
+[CX4H3][OX2H1],UNIFAC
+[OX2H2],UNIFAC
+[CX4H3][CX3](=[OX1])[#6],UNIFAC
+[CX4H2][CX3H0](=[OX1])[#6],UNIFAC
+[CX3H1]([#6])=[OX1],UNIFAC
+[CX4H3][CX3](=[OX1])[OX2][#6],UNIFAC
+[CX4H2][CX3](=[OX1])[OX2][#6],UNIFAC
+[CX3H1](=[OX1])[OX2][#6],UNIFAC
+"[CX4H3][OX2!R!$([OX2][CX3]=[OX1,SX1,NX2])!$([OX2][CX4H2][CX4H2][OX2H1])!$([OX2][CX4H1][CX4H2][OX2H1])!$([OX2][CX4H2][CX4H1][OX2H1])][#6]",UNIFAC
+"[CX4H2][OX2!R!$([OX2][CX4H2][CX4H2][OX2H1])!$([OX2]([CX4H2])[CX4H1][CX4H2][OX2H1])!$([OX2][CX4H2][CX4H1][OX2H1])!$([OX2][CX3]=[OX1,SX1,NX2])!$([OX2]([CX4H2])[CX4H3])][#6]",UNIFAC
+[OX2R!r3!$([OX2]C=[OX1])!$([OX2]1[CX4H2][CX4H2][NX3H1][CX4H2][CX4H2]1)]([R])[CX4H2R],UNIFAC
+[CX4H3][NX3H2],UNIFAC
+[CX4H2][NX3H2],UNIFAC
+[CX4H1][NX3H2],UNIFAC
+[CX4H3][NX3H1!$([NX3H1]([CX4H3])[CX3]=[OX1])][#6],UNIFAC
+[CX4H2][NX3H1!$([NX3H1]1[CX4H2][CX4H2][OX2][CX4H2][CX4H2]1)!$([NX3H1]([CX4H2])[CX3]=[OX1])!$([NX3H1]([CX4H3])[CX4H2])][#6],UNIFAC
+[CX4H1][NX3H1!$([NX3H1][CX4H3])!$([NX3H1][CX4H2])][#6],UNIFAC
+"[CX4H3][NX3!$([NX3]([CX4H3])([CH3,CH2])[CX3]=[OX1])]([#6])[#6]",UNIFAC
+"[CX4H2][NX3!$([NX3]([CX4H2])([CH3,CH2])[CX3]=[OX1])!$([NX3][CX4H3])]([#6])[#6]",UNIFAC
+[cH1]1[nX2][cH1][cH1][cH1][cH1]1,UNIFAC
+"[$([nX2]1:[cX3H1]:[cX3H1]:[cX3H1]:[cX3H1]:[cX3H0]1),$([nX2]1:[cX3H1]:[cX3H1]:[cX3H1]:[cX3H0]:[cX3H1]1),$([nX2]1:[cX3H1]:[cX3H1]:[cX3H0]:[cX3H1]:[cX3H1]1)]",UNIFAC
+[CX4H3][CX2]#[NX1],UNIFAC
+[CX4H2][CX2]#[NX1],UNIFAC
+[CX3H0](=[OX1])[OX2H1],UNIFAC
+[CX3H1](=[OX1])[OX2H1],UNIFAC
+[CX4H2!$([CX4H2](Cl)Cl)]Cl,UNIFAC
+[CX4H1!$([CX4H1]([Cl])F)!$([CX4H1]([Cl])(F)F)]([!Cl])([!Cl])[Cl],UNIFAC
+[CX4H0]([!Cl!F])([!Cl!F])([!Cl!F])[Cl],UNIFAC
+[CX4H2]([Cl])[Cl],UNIFAC
+[CX4H1]([!Cl!F])([Cl])[Cl],UNIFAC
+[CX4H0]([Cl])([Cl])([!Cl!F])[!Cl!F],UNIFAC
+[CX4H1]([Cl])([Cl])[Cl],UNIFAC
+[CX4H0]([!Cl!F])([Cl])([Cl])[Cl],UNIFAC
+[CX4]([Cl])([Cl])([Cl])[Cl],UNIFAC
+"[CX4H3][$([NX3+](=[OX1])([O-])),$([NX3](=O)=O)]",UNIFAC
+"[CX4H2][$([NX3+](=[OX1])([O-])),$([NX3](=O)=O)]",UNIFAC
+"[CX4H1][$([NX3+](=[OX1])([O-])),$([NX3](=O)=O)]",UNIFAC
+[SX1]=[CX2]=[SX1],UNIFAC
+[CX4H3][SX2H1],UNIFAC
+[CX4H2][SX2H1],UNIFAC
+"[OX2]1-,:[#6X3]=,:[#6X3]-,:[#6X3]=,:[#6X3]([CX3H1]=[OX1])-,:1",UNIFAC
+[OX2H1][CX4H2][CX4H2][OX2H1],UNIFAC
+[I],UNIFAC
+[Br!$([Br][cR])],UNIFAC
+[CX2H1]#[CX2H0],UNIFAC
+[CX2H0]#[CX2H0],UNIFAC
+[CX4H3][Sv4X3](=[OX1])[CX4H3],UNIFAC
+[CX3H2]=[CX3H1][CX2]#[NX1],UNIFAC
+[Cl][CX3]=[CX3],UNIFAC
+[CX3H1](=[OX1])[NX3]([CX4H3])[CX4H3],UNIFAC
+[CX3H1](=[OX1])[NX3]([CX4H2])[CX4H2],UNIFAC
+[CX4](F)(F)(F)[!Cl!F],UNIFAC
+[CX4](F)(F)([!F!Cl!H])([!F!Cl!H]),UNIFAC
+[CX4](F)([!F!Cl!H])([!F!Cl!H])([!F!Cl!H]),UNIFAC
+[#6!$([CX4H3])!$([CX4H2])][CX3](=[OX1])[OX2][#6],UNIFAC
+[SiX4H3],UNIFAC
+[SiX4H2]([!$([OX2])])([!$([OX2])]),UNIFAC
+[SiX4H1]([!$([OX2])])([!$([OX2])])([!$([OX2])]),UNIFAC
+[SiX4H0]([!$([OX2])])([!$([OX2])])([!$([OX2])])([!$([OX2])]),UNIFAC
+[SiX4H2][OX2],UNIFAC
+[SiX4H1][OX2],UNIFAC
+[SiX4H0][OX2],UNIFAC
+[CX4H2]1[NX3]([CX4H3])[CX3](=[OX1])[CX4H2][CX4H2]1,UNIFAC
+[CX4]([Cl])([Cl])([Cl])[F],UNIFAC
+[CX4H0]([Cl])([Cl])([F])[!Cl!F],UNIFAC
+[CX4H1]([Cl])([Cl])F,UNIFAC
+[CX4H1](Cl)(F)([!F!Cl]),UNIFAC
+[CX4H0](Cl)(F)(F)[!Cl!F],UNIFAC
+[CX4H1](Cl)(F)F,UNIFAC
+[CX4](Cl)(F)(F)F,UNIFAC
+[CX4](Cl)(Cl)(F)F,UNIFAC
+[CX3](=[OX1])[NX3H2],UNIFAC
+[CX3](=[OX1])[NX3H1][CX4H3],UNIFAC
+[CX3](=[OX1])[NX3H1][CX4H2],UNIFAC
+[CX3](=[OX1])[NX3]([CX4H3])[CX4H3],UNIFAC
+[CX3](=[OX1])[NX3]([CX4H3])[CX4H2],UNIFAC
+[CX3](=[OX1])[NX3]([CX4H2])[CX4H2],UNIFAC
+[OX2H0!R][CX4H2][CX4H2][OX2H1],UNIFAC
+"[$([OX2H0!R][CX4H1][CX4H2][OX2H1]),$([OX2H0!R][CX4H2][CX4H1][OX2H1])]",UNIFAC
+[CX4H3][SX2H0][*],UNIFAC
+[CX4H2][SX2H0!$([SX2H0]([CX4H2])[CX4H3])][*],UNIFAC
+[OX2]1[CX4H2][CX4H2][NX3H1][CX4H2][CX4H2]1,UNIFAC
+"[#6X3H1]1-,:[#16X2]-,:[#6X3H1]=,:[#6X3H1]-,:[#6X3H1]=,:1",UNIFAC
+"[$([#6X3H1]1-,:[#16X2]-,:[#6X3H1]=,:[#6X3H1]-,:[#6X3H0]=,:1),$([#6X3H1]1-,:[#16X2]-,:[#6X3H0]=,:[#6X3H1]-,:[#6X3H1]=,:1)]",UNIFAC
+[*][NX2]=[CX2]=[OX1],UNIFAC
+[CX4H2][Sv6X4](=[OX1])(=[OX1])[CX4H2],UNIFAC
+[CX4H2][Sv6X4](=[OX1])(=[OX1])[CX4H1],UNIFAC
+[CX4H2]1[OX2][CX4H2]1,UNIFAC
+[CX4H2]1[OX2][CX4H1]1,UNIFAC
+[CX4H2]1[OX2][CX4H0]1,UNIFAC
+[CX4H1]1[OX2][CX4H1]1,UNIFAC
+[CX4H1]1[OX2][CX4H0]1,UNIFAC
+[CX4H0]1[OX2][CX4H0]1,UNIFAC
+[CX3](=[OX1])[OX2][CX3](=[OX1]),UNIFAC
+[$([SX2H0]P(=S)([OH0])[OH0])]P(=S)([OH0])[OH0],LD50_mo_oral
+CCOP(=S)(OCC)SC([*:1]),LD50_mo_oral
+[PX4H0](=O)([OH0])([OH0])[OH0],LD50_mo_oral
+COP(=O)(O([*:1]))OC,LD50_mo_oral
+[$([OH0]P(=S)([OH0])[OH0])]P(=S)([OH0])[OH0],LD50_mo_oral
+CCOP(=S)(O([*:1]))OCC,LD50_mo_oral
+S=P(O([*:1]))(Oc1ccc([*:1])cc1)c1ccccc1,LD50_mo_oral
+S=P(O([*:1]))(O([*:1]))Oc1ccc([*:1])cc1,LD50_mo_oral
+[$(N([!H])C(=O)[OH0])]C(=O)[OH0],LD50_mo_oral
+CN(SN([*:1])([*:1]))C(=O)Oc1cccc2CC(C)(C)Oc12,LD50_mo_oral
+CN(SOCCC([*:1]))C(=O)O([*:1]),LD50_mo_oral
+O=C(N([*:1]))Oc1ccccc([*:1])1,LD50_mo_oral
+[CX4]NC(=O)ON=C,LD50_mo_oral
+CN(C)C(=O)O([*:1]),LD50_mo_oral
+*C1(*)[#6](=O)-[#7]-[#6](=O)-[#7]-[#6]1=O,LD50_mo_oral
+[OH1]C1=CC(=O)Oc2[cH][cH][cH][cH]c12,LD50_mo_oral
+*-[#7]-1-c2ccccc2-[#16]-c2ccccc-12,LD50_mo_oral
+[NR1X3]1[CX4R1][CX4R1][NX3R1]([CX3]=[NX2])[CX4R1][CX4R1]1,LD50_mo_oral
+[NR1X3]1[CX4R1][CX4R1][NX3R1](c2ccccc2)[CX4R1][CX4R1]1,LD50_mo_oral
+N#Cc1c([*:1])c([*:1])c(Cl)c(C#N)c1Cl,LD50_mo_oral
+"[Br,Cl,I][CX4;CH,CH2]",Glaxo Wellcome
+"[S,C](=[O,S])[F,Br,Cl,I]",Glaxo Wellcome
+O=CN=[N+]=[N-],Glaxo Wellcome
+"COS(=O)O[C,c]",Glaxo Wellcome
+"COS(=O)(=O)[C,c]",Glaxo Wellcome
+C(=O)OC(=O),Glaxo Wellcome
+OO,Glaxo Wellcome
+C(=O)Oc1c(F)c(F)c(F)c(F)c1(F),Glaxo Wellcome
+C(=O)Oc1ccc(N(=O)=O)cc1,Glaxo Wellcome
+C(=O)Onnn,Glaxo Wellcome
+"N=C=[S,O]",Glaxo Wellcome
+OS(=O)(=O)C(F)(F)F,Glaxo Wellcome
+P(=S)(S)S,Glaxo Wellcome
+NP(=O)(N)N,Glaxo Wellcome
+cN=[N+]=[N-],Glaxo Wellcome
+"C(=O)C[N+,n+]",Glaxo Wellcome
+[N;R0][N;R0]C(=O),Glaxo Wellcome
+"[C+,Cl+,I+,P+,S+]",Glaxo Wellcome
+C=P,Glaxo Wellcome
+[Cl]C([C&R0])=N,Glaxo Wellcome
+[N&D2](=O),Glaxo Wellcome
+"[P,S][Cl,Br,F,I]",Glaxo Wellcome
+N=C=N,Glaxo Wellcome
+[N+]#[C-],Glaxo Wellcome
+C(=O)N(C(=O))OC(=O),Glaxo Wellcome
+N#CC[OH],Glaxo Wellcome
+N#CC(=O),Glaxo Wellcome
+S(=O)(=O)C#N,Glaxo Wellcome
+P(OCC)(OCC)(=O)C#N,Glaxo Wellcome
+[N;R0]=[N;R0]C#N,Glaxo Wellcome
+[N;R0]=[N;R0]CC=O,Glaxo Wellcome
+[CD2;R0][CD2;R0][CD2;R0][CD2;R0][CD2;R0][CD2;R0][CD2;R0],Glaxo Wellcome
+"[C,S,P](=O)[OH].[C,S,P](=O)[OH].[C,S,P](=O)[OH].[C,S,P](=O)[OH]",Glaxo Wellcome
+[O;R1][C;R1][C;R1][O;R1][C;R1][C;R1][O;R1],Glaxo Wellcome
+SS,Glaxo Wellcome
+[SH],Glaxo Wellcome
+"C1[O,S,N]C1",Glaxo Wellcome
+c([OH])c([OH])c([OH]),Glaxo Wellcome
+c([OH])c([OH])cc([OH]),Glaxo Wellcome
+N=NC(=S)N,Glaxo Wellcome
+SC#N,Glaxo Wellcome
+cC[N+],Glaxo Wellcome
+"C[O,S;R0][C;R0](=S)",Glaxo Wellcome
+N[CH2]C#N,Glaxo Wellcome
+C1(=O)OCC1,Glaxo Wellcome
+P(=O)([OH])OP(=O)[OH],Glaxo Wellcome
+N1CCC1=O,Glaxo Wellcome
+O=C1[#6]~[#6]C(=O)[#6]~[#6]1,Glaxo Wellcome
+C=CC=CC=CC=C,Glaxo Wellcome
+O1CCCCC1OC2CCC3CCCCC3C2,Glaxo Wellcome
+O=C1NCC2CCCCC21,Glaxo Wellcome
+O=C1CCCC(N1)=O,Glaxo Wellcome
+O1CCCCC1C2CCCO2,Glaxo Wellcome
+[OH]c1cc([OH])cc2[O+]=C(C([OH])=Cc21)c3cc([OH])c([OH])cc3,Glaxo Wellcome
+C12OCCC(O1)CC2,Glaxo Wellcome
+"[OH1][P,C,S](=O)",Glaxo Wellcome
+"[NH1]([P,S]=O)([P,S]=O)",Glaxo Wellcome
+[nH]1cnoc1=O,Glaxo Wellcome
+[OH1]C1=NC=NO1,Glaxo Wellcome
+[NH1]1C=NOS1=O,Glaxo Wellcome
+[OH1]C1=NC(=O)CC1=O,Glaxo Wellcome
+[OH1]C1NC(=O)C(=O)C1,Glaxo Wellcome
+[nH1]1ncoc1=O,Glaxo Wellcome
+[OH1]C1=NN=CO1,Glaxo Wellcome
+[nH1]1[nH]cnc1=O,Glaxo Wellcome
+[OH1]C1=N[NH1]C=N1,Glaxo Wellcome
+[OH1]C1=NOC=C1,Glaxo Wellcome
+[nH1]1occc1=O,Glaxo Wellcome
+[OH1]c1oncc1,Glaxo Wellcome
+[nH1]1ccc(=O)o1,Glaxo Wellcome
+[nH1]nnn,Glaxo Wellcome
+[nH1](n)nn,Glaxo Wellcome
+[OH1]C1=NC(=O)NO1,Glaxo Wellcome
+[OH1]C1=NC(=O)ON1,Glaxo Wellcome
+[nH1]1cnnc1C(F)(F)F,Glaxo Wellcome
+[nH1]1cnc(n1)C(F)(F)F,Glaxo Wellcome
+[nH1]1C(=O)CC(=O)O1,Glaxo Wellcome
+[OH1]C1=CC(=O)NO1,Glaxo Wellcome
+[OH1]C1=CC(=O)ON1,Glaxo Wellcome
+[NH1]1C(=O)c2ccccc2S1(=O)=O,Glaxo Wellcome
+[OH1]C1=NS(=O)(=O)c2ccccc21,Glaxo Wellcome
+[OH1]C1=NC(=O)c2ccccc21,Glaxo Wellcome
+[OH1]C1=COC=CC1=O,Glaxo Wellcome
+[OH1]C1=NSN=C1,Glaxo Wellcome
+[OH1]NC(=O),Glaxo Wellcome
+[NH]S(=O)(=O)C(F)(F)F,Glaxo Wellcome
+[NH](c)S(=O)=O,Glaxo Wellcome
+"[OH1]c1c[c,n]ccc1",Glaxo Wellcome
+[NH2][CX4],Glaxo Wellcome
+[NH]([CX4])[CX4],Glaxo Wellcome
+[NX3]([CX4])([CX4])[CX4],Glaxo Wellcome
+"[C,c](=N)N",Glaxo Wellcome
+"[C,c](=N)N[C,S](=O)",Glaxo Wellcome
+"[$([C,c](=N)N);!$([C,c](=N)N[C,S](=O))]",Glaxo Wellcome
+n(:c)(:c):a,Glaxo Wellcome
+[nH0;!$(n-C);!$(n(:c)(:c):a)]1ccccc1,Glaxo Wellcome
+"[N,n;+1]",Glaxo Wellcome
+"[$([NH2]!:c),$([NH1]([CX4])!:c),$([NH0]([CX4])([CX4])!:c)]",Glaxo Wellcome
+"[C;H1](=[O,S])[C,c]",Glaxo Wellcome
+"[C,P;H1](=[O,S])[O,S]",Glaxo Wellcome
+"[C](=O)([C,c,O,S])[C,c,O,S]",Glaxo Wellcome
+C(=O)[OH1],Glaxo Wellcome
+C(=O)[SH1],Glaxo Wellcome
+"C(=[O,S])(N)Oc",Glaxo Wellcome
+"C1(=O)NS(=O)(=O)[C,c]=,:[C,c]1",Glaxo Wellcome
+"P(=O)[O,S]",Glaxo Wellcome
+P[OH1],Glaxo Wellcome
+"[$(P(=O)[O,S]);!$(P[OH1])]",Glaxo Wellcome
+c(=O)(~c)~c,Glaxo Wellcome
+"[$(c1(=O)ccn([C,c])cc1),$(c1(=O)n([C,c])cccc1)]",Glaxo Wellcome
+"[$(c(=O)(~c)~c);!$([$(c1(=O)ccn([C,c])cc1),$(c1(=O)n([C,c])cccc1)])]",Glaxo Wellcome
+C(=O)-N-C=O,Glaxo Wellcome
+[NX3H2][CX4],Glaxo Wellcome
+[NX3H]([CX4])[CX4],Glaxo Wellcome
+"N=[O,C,N,S]",Glaxo Wellcome
+"N-[C,c,N]=[C,c,N,n,O,S]",Glaxo Wellcome
+"[OH1][C,c,N;!$(C=O)]",Glaxo Wellcome
+[OH1]C=C,Glaxo Wellcome
+"[OH1]NC=[O,S]",Glaxo Wellcome
+"[$([NX3H2]!:c),$([NX3H1]([CX4])!:c),$([NX3H0]([CX4])([CX4])!:c)]",Glaxo Wellcome
+"[$([NH2][CX4]),$([NH]([CX4])[CX4]),$([OH1][C,c,N;!$(C=O)]),$([$([NH2]!:c),$([NH1]([CX4])!:c),$([NH0]([CX4])([CX4])!:c)]);!$(N=[O,C,N,S]);!$(N-[C,c,N]=[C,c,N,n,O,S]);!$([OH1]C=C);!$([OH1]NC=[O,S])]",Glaxo Wellcome
+"C(=O)O[C,H1].C(=O)O[C,H1].C(=O)O[C,H1]",Dundee
+"n1c([F,Cl,Br,I])cccc1",Dundee
+"C(=O)[Cl,Br,I,F]",Dundee
+C=[C!r]O,Dundee
+N#CC(=O),Dundee
+C(=O)N[NH2],Dundee
+[CH1](=O),Dundee
+[R0;D2][R0;D2][R0;D2][R0;D2],Dundee
+"[CX4][Cl,Br,I]",Dundee
+c1nnnn1C=O,Dundee
+c1cc([NH2])ccc1,Dundee
+[CH2R1]1N[CH2R1][CH2R1][CH2R1][CH2R1][CH2R1]1,Dundee
+N=[N+]=[N-],Dundee
+N=N,Dundee
+[CH2R1]1N[CH2R1][CH2R1][CH2R1][CH2R1][CH2R1][CH2R1]1,Dundee
+"[cR2]1[cR2][cR2]([Nv3X3,Nv4X4])[cR2][cR2][cR2]1[cR2]2[cR2][cR2][cR2]([Nv3X3,Nv4X4])[cR2][cR2]2",Dundee
+"[C,c](=O)[CX4,CR0X3,O][C,c](=O)",Dundee
+C12C(NC(N1)=O)CSC2,Dundee
+"[C+,c+,C-,c-]",Dundee
+"c1c([OH])c([OH,NH2,NH])ccc1",Dundee
+"[O+,o+,S+,s+]",Dundee
+"C1(=[O,N])C=CC(=[O,N])C=C1",Dundee
+"C1(=[O,N])C(=[O,N])C=CC=C1",Dundee
+C=[C!r]C#N,Dundee
+"[OR2,NR2]@[CR2]@[CR2]@[OR2,NR2]@[CR2]@[CR2]@[OR2,NR2]",Dundee
+c1ccc2c(c1)ccc(=O)o2,Dundee
+N[CH2]C#N,Dundee
+"[N,O,S]C#N",Dundee
+N#CC[OH],Dundee
+[CR1]1[CR1][CR1][CR1][CR1][CR1][CR1]1,Dundee
+[CR1]1[CR1][CR1]cc[CR1][CR1]1,Dundee
+[CR1]1[CR1][CR1][CR1][CR1][CR1][CR1][CR1]1,Dundee
+[CR1]1[CR1][CR1]cc[CR1][CR1][CR1]1,Dundee
+"[cR2]1[cR2]c([N+R0,NX3R0,nX3R0])c([N+R0,NX3R0,nX3R0])[cR2][cR2]1",Dundee
+"[cR2]1[cR2]c([N+R0,NX3R0,nX3R0])[cR2]c([N+R0,NX3R0,nX3R0])[cR2]1",Dundee
+"[cR2]1[cR2]c([N+R0,NX3R0,nX3R0])[cR2][cR2]c1([N+R0,NX3R0,nX3R0])",Dundee
+[N!R]=[N!R],Dundee
+"[C,c](=O)[C,c](=O)",Dundee
+SS,Dundee
+[CX3R0][NX3R0],Dundee
+C(=O)Onnn,Dundee
+C1(=O)OCC1,Dundee
+"c1cc([Cl,Br,I,F])cc([Cl,Br,I,F])c1[Cl,Br,I,F]",Dundee
+"c1ccc([Cl,Br,I,F])c([Cl,Br,I,F])c1[Cl,Br,I,F]",Dundee
+"[Hg,Fe,As,Sb,Zn,Se,se,Te,B,Si]",Dundee
+"[NX3R0,NX4R0,OR0,SX2R0][CX4][NX3R0,NX4R0,OR0,SX2R0]",Dundee
+C1NC(=O)NC(=O)1,Dundee
+N[NH2],Dundee
+"[OH]c1ccc([OH,NH2,NH])cc1",Dundee
+C(=O)N[OH],Dundee
+C=[N!R],Dundee
+"N=[CR0][N,n,O,S]",Dundee
+I,Dundee
+N=C=O,Dundee
+"[$([CH2]),$([CH][CX4]),$(C([CX4])[CX4])]=[$([CH2]),$([CH][CX4]),$(C([CX4])[CX4])]",Dundee
+C=C=O,Dundee
+S1C=CSC1=S,Dundee
+"C=!@CC=[O,S]",Dundee
+"[$([CH]),$(CC)]#CC(=O)[C,c]",Dundee
+"[$([CH]),$(CC)]#CS(=O)(=O)[C,c]",Dundee
+C=C(C=O)C=O,Dundee
+"[$([CH]),$(CC)]#CC(=O)O[C,c]",Dundee
+"[NX4,nX3][OX1]",Dundee
+s1c(S)nnc1NC=O,Dundee
+"NC[F,Cl,Br,I]",Dundee
+"[NX3,NX4][F,Cl,Br,I]",Dundee
+n[OH],Dundee
+"[$([NX3](=O)=O),$([NX3+](=O)[O-])]",Dundee
+[#7]-N=O,Dundee
+"[C,c]=N[OH]",Dundee
+"[C,c]=NOC=O",Dundee
+"[OR0,NR0][OR0,NR0]",Dundee
+[CX4](F)(F)[CX4](F)F,Dundee
+OO,Dundee
+c1ccccc1OC(=O)[#6],Dundee
+c1ccccc1OC(=O)O,Dundee
+P,Dundee
+"[cR,CR]~C(=O)NC(=O)~[cR,CR]",Dundee
+"a1aa2a3a(a1)[a,A]=,:[a,A]-,:[a,A]=,:[a,A]3A=AA2",Dundee
+a21aa3a(aa1aaaa2)aaaa3,Dundee
+a31a(a2a(aa1)aaaa2)aaaa3,Dundee
+[CR0]=[CR0][CR0]=[CR0],Dundee
+"[s,S,c,C,n,N,o,O]~[nX3+,NX4+](~[s,S,c,C,n,N])~[s,S,c,C,n,N]",Dundee
+"[s,S,c,C,n,N,o,O]~[n+,N+](~[s,S,c,C,n,N,o,O])(~[s,S,c,C,n,N,o,O])~[s,S,c,C,n,N,o,O]",Dundee
+[*]=[N+]=[*],Dundee
+O1CCCCC1OC2CCC3CCCCC3C2,Dundee
+"[Si][F,Cl,Br,I]",Dundee
+c1ccccc1C=Cc2ccccc2,Dundee
+"[SX3](=O)[O-,OH]",Dundee
+"[C,c]S(=O)(=O)O[C,c]",Dundee
+"S(=O)(=O)[O-,OH]",Dundee
+S(=O)(=O)C#N,Dundee
+[SX2]O,Dundee
+OS(=O)(=O)[O-],Dundee
+[SX2H0][N],Dundee
+c12ccccc1(SC(S)=N2),Dundee
+c12ccccc1(SC(=S)N2),Dundee
+"[C,c]=S",Dundee
+SC=O,Dundee
+[S-],Dundee
+[SH],Dundee
+"*1[O,S,N]*1",Dundee
+OS(=O)(=O)C(F)(F)F,Dundee
+"[SiR0,CR0](c1ccccc1)(c2ccccc2)(c3ccccc3)",Dundee
+C#C,Dundee
+"[$([NX3](=O)=O),$([NX3+](=O)[O-])]-c(:*):*",LINT
+[2H],LINT
+[13#6],LINT
+n1c(cccc1)Cl,LINT
+[NH2D1]-c(:*):*,LINT
+"[Si,B,Se]",LINT
+[!#6]-[CH2]-N1C(=O)CCC(=O)1,LINT
+O[CH2][CH2]O-!@[CH2][CH2]O,LINT
+"C-!@[NX2]=[C!R,#1]-C",LINT
+"[S,P](=O)OC",LINT
+"P(=[O,S])[C,N]([C,N])[C,N]",LINT
+"[N;!$(N-[C,S]=*)]-,=;!@[N;!$(N-[C,S]=*)]",LINT
+N-!@[CX4]-!@N,LINT
+N-!@[SX2]-*,LINT
+"[N,S,O][CH2][CH2]-[F,Cl,Br,I]",LINT
+O=[C!H0],LINT
+O=[CX3]-!@[CX3]=O,LINT
+NC(OC([CH3])([CH3])[CH3])=O,LINT
+NC(O[CH2]c1ccccc1)=O,LINT
+OC(=O)-!@[NX3],LINT
+"O=C-[F,Cl,Br,I]",LINT
+"[CH2]-[Cl,Br,I]",LINT
+"O=C-C-[F,Cl,Br,I]",LINT
+"S(=O)(=O)-[F,Cl,Br,I]",LINT
+[ND1]=C-!@[SX2]-[CH2D2],LINT
+N-C(=S)-N,LINT
+[CH2D1]=[CD2]-!@*,LINT
+S=P~*,LINT
+S-C#N,LINT
+*-[S!H0],LINT
+[Sv4](=O)(-!@[!#1])-!@[!#1],LINT
+"N-[F,Cl,Br,I]",LINT
+"N-C-[F,Cl,Br,I,$(C#N)]",LINT
+"[$(C#N),$(N(~O)~O),$(C=O),$(S(=O)=O),$(C(F)(F)F),Cl][C!H0]=[C!H0]",LINT
+[C;!$(C=*)][C!R](=O)[CH2D2],LINT
+C[C!R](=O)[O!R][CH2D2],LINT
+[CH2][CH2][CH2]-!@[CH2][CH2][CH2],LINT
+"O=[#6]1[#6]:,=[#6][#6](=O)[#6]:,=[#6]1",LINT
+C=C-!@O-*,LINT
+[NH1X2]=[C!R;!$(C(-N)(=[NH1])-N)],LINT
+O-!@[N;!$(N(=O)=O);!$([N+](=O)[O-])],LINT
+S-S,LINT
+O~O,LINT
+C-C(=O)[SD2],LINT
+N~1~*~*1,LINT
+O~1C~*1,LINT
+I-c:*,LINT
+Br-c:*,LINT
+a1aaa2a(a1)aaa(a2):a,LINT
+"[!#1]-,:1-:a2a(-:[!#1]:3:a1aaaa3)aaaa2",LINT
+"[P,S](~O)(~O)~O",LINT
+C12CC3CC(C1)CC(C2)C3,LINT
+C#N.C#N,LINT
+[CX3](=O)[OH1].[CX3](=O)[OH1],LINT
+[NH2][CX4]C(=O)O,LINT
+Cl~O,LINT
+"[F,Cl,Br,I].[F,Cl,Br,I].[F,Cl,Br,I].[F,Cl,Br,I]",LINT
+"[Cl,Br,I][CX4][CX4][$([O,S,N]*),Cl,Br,I]",Inpharmatica
+"[C,S,P](=O)[F,Cl,Br,I]",Inpharmatica
+"[F,Cl,Br,I][CX4]C=C",Inpharmatica
+"[Br,Cl,I][C!H0]C=[O,S]",Inpharmatica
+"[!#7,#1]~[NX2R0]=[NX2R0]~[!#7,#1]",Inpharmatica
+"[Br,Cl,I][CX4]c",Inpharmatica
+[!#7]~[NX2]~[NX1],Inpharmatica
+"N=C=[N,O,P,S]",Inpharmatica
+"[!#1!#6!#7!#8!#9!#15!#16!#17]~[*,#1]",Inpharmatica
+"[CH2]=[CH][N,O,P,S;R0]",Inpharmatica
+[NR0]~[NX2]~[OX1],Inpharmatica
+"[*,#1]~[NX2]~[OX1]",Inpharmatica
+"S=P~[*,#1]",Inpharmatica
+"c1ccc[s,o;X2]c1",Inpharmatica
+[SX4](~S)(~O)(~O)~*,Inpharmatica
+[PX3]([#6])([#6])[#6],Inpharmatica
+[PX4](~[!O!S])([#6])([#6])[#6],Inpharmatica
+"[!#7,#1]C=NO[C,S,P](=O)*",Inpharmatica
+O=C[NX3](C=O)OC(=O)*,Inpharmatica
+[Nv3X3][Nv3X3!H0],Inpharmatica
+[NX1]#C[CX4][OH],Inpharmatica
+*[SX3](*)*,Inpharmatica
+C1(C=CC=CC1=O)=O,Inpharmatica
+"*C([F,Cl,Br,I,$(OS(=O)(=O)*)])=[NX2]*",Inpharmatica
+"*S(=O)(=O)[F,Cl,Br,I]",Inpharmatica
+"AA[CH2][F,Cl,Br,I,$(OS(=O)(=O)*)]",Inpharmatica
+"*[C,S](=O)O[C,S](=O)*",Inpharmatica
+"c1nc(ncc1)[Br,I]",Inpharmatica
+"CC(=[OX1,SX1,NH])[SX2][*,#1]",Inpharmatica
+"[#6,#1]C(=O)CC[Br,I]",Inpharmatica
+"[*,#1][SX2R0]O[*,#1]",Inpharmatica
+"[*,#1][OR0]O[*,#1]",Inpharmatica
+[CH3][CH2][CH2][CH2][CH2][CH2][CH2][CH2][CH2][CH2],Inpharmatica
+"[2#1,3#1,13C,14C,15N,125I,23F,22Na,32P,33P,35S,45Ca,57Co,103Ru,141Ce]",Inpharmatica
+P-P,Inpharmatica
+S=S,Inpharmatica
+[Si]~O,Inpharmatica
+O=[CH]*,Inpharmatica
+C[CR0]=[NR0][*!O],Inpharmatica
+"C1C[N,S,O]1",Inpharmatica
+*C(=O)C(=O)*,Inpharmatica
+[*!$(C[OH])]=C([OH])C(=O)*,Inpharmatica
+C#CC=O,Inpharmatica
+"[#6,#1,OH0][C!$(C1(=O)C=CC(=O)C=C1)](=O)C=[C!$(C[Nv3X3,OH])]",Inpharmatica
+"[Br,Cl,I][CX4]C=[C,N,P]",Inpharmatica
+"N[F,Cl,Br,I]",Inpharmatica
+O=S(=O)(*)F,Inpharmatica
+O=S(*)OF,Inpharmatica
+"[*,#1]~[F,Cl,Br,I]~[*,#1]",Inpharmatica
+"C[Mg][F,Cl,Br,I]",Inpharmatica
+N[PX3](N)N,Inpharmatica
+"NC[F,Cl,Br,I]",Inpharmatica
+O=C1C=CC(=O)C=C1,Inpharmatica
+S-S,Inpharmatica
+Oc1cc(O)cc(O)c1,Inpharmatica
+Oc1c(O)cc(O)cc1,Inpharmatica
+C=P,Inpharmatica
+N!@[SX2],Inpharmatica
+"[#15]~[F,Cl,Br,I,#16]",Inpharmatica
+"[O,S]~[Cl,Br,I]",Inpharmatica
+a1aaaa2ccc3ccccc3c12,Inpharmatica
+"[#6][C,S](=[O,S])C[F,Cl,Br,I]",Inpharmatica
+"[#6][P,S](~[OX1])(~[OX1])O[C!H0]",Inpharmatica
+C(F)(F)C(F)(F)C(F)(F)C(F)(F),Inpharmatica
+"[O,S]C#N",Inpharmatica
+a1aaac2cc3ccccc3cc12,Inpharmatica
+"[O,S]C(=[O,S])[O,S]",Inpharmatica
+*(C#N)C#N,Inpharmatica
+"*C(=[O,S])[O,S]C(=[O,S])*",Inpharmatica
+C(=O)C([OH])[OH],Inpharmatica
+CC(=S)C,Inpharmatica
+*[SX2H],Inpharmatica
+"[C!H0][Br,I]",Inpharmatica
+CC(=S)O,Inpharmatica
+"[*!#7]~[#6]-,=CN(~O)(~O)",Inpharmatica
+*~@C1C(=O)NC(=O)C(~@*)1,Inpharmatica
+[CH]1C(=O)NC(=O)[CH]=1,Inpharmatica
+"[N,S]1[C,N,S][C,N,S]1",Inpharmatica
+"S!@C(=!@[O,S])!@[#7]",Inpharmatica
+"[c,n]1[c,n][c,n][c,n][c,n]n(C)1",Inpharmatica
+"[F,Cl,Br,I]C-,=;!@C([F,Cl,Br,I])-,=;!@C([F,Cl,Br,I])",Inpharmatica
+"[N,P,Se,S][C!H0]C[Br,Cl,I]",Inpharmatica
+*C(=O)C(=!@[C!H0])C#N,Inpharmatica
+N#C[#7!$(N(C#N)=C(N)NC)],Inpharmatica
+"[N,O,S]-@[#6!$(*(~@*)(~@*)~@*)]@[#6!$(*(~@*)(~@*)~@*)]-@[N,O,S]-@[#6!$(*(~@*)(~@*)~@*)]@[#6!$(*(~@*)(~@*)~@*)]-@[O,N]-@[#6!$(*(~@*)(~@*)~@*)]@[#6!$(*(~@*)(~@*)~@*)]-@[N,O,S]-@C",Inpharmatica
+[C!H0]=CS(=O)(=O)*,Inpharmatica
+"[*!$(C=O)]!@N!@O[*,#1]",Inpharmatica
+N=!@S,Inpharmatica
+*(c1ccccc1)(c1ccccc1)(c1ccccc1),Inpharmatica
+C(=O)!@N!@C(=O)[#7],Inpharmatica
+"c1nc(ccc1)[Br,I,Cl,F]",Inpharmatica
+C(=O)OC(=O),MLSMR
+C(=O)Oc1ccc([N+]([O-])=O)cc1,MLSMR
+O=*N=[N+]=[N-],MLSMR
+C(=O)Onnn,MLSMR
+cN=[N+]=[N-],MLSMR
+"[#6,#8,#16]-[CH1]=[NH1]",MLSMR
+S(=O)(=O)C#N,MLSMR
+[N;R0]=[N;R0]C#N,MLSMR
+N#CC[OH],MLSMR
+N#CC(=O),MLSMR
+"[S,C](=[O,S])[F,Br,Cl,I]",MLSMR
+[Cl]C([C&R0])=N,MLSMR
+"[P,S][F,Cl,Br,I]",MLSMR
+"[C+,Cl+,I+,P+,S+]",MLSMR
+[!#6;!#7;!#8;!#16;!#1;!#3;!#9;!#11;!#12;!#15;!#17;!#19;!#20;!#30;!#35],MLSMR
+C(=O)N(C(=O))OC(=O),MLSMR
+"C(=O)CC[N+,n+]",MLSMR
+cC[N+],MLSMR
+C=P,MLSMR
+P(=S)(S)S,MLSMR
+P(OCC)(OCC)(=O)C#N,MLSMR
+"COS(=O)(=O)[C,c]",MLSMR
+"a-S(=O)(=O)-O[$([a&!#6]),$(c[a&!#6]),$(cc[a&!#6]),$(ccc[a&!#6]),$(cccc[a&!#6]),$(ccccc[a&!#6])]",MLSMR
+"COS(=O)O[C,c]",MLSMR
+OS(=O)(=O)C(F)(F)F,MLSMR
+"[C,S,P](=O)[OH].[C,S,P](=O)[OH].[C,S,P](=O)[OH].[C,S,P](=O)[OH]",MLSMR
+[OH]-S(=O)(=O)-*,MLSMR
+[SH],MLSMR
+[OH1]-C(-c1ccccc1)c2ccccc2,MLSMR
+[OH1]c1ccc([OH1])cc1,MLSMR
+c([OH])c([OH])c([OH]),MLSMR
+c([OH])c([OH])cc([OH]),MLSMR
+*=C=*,MLSMR
+"[$(*-[NX2-]-[NX2+]#[NX1]),$(*-[NX2]=[NX2+]=[NX1-]),$(N=N=N)]",MLSMR
+[N;R0]=[N;R0]CC=O,MLSMR
+N=NC(=S)N,MLSMR
+N=N,MLSMR
+[#6]-[CH1]=O,MLSMR
+[#6]-O[CH1](-[#6])[OH1],MLSMR
+[#6]-O[CH1](-[#6])O-[#6],MLSMR
+[#6]-C(=O)-[#6],MLSMR
+[#6]-C(=O)O-[#6],MLSMR
+"[#6,#8,#16]-C(=[NH1])[#6,#8,#16]",MLSMR
+C=[NH],MLSMR
+CC(=S)C,MLSMR
+"C[O,S;R0][C;R0](=S)",MLSMR
+COC(=S)C,MLSMR
+CC(=S)N,MLSMR
+NC(=S)N,MLSMR
+[N&D2](=O),MLSMR
+[CD2;R0][CD2;R0][CD2;R0][CD2;R0][CD2;R0][CD2;R0],MLSMR
+"[N,C,S,O]-&!@[N,C,S,O]-&!@[N,C,S,O]-&!@[N,C,S,O]-&!@[N,C,S,O]-&!@[N,C,S,O]-&!@[N,C,S,O]",MLSMR
+"[$([A&D2]),$([A&D1])]!@[A&D2]!@[A&D2]!@[A&D2]!@[A&D2]!@[$([A&D2]),$([A&D1])]",MLSMR
+C=CC=CC=CC=C,MLSMR
+acC=&!@Cca,MLSMR
+[N+]#[C-],MLSMR
+SC#N,MLSMR
+N[CH2]C#N,MLSMR
+"c[$([NX3](=O)=O),$([NX3+](=O)[O-])]",MLSMR
+"a-[$([NX3](=O)=O),$([NX3+](=O)[O-])].a-[$([NX3](=O)=O),$([NX3+](=O)[O-])]",MLSMR
+"[$([NX3](=O)=O),$([NX3+](=O)[O-])]-caac-[$(N(C)C),$([NH]C),$([NH2])]",MLSMR
+"c1cccc(C(=O)[C,c]([#7])=,:[C,c]([#7])C2(=O))c12",MLSMR
+"N=C1[#6]:,=[#6]C(=[C,N])[#6]:,=[#6]1",MLSMR
+"*=,:[#6]C([#6]=,:*)[#6]=,:*",MLSMR
+ac-*=&!@*-&!@C(=O)-&!@ca,MLSMR
+"c1cccc2C(=O)C(C:,=*)C(=O)c12",MLSMR
+c12cccc(C(=O)C(ca)C(=O)3)c2c3ccc1,MLSMR
+NS(=O)(=O)c1cccc([#7])c1,MLSMR
+OCccCO,MLSMR
+c1ccccc1-n2nnnc2[CH2]*,MLSMR
+"[Br,Cl,I][CX4,CH,CH2,CH3]",MLSMR
+"O=CC(-[F,Cl,Br,I])([F,Cl,Br,I])-[F,Cl,Br,I]",MLSMR
+"O=CCC[F,Cl,Br,I]",MLSMR
+"[F,Cl,Br][c]1:[c,n]:[c,n]:[n]:[c,n]:[c,n]1",MLSMR
+"[F,Cl,Br][c]1:[c,n]:[c,n]:[c,n]:[c,n]:[n]1",MLSMR
+"*[N,S,O]-&!@[N,S,O][#6]",MLSMR
+OO,MLSMR
+SS,MLSMR
+[#6]-[NH]-[NH]-[#6],MLSMR
+[N;R0][N;R0]C(=O),MLSMR
+"[#6]-[CH1]=C-C(=O)[#6,#7,#8]",MLSMR
+"[CH2]=C-C(=O)[#6,#7,#8]",MLSMR
+N#CC(=C)C#N,MLSMR
+"[#6,#7]-&!@[#6](=&!@[CH])-&!@C(=O)-&!@[C,N,O,S]",MLSMR
+"[#6]-C#CC(=O)[#6,#7,#8]",MLSMR
+"[CH1]#CC(=O)-[#6,#7,#8]",MLSMR
+"C[$([NX3](=O)=O),$([NX3+](=O)[O-])]",MLSMR
+[O;R1][C;R1][C;R1][O;R1][C;R1][C;R1][O;R1],MLSMR
+"[#6]-O-[$([NX3](=O)=O),$([NX3+](=O)[O-])]",MLSMR
+O=C-&!@C=O,MLSMR
+*-C(=O)-&!@[NH]-C-&!@C(=O)-&!@[NH]-*,MLSMR
+C[N+](-[O-])(C)C,MLSMR
+a-P(-a)-a,MLSMR
+[OH]-P(=O)(-O)-*,MLSMR
+COP(=O)(-*)O,MLSMR
+P(=O)([OH])OP(=O)[OH],MLSMR
+[#6]OP(=O)(*)O[#6].[#6]OP(=O)(*)O[#6].[#6]OP(=O)(*)O[#6],MLSMR
+NP(=O)(N)N,MLSMR
+c1(c)c2c(c)cccc2ccc1,MLSMR
+"c12:[c,n]:[c,n]:[c,n]:[c,n]:c1[c,n]c3:[c,n]:[c,n]:[c,n]:[c,n]:c3[c,n]2",MLSMR
+"c12:[c,n]:[c,n]:[c,n]:[c,n]:c1:[c,n]:[c,n]:c3:[c,n]:[c,n]:[c,n]:[c,n]:c23",MLSMR
+a1aaac2ac3acac4aaac(c34)c12,MLSMR
+c12ccccc1C(=O)c3ccccc3C2=O,MLSMR
+c12cccc(C(=O)N(-&!@C)C(=O)3)c2c3ccc1,MLSMR
+"C1[O,S,N]C1",MLSMR
+C1(=O)OCC1,MLSMR
+N1CCC1=O,MLSMR
+O=C1CCCC(N1)=O,MLSMR
+"[#6,#7]-S(=O)(=O)Oc",MLSMR
+"[$([o,n]=c1ccc(=[o,n])cc1),$([O,N]=C1C=CC(=[O,N])C=C1),$([O,N]=C1[#6]:,=[#6]C(=[O,N])[#6]:,=[#6]1)]",MLSMR
+O1CCCCC1OC2CCC3CCCCC3C2,MLSMR
+O1CCCCC1C2CCCO2,MLSMR
+C12OCCC(O1)CC2,MLSMR
+[OH]c1cc([OH])cc2=[O+]C(=C([OH])Cc21)c3cc([OH])c([OH])cc3,MLSMR
+O=C1NCC2CCCCC21,MLSMR
+[SX2H1],SMARTCyp
+"[$([SX2H0]);!$([S][#6X3,#7X2]);!$([S][CX4H0])]",SMARTCyp
+"[$([SX2H0][#6X3,#7X2]);!$([S](~[#6X3,#7X2])[#6X3,#7X2]);!$([S][CX4H0])]",SMARTCyp
+[$([S][*D4H0]);$([SX2H0])],SMARTCyp
+"[$([SX2H0]([#6X3,#7X2])[#6X3,#7X2]);!$([S][CX4H0])]",SMARTCyp
+[sX2r5],SMARTCyp
+[$([#16X3](=[OX1]));$([#16]);!$([#16X3](=[OX1])[#6X3](~[#7X2]))],SMARTCyp
+[$([#16X3](=[OX1]));$([#16]);$([#16X3](=[OX1])[#6X3](~[#7X2]))],SMARTCyp
+[$([CX3H1](=O)[#6])],SMARTCyp
+[$([PX4]);$([P]=[S])],SMARTCyp
+[$([CX4]([#6X3])([#6X3])[#6X3]);!$([CH0])],SMARTCyp
+"[$([CX4][N]);!$([CH0]);!$([C][N]([#6X3,#7X2])[#6X3,#7X2]);!$([C][N]=[#6X3]);!$([CX4][NX3][C]=[O])]",SMARTCyp
+"[!$([CH0]);$([CX4]([#6X3])[#6X3]),$([CX4][#7]=[#6X3]),$([CX4]([#8])[#8]);!$([CX4]([#8])[#8][C]=[O])]",SMARTCyp
+[$([CX4][S]);!$([CH0]);!$([C][S]=[O])],SMARTCyp
+"[$([CX4][#6X3]~[#8]),$([CX4][#6X3](~[#7])~[#7]),$([CX4][#6X2]),$([CX4][CX3]=[CX3]-[#6X3]);!$([CH0]);!$([CX4][C](=[O])[NX3]);!$([CX4][#6X3](=[#8])-[#8]);!$([CX4][CX3]([CX3])=[CX3]-[#6X3])]",SMARTCyp
+[$([CX4][O]);!$([CH0]);!$([C][O][C]=[O]);!$([CX4]1[O][C]1)],SMARTCyp
+[$([CX4][#6X3]);!$([CH0]);!$([CX4][C](=[O])[NX3])],SMARTCyp
+"[$([CX4][#7](~[#6X3,#7X2])~[#6X3,#7X2]);!$([CH0])]",SMARTCyp
+[$([CX4][S](=[O])=[O]);!$([CH0])],SMARTCyp
+"[CX4;CH1,CH2;!$([CX4][NX3H1][C]=[O])]",SMARTCyp
+[CX4H3;!$([CX4][NX3H1][C]=[O])],SMARTCyp
+[$([CX4][NX3H1][C]=[O]);!$([CH0])],SMARTCyp
+"[$([CX3H2]);$([C]=[#6X3,#7X2]-[#6X3,#7X2])]",SMARTCyp
+"[$([CX3H1]);$([C]=[#6X3,#7X2]-[#6X3,#7X2]);!$([C](-[#6X3,#7X2])=[#6X3,#7X2]-[#6X3,#7X2])]",SMARTCyp
+[$([cH1]);$([c](:[#7]):[#7])],SMARTCyp
+"[$([ch1]);!$([ch1]1:[c](-[NX3]-[#6X3,#7X2]):[c]:[c]:[c]:[c]1);!$([c]1:[c]:[c]:[c](-[NX3]-[#6X3,#7X2]):[c]:[c]1);$([ch1]1:[c](-[NX3]):[c]:[c]:[c]:[c]1),$([c]1:[c]:[c]:[c](-[NX3]):[c]:[c]1)]",SMARTCyp
+"[$([CX3]);$([CX3]=[CX3]);!$([CH0]);!$([CX3](-[#6X3,#7X2])=[CX3]);!$([CX3]=[CX3]-[#6X3,#7X2])]",SMARTCyp
+[$([cH1]);$([c]:[#16])],SMARTCyp
+"[$([ch1]);$([c]1:[c]:[c]:[c](~[#7X2H0]~[cX3,CX3]):[c]:[c]1),$([c]1:[c]:[c]:[c](~[#7X3H1]~[cX3,CX3]):[c]:[c]1);!$([c]1:[c]:[c]:[c](-[NH]-[C]=[O]):[c]:[c]1)]",SMARTCyp
+"[$([ch1]);!$([c]1:[c]:[c]:[c](-[O]-[C]=[O]):[c]:[c]1);$([c]1:[c]:[c]:[c](-[NH]-[C]=[O]):[c]:[c]1),$([c]1:[c]:[c]:[c](-[O,SX2]):[c]:[c]1)]",SMARTCyp
+[$([cH1]);$([c]1:[c]:[#16]:[c]:[c]1)],SMARTCyp
+"[$([ch1]);$([ch1]1:[c](~[#7X2H0]~[cX3,CX3]):[c]:[c]:[c]:[c]1),$([ch1]1:[c](~[#7X3H1]~[cX3,CX3]):[c]:[c]:[c]:[c]1),$([ch1]:[c]-[O,SX2]);!$([ch1]:[c]-[O]-[C]=[O])]",SMARTCyp
+"[$([CX3H1,cX3H1]);!$([ch1]1:[c]:[c]:[#7]:[c]:[c]1);!$([ch1]1:[c]:[#7]:[c]:[c]:[c]1);!$([ch1]1:[c]:[#7]:[c]:[c]1);!$([ch1]:[#7])]",SMARTCyp
+"[$([ch1]1:[c]:[c]:[#7]:[c]:[c]1),$([ch1]1:[c]:[#7]:[c]:[c]:[c]1),$([ch1]1:[c]:[#7]:[c]:[c]1),$([ch1]:[#7])]",SMARTCyp
+"[$([NX3H0]);!$([NX3][#6X3,#7X2])]",SMARTCyp
+"[$([NX3]);$([H1,H2])]",SMARTCyp
+[$([N]([#6X3]1)[#6X3]=[#6X3][#6X4][#6X3]=1)],SMARTCyp
+"[$([NX3H0]);$([NX3][#6X3,#7X2]);!$([NX3]([#6X3,#7X2])[#6X3,#7X2])]",SMARTCyp
+"[$([nr6]),$([NX2]=[C])]",SMARTCyp
+"[$([N]);$([NX3H0]([#6X3,#7X2])[#6X3,#7X2]),$([NX2H1][C]=[O])]",SMARTCyp
+[nr5H0],SMARTCyp
+[#6]-1-[#6]-[#6]-[#6]-4-[#6](-[#6]-1)-[#6]-2-[#6](-[#6]-3-[#6](-[#6]-[#6]-2)-[#6]-[#6]-[#6]-3)-[#6]-[#6]-4,Endocrine disruption
+c1cc-2c(cc1)-[#6]-[#6]-[#6](-[#6]-2-[#6])-[#6],Endocrine disruption
+c1cc(ccc1)-[#6]=[#6]-c2ccc(cc2)-[#8]-[#1],Endocrine disruption
+c1cc(ccc1)-[#6]-[#6]-c2ccc(cc2)-[#8]-[#1],Endocrine disruption
+c1cc(ccc1)-[#6](=[#6]-c2ccccc2)-c3ccccc3,Endocrine disruption
+[#6]-2(=[#6]-c1ccccc1-[#8]-[#6]-2=[#8])-c3ccccc3,Endocrine disruption
+[#8]=[#6](-c1ccccc1)-[#6]=[#6]-c2ccccc2,Endocrine disruption
+c1cc(ccc1-[#8]-[#1])-[#6](-c2ccccc2)=[#8],Endocrine disruption
+c1cc(ccc1)-[#6](-c2ccccc2)=[#6](-[Cl])-[Cl],Endocrine disruption
+c1cc(ccc1)-[#6](-c2ccccc2)-[#6],Endocrine disruption
+c1c(cccc1)-c2ccccc2,Endocrine disruption
+c1c(cccc1)-c2ccccc2-[Cl],Endocrine disruption
+c1c(cccc1)-c2ccc(cc2)-[#8]-[#1],Endocrine disruption
+c1cc-3c(cc1)-[#8]-c2ccccc2-[#8]-3,Endocrine disruption
+c1cc(c(cc1)-[#6](=[#8])-[#8]-[#6])-[#6](-[#8]-[#6])=[#8],Endocrine disruption
+c1c(ccc(c1)-[#8]-[#1])-[#6](-[#8]-[#6])=[#8],Endocrine disruption
+[#8](-[#6])-c1ccc(cc1)-[#8]-[#1],Endocrine disruption
+c1cc(ccc1-[Cl])-[#8]-c2ccc(cc2-[Cl])-[Cl],Endocrine disruption
+c1cc(ccc1-[#7](=[#8])=[#8])-[#8]-c2ccc(cc2-[Cl])-[Cl],Endocrine disruption
+c1cc(ccc1-[#8]-[#1])-[#6]-[#7]-3-[#6](-c2ccccc2-[#6]-3=[#8])=[#8],Endocrine disruption
+c1cc(ccc1)-[#8]-[P](=[#8])(-[#8]-[#6])-[#8]-[#6],Endocrine disruption
+c1cc(ccc1)-[#8]-[P](=[#16])(-[#8]-[#6])-[#8]-[#6],Endocrine disruption
+[#8](-[#1])-c1ccc(cc1)-[#6]-[#6],Endocrine disruption
+[#8](-[#1])-c1ccc(cc1)-[#6](-[#6])(-[#6])-[#6],Endocrine disruption
+c12ccc3c(c1cccc2)cccc3,Endocrine disruption
+c1c(cccc1)-[#7]-2-[#6](=[#8])-[#6]-[#6]-[#6]-2=[#8],Endocrine disruption
+[#6]-1-[#6]-[#6]-[#6]-[#6]-[#6]-[#6]-[#6]-[#6]-[#6]-[#6]-[#6]-1,Endocrine disruption
+[#6]-[#6]-[#6]-[#6]-[#6]-c1cccc(c1)-[#8]-[#6],Endocrine disruption
+[#6]-[#6]-[#6]-[#6]-[#6]-c1ccc(cc1)-[#8]-[#6],Endocrine disruption
+c1c(cccc1-[#6](-[F])(-[F])-[F])-[#7](-[#6](=[#8])-[#1])-[#1],Endocrine disruption
+c1c(cccc1)-[#6]-[#8]-c2ccccc2,Endocrine disruption
+[#6]-1-2-[#6]=[#6]-[#6](-[#6]-1)-[#6]-[#6]-2,Endocrine disruption
+[#6]-1-2-[#6]-[#6]-[#6](-[#6]-1)-[#6]-[#6]-2,Endocrine disruption
+c1(c(cccc1)-[#8]-c2ccccc2)-[Br],Endocrine disruption
+c1-2c(cccc1)-[#6]-[#6]-[#6]-2,Endocrine disruption
+Clc1ccc([*:1])cc1,Acute Aquatic Toxicity
+[O-][N+](=O)c1cc([*:1])c([*:1])cc1,Acute Aquatic Toxicity
+[+],Custom filters
+[-],Custom filters
