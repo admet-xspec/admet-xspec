@@ -1,2 +1,2 @@
 from .featurizer import *
-from split import *
+from .split import *
