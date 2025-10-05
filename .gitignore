@@ -9,4 +9,5 @@
 /notebooks
 /external/DeepChemStable
 /data/preprocessing
-.vscode/
+**/*.log
+.vscode

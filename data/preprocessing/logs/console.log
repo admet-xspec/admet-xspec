@@ -124,3 +124,40 @@ INFO:root:Training completed in 14.1 seconds.
 INFO:root:Training completed in 12.66 seconds.
 INFO:root:Training completed in 12.92 seconds.
 INFO:root:Config saved to data/preprocessing/logs/operative_config.gin
+INFO:root:Dropped 33 'nan' SMILES after pd.read_csv
+INFO:root:Dataset size: 5358
+INFO:root:Dataset size: 2421
+INFO:root:Dataset size: 1228
+INFO:root:Dataset size: 435
+INFO:root:Dataset size: 2421
+INFO:root:Dataset size: 1851
+INFO:root:Dataset size: 2440
+INFO:root:Dataset size: 5737
+INFO:root:Dataset size: 670
+INFO:root:Dataset size: 770
+INFO:root:Dataset size: 1024
+INFO:root:Dataset size: 3487
+INFO:root:Dropped 97 'nan' SMILES after pd.read_csv
+INFO:root:Dataset size: 1466
+INFO:root:Dataset size: 720
+INFO:root:Dataset size: 1590
+INFO:root:Dataset size: 4873
+INFO:root:Dataset size: 1202
+INFO:root:Dataset size: 386
+INFO:root:Dataset size: 1678
+INFO:root:Dropped 54 'nan' SMILES after pd.read_csv
+INFO:root:Dataset size: 450
+INFO:root:Dataset size: 2269
+INFO:root:Dataset size: 2603
+INFO:root:Dataset size: 1245
+INFO:root:Dataset size: 434
+INFO:root:Dataset size: 346
+INFO:root:Dataset size: 597
+INFO:root:Dataset size: 1725
+INFO:root:Dataset size: 427
+INFO:root:Dropped 57 'nan' SMILES after pd.read_csv
+INFO:root:Dataset size: 593
+INFO:root:Dataset size: 2540
+INFO:root:Dataset size: 1047
+INFO:root:Training completed in 1.06 minutes.
+INFO:root:Config saved to data/preprocessing/logs/operative_config.gin

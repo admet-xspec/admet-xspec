@@ -1,6 +1,8 @@
 import logging
 import time
+import glob
 from pathlib import Path
+import pandas as pd
 
 from src.mgmt_pipeline import ManagementPipeline
 
@@ -52,12 +54,15 @@ if __name__ == "__main__":
     # Initialize the management pipeline
     pipeline = ManagementPipeline()
 
+    datasets = glob.glob(str(pipeline.dataset_dir) + "/**/*.csv", recursive=True)
+    
     # Featurize the data
-    pipeline.featurize_datasets()
+    featurized_datasets: list[pd.DataFrame] = [pipeline.featurize_dataset(ds) for ds in datasets]
 
-    # Test loading
-    pipeline.load_featurized_datasets()
-
+    # Save visualizations
+    for featurized_dataset in featurized_datasets:
+        pipeline.dump_visualization(featurized_dataset)
+    
     # Log time
     time_elapsed = time.time() - time_start
     logging.info(
