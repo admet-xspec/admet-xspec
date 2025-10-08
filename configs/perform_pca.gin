@@ -1,4 +1,5 @@
 # dont change
+ManagementPipeline.explorer = @explorer/gin.singleton()
 ManagementPipeline.featurizer = @featurizer/gin.singleton()
 ManagementPipeline.predictor = @predictor/gin.singleton()
 ManagementPipeline.splitter = @splitter/gin.singleton()
@@ -14,6 +15,7 @@ ManagementPipeline.out_dir = 'data/preprocessing'
 
 # Provide paths to the .gin config files of a data splitter, a featurizer and a predictor
 include 'configs/data_splitters/100.gin'
+include 'configs/explorers/pca.gin'
 include 'configs/featurizers/ecfp.gin'
 include 'configs/classifiers/rf.gin'
 

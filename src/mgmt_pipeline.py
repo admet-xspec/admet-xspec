@@ -65,8 +65,7 @@ class ManagementPipeline:
 
     def get_dataset_output_basename(self, globbed_dataset_path: str) -> str:
         """Return filename without extension"""
-
-        dataset_name = str(Path(globbed_dataset_path).parent).replace("/", "_")
+        dataset_name = str(Path(*Path(globbed_dataset_path).parent.parts[2:])).replace("/", "_")
         dataset_name = f"{dataset_name}_{type(self.featurizer).__name__}"
         return dataset_name
 
@@ -85,32 +84,56 @@ class ManagementPipeline:
             "fp_ecfp": descriptors 
         })
         
-        self.save_featurized_dataset(dataset_path, df_featurized)
+        return df_featurized
 
     def save_featurized_dataset(self, dataset_path: str, df_featurized: pd.DataFrame):
         output_basename = self.get_dataset_output_basename(dataset_path)
         df_featurized.to_csv(self.out_dir / f"ecfp/{output_basename}.csv")
 
-    def load_featurized_dataset(self, dataset_path) -> dict[str, np.ndarray]:
+    def load_featurized_dataset(self, dataset_path) -> pd.DataFrame:
         output_basename = self.get_dataset_output_basename(dataset_path)
         dataset_path = self.out_dir / f"ecfp/{output_basename}.csv"
         
         df_featurized = pd.read_csv(dataset_path, delimiter=",")
 
-        descriptors = df_featurized["fp_ecfp"].to_list()
-        descriptors = [np.array([bit for bit in fp_string]) for fp_string in descriptors]
+        return df_featurized
+    
+    def get_ecfp_bitcolumn_dataframe(self, df_featurized: pd.DataFrame) -> pd.DataFrame:
+        """
+        Take in a dataframe containing SMILES with their <n_bits>-long ECFP string
+        Output a dataframe with SMILES and each ECFP bit in separate col, i.e. bit_0, ..., bit_2047 (if n_bits=2048)
+        """
 
-        featurized_dataset = {
-            smiles: descriptor for smiles, descriptor in zip(
-                df_featurized["smiles"].to_list(),
-                descriptors
-            )
+        bit_columns = df_featurized["fp_ecfp"].apply(
+            lambda s: pd.Series([int(s[i]) for i in range(len(s))], index=[f"bit_{i}" for i in range(len(s))])
+        )
+
+        ecfp_dataframe = pd.concat([df_featurized[["smiles"]], bit_columns], axis=1)
+        
+        return ecfp_dataframe
+
+    def dump_pca_visualization(self, dataset_df_dict: dict[str, pd.DataFrame]):
+        dataset_smiles_dict = {
+            ds_basename: df["smiles"] for ds_basename, df in dataset_df_dict.items() 
         }
 
-        return featurized_dataset
-    
-    def dump_visualization(self, df_featurized: pd.DataFrame):
-        visualization_name: str
-        image: Image.Image
+        dataset_pca_form_dict = {
+            ds_basename: df.drop(columns=["smiles"]) for ds_basename, df in dataset_df_dict.items()
+        }
+
+        dataset_after_pca_ndarray_dict = {
+            ds_basename: self.explorer.get_pca(df) for ds_basename, df in dataset_pca_form_dict.items()
+        }
+
+        dataset_after_pca_df_dict = {}
+        for ds_basename, ndarray in dataset_after_pca_ndarray_dict.items():
+            dataset_after_pca_df_dict[ds_basename] = pd.DataFrame(
+                {
+                    f"dim_{i + 1}": ndarray[:, i] for i in range(ndarray.shape[1])
+                }
+            )
         
-        visualization_name, image = self.explorer.visualize(df_featurized)
+        image = self.explorer.visualize(dataset_after_pca_df_dict)
+
+        image.save("test.png")
+        
