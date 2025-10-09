@@ -10,7 +10,11 @@ RDLogger.DisableLog("rdApp.*")
 
 
 def clean_smiles(smiles_list: List[str]) -> List[str | None]:
-    """Remove invalid SMILES from a list of SMILES strings, strip salts, and remove charges from molecules."""
+    """
+    Remove invalid SMILES from a list of SMILES strings, strip salts, and remove charges from molecules.
+    Its purpose is to be the standard procedure for cleaning SMILES strings before using them in our
+    training and inference pipelines. Any modifications to this function should be done with caution.
+    """
     un = Uncharger()
     salt_remover = SaltRemover()
     cleaned_smiles = []
