@@ -10,7 +10,7 @@ RDLogger.DisableLog("rdApp.*")
 
 
 def clean_smiles(smiles_list: List[str]) -> List[str | None]:
-    """Remove invalid SMILES from a list of SMILES strings, strip salts, and remove duplicates."""
+    """Remove invalid SMILES from a list of SMILES strings, strip salts, and remove charges from molecules."""
     un = Uncharger()
     salt_remover = SaltRemover()
     cleaned_smiles = []
