@@ -25,6 +25,7 @@ import pandas as pd
 import gin
 import glob
 import tempfile
+from pathlib import Path
 
 from src.mgmt_pipeline import ManagementPipeline
 
@@ -40,12 +41,10 @@ def test_normalize(
     pipeline = ManagementPipeline()
     pipeline.run()
 
-    correct_file_names = [
-        "brain_mouse_uptake.csv" in out_filenames,
-        "maoa_rat_property_inhibition.csv" in out_filenames
-    ]
-
-    globbed_datasets = glob.glob(str(mock_normalized_datasets_dir / "**/*LONGNAME.csv"))
+    globbed_datasets = glob.glob(
+        str(mock_normalized_datasets_dir / "**/*LONGNAME.csv"),
+        recursive=True
+    )
 
     # FINISHED ARRANGING
 
@@ -60,12 +59,14 @@ def test_normalize(
     raw_and_normalized: list[tuple[pd.DataFrame, pd.DataFrame]] = []
     for dataset in globbed_datasets:
         raw_df = pd.read_csv(dataset, delimiter=";")
-        normalized_df = pipeline.normalize_df(raw_df)
+        normalized_df = pipeline.get_normalized_df(
+            Path(dataset), delimiter=";"
+        )
 
         raw_clean_df = pipeline.get_clean_smiles_df(raw_df)
         normalized_clean_df = pipeline.get_clean_smiles_df(normalized_df)
 
-        raw_and_normalized.append((raw_df, normalized_df))
+        raw_and_normalized.append((raw_clean_df, normalized_clean_df))
 
     # FOR ASSERT #1
     correct_file_names = [

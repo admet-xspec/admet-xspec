@@ -1,7 +1,11 @@
 import glob
 import pandas as pd
 from PIL import Image
-from src.utils import clean_smiles, get_nice_class_name
+from src.utils import (
+    clean_smiles,
+    get_canonical_smiles,
+    get_nice_class_name
+)
 import logging
 from src.predictor.predictor_base import PredictorBase
 from src.data.featurizer import (
@@ -40,19 +44,53 @@ class ManagementPipeline:
         self.featurizer = featurizer
         self.model_name = model_name
         self.out_dir = Path(out_dir)
-        self.test_size = test_size
         self.stratify = stratify
 
         self.train_path = None
         self.test_path = None
 
+    @staticmethod
+    def _get_smiles_col_in_raw(raw_df) -> str:
+        possible_variants = ["smiles", "SMILES", "Smiles", "molecule"]
+        for smiles_col_variant in possible_variants:
+            if smiles_col_variant in raw_df.columns:
+                return smiles_col_variant
+
+        # Failed
+        raise ValueError(
+            "Failed to find one of SMILES column name variants:",
+            str(possible_variants),
+            "in dataframe:",
+            str(raw_df),
+        )
+
+    def run(self):
+        if self.mode == "normalize":
+            assert self.force_normalize_all is not None, (
+                "Ran ManagementPipeline in 'normalize' mode without specifying .force_normalize_all attribute"
+            )
+            self.normalize_datasets()
+        if self.mode == "explorer":
+            assert self.explorer is not None, (
+                "Ran ManagementPipeline in 'explorer' mode without specifying .explorer: ExplorerBase attribute"
+            )
+            self.dump_exploratory_visualization()
+
     def normalize_datasets(self, force_normalize_all: bool = False):
         datasets = glob.glob(f"{str(self.dataset_dir)}/**/*.csv", recursive=True)
-        
-        datasets_paths: list[tuple[str, Path]] = [
-            (ds_glob, self.get_normalized_path(ds_glob)) for ds_glob in datasets
+
+        # pairs of "before, after" paths
+        datasets_paths: list[tuple[Path, Path]] = [
+            (
+                Path(ds_glob),
+                self.get_df_output_path(
+                    self.get_normalized_basename(Path(ds_glob))
+                )
+            )
+            for ds_glob in datasets
         ]
 
+        # filter already normalized
         if not force_normalize_all:
             datasets_paths = [
                 (ds_glob, ds_path) 
@@ -61,7 +99,7 @@ class ManagementPipeline:
             ]
         
         for ds_glob, ds_path in datasets_paths:
-            normalized_dataset_df = self.get_normalized_dataset(
+            normalized_dataset_df = self.get_normalized_df(
                 ds_glob
             )
 
@@ -70,24 +108,103 @@ class ManagementPipeline:
                 ds_path
             )
 
-    def get_clean_smiles_from_dataframe(self, df) -> list[str]:
-        """Consolidate NaN-dropping, ";-separated" data loading into one function"""
+    def get_normalized_df(self, ds_globbed_path: Path, delimiter: str = ";") -> pd.DataFrame:
+        """Get ready-to-save df without NaNs and with canonical SMILES"""
+        df_to_normalize = pd.read_csv(ds_globbed_path, delimiter=delimiter)
+        df_to_normalize.rename(
+            columns={
+                self._get_smiles_col_in_raw(df_to_normalize): "smiles"
+            }, inplace=True
+        )
 
-        self.no
+        df_to_normalize = self.get_clean_smiles_df(
+            df_to_normalize,
+            smiles_col="smiles"
+        )
 
-        pre_dropna_length = len(df)
-        df = df.dropna(subset="smiles")
-        pre_cleaning_length = len(df)
-        df["smiles"] = clean_smiles(df["smiles"].to_list())
-        df = df.dropna(subset=["smiles"]).reset_index(drop=True)
+        df_to_normalize = self.get_canon_smiles_df(
+            df_to_normalize,
+            smiles_col="smiles"
+        )
+
+        return df_to_normalize
+
+    def get_clean_smiles_df(self, df: pd.DataFrame, smiles_col: str) -> pd.DataFrame:
+        """Consolidate pandas, our-internal NaN-dropping into one function"""
+        pre_dropna_len = len(df)
+        df = df.dropna(subset=smiles_col)
+
+        pre_cleaning_len = len(df)
+        df[smiles_col] = clean_smiles(df[smiles_col].to_list())
+
+        df = df.dropna(subset=[smiles_col]).reset_index(drop=True)
         
-        if pre_dropna_length != pre_cleaning_length:
-            logging.info(f"Dropped {pre_dropna_length - pre_cleaning_length} 'nan' SMILES after pd.read_csv")
-        if pre_cleaning_length != len(df):
-            logging.info(f"Dropped {pre_cleaning_length - len(df)} invalid SMILES")
+        if pre_dropna_len != pre_cleaning_len:
+            logging.info(f"Dropped {pre_dropna_len - pre_cleaning_len} 'nan' SMILES after pd.read_csv")
+        if pre_cleaning_len != len(df):
+            logging.info(f"Dropped {pre_cleaning_len - len(df)} invalid SMILES")
         logging.info(f"Dataset size: {len(df)}")
 
-        return df["smiles"].tolist()
+        return df
+
+    def get_canon_smiles_df(self, df: pd.DataFrame, smiles_col: str) -> pd.DataFrame:
+        pre_canonicalization_len = len(df)
+        df[smiles_col].apply(
+            lambda smiles: get_canonical_smiles(smiles)
+        )
+
+        df = df.dropna(subset=[smiles_col]).reset_index(drop=True)
+
+        if pre_canonicalization_len != len(df):
+            logging.info(
+                f"Canonicalization resulted in {pre_canonicalization_len - len(df)} "
+                "'None' SMILES, all were dropped."
+            )
+
+        return df
+
+    def get_normalized_basename(self, ds_globbed_path: Path) -> str:
+        root_domains = ["brain", "liver", "MAO-A"]
+
+        dataset_dir_parts = ds_globbed_path.parent.parts
+
+        begin_index = None
+        for root_domain in root_domains:
+            if root_domain in dataset_dir_parts:
+                begin_index = dataset_dir_parts.index(root_domain)
+                break
+
+        if begin_index is None:
+            raise ValueError(
+                f"Unable to match any part of Path: {str(ds_globbed_path)} "
+                f"to one of root domains (of interest): {str(root_domains)}"
+            )
+
+        basename_parts = dataset_dir_parts[begin_index:]
+        normalized_basename = str(Path(*basename_parts)).replace("/", "_")
+        normalized_basename = normalized_basename.replace("-", "")
+        normalized_basename = normalized_basename.lower()
+
+        return normalized_basename
+
+    def get_df_output_path(
+            self,
+            normalized_basename: str,
+            prefix: str = "",
+            suffix: str = "",
+            extension: str = ".csv",
+    ) -> Path:
+        output_path_str = (
+            f"{str(self.normalized_dataset_dir)}/"
+            f"{prefix}_{normalized_basename}_{suffix}.{extension}"
+        )
+        return Path(output_path_str)
+
+
+
+    # LEGACY
+
+
 
     def get_dataset_output_basename(self, globbed_dataset_path: str) -> str:
         """Return filename without extension"""

@@ -33,6 +33,24 @@ class SmilesCleaner:
         else:
             return None
 
+# koziarskilab/BindingAffinityPipeline/blob/main/src/data/utils.py :)
+def get_canonical_smiles(smiles: str, remove_salt: bool = True) -> str | None:
+    """Convert a SMILES string to its canonical form."""
+    if isinstance(smiles, str):
+        mol = Chem.MolFromSmiles(smiles)
+        if mol is None:
+            return None
+        if remove_salt:
+            mol = SaltRemover().StripMol(mol)
+            # leave only the largest fragment
+            mol_fragments = Chem.GetMolFrags(mol, asMols=True)
+            if len(mol_fragments) > 0:
+                mol = max(
+                    Chem.GetMolFrags(mol, asMols=True), key=lambda x: x.GetNumAtoms()
+                )
+        return Chem.MolToSmiles(mol, isomericSmiles=True, canonical=True)
+    else:
+        return None
 
 def get_nice_class_name(obj):
     """
