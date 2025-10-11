@@ -23,18 +23,18 @@ class ManagementPipeline:
     def __init__(
         self,
         dataset_dir: Path | str,
-        explorer: ExplorerBase,
-        splitter: DataSplitterBase,
-        predictor: PredictorBase,
-        featurizer: FeaturizerBase,
         model_name: str,
         out_dir: Path | str,
-        test_size: float = 0.2,
+        explorer: ExplorerBase = None,
+        splitter: DataSplitterBase = None,
+        predictor: PredictorBase = None,
+        featurizer: FeaturizerBase = None,
         stratify: bool = True,
     ):
 
         self.dataset_dir = Path(dataset_dir)
         self.explorer = explorer
+        self.splitter = splitter
         self.splitter = splitter
         self.predictor = predictor
         self.featurizer = featurizer
@@ -46,8 +46,34 @@ class ManagementPipeline:
         self.train_path = None
         self.test_path = None
 
+    def normalize_datasets(self, force_normalize_all: bool = False):
+        datasets = glob.glob(f"{str(self.dataset_dir)}/**/*.csv", recursive=True)
+        
+        datasets_paths: list[tuple[str, Path]] = [
+            (ds_glob, self.get_normalized_path(ds_glob)) for ds_glob in datasets
+        ]
+
+        if not force_normalize_all:
+            datasets_paths = [
+                (ds_glob, ds_path) 
+                for ds_glob, ds_path in datasets_paths 
+                if not ds_path.exists()
+            ]
+        
+        for ds_glob, ds_path in datasets_paths:
+            normalized_dataset_df = self.get_normalized_dataset(
+                ds_glob
+            )
+
+            self.save_dataframe(
+                normalized_dataset_df, 
+                ds_path
+            )
+
     def get_clean_smiles_from_dataframe(self, df) -> list[str]:
         """Consolidate NaN-dropping, ";-separated" data loading into one function"""
+
+        self.no
 
         pre_dropna_length = len(df)
         df = df.dropna(subset="smiles")

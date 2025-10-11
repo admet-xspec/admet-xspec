@@ -10,4 +10,5 @@
 /external/DeepChemStable
 /data/preprocessing
 **/*.log
+**/logs/*
 .vscode
