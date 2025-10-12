@@ -6,7 +6,7 @@
 #   TRAINING SCRIPT GENERAL CONFIG
 
 #   Provide a name for the model
-    TrainingPipeline.model_name = 'testing_pipeline'
+    TrainingPipeline.model_name = 'my_model'
 
 #   Directory to which the models are saved
     TrainingPipeline.out_dir = 'models'
@@ -18,7 +18,7 @@
 
 #   Provide path to the dataset
 #   (The dataset should be in .csv format and contain 'smiles' and 'y' columns)
-    TrainingPipeline.data_path = 'data/archival/permeability/bbbp_pampa.csv'
+    TrainingPipeline.data_path = 'path/to/dataset.csv'
 
 #   [ADVANCED USAGE] The arguments below should be None, unless you want to override the default
 #   strategy of generating train/test splits and provide your own pre-cleaned train/test data as .csv files
