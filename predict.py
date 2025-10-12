@@ -1,11 +1,22 @@
+"""
+Script to run inference using a pre-trained model and save predictions and metrics.
+
+It is configured via a gin configuration file (see configs/predict.gin for an example).
+The inference pipeline includes:
+- Loading the pre-trained model
+- Making predictions on the provided dataset
+- Saving the predictions to an output CSV file
+- Optionally computing and saving evaluation metrics if true labels are available
+"""
+
 import gin
 import logging
 from src.inference_pipeline import InferencePipeline
 import tempfile
+import argparse
+import pathlib
 
 if __name__ == "__main__":
-    import argparse
-    import pathlib
 
     parser = argparse.ArgumentParser()
     parser.add_argument(

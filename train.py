@@ -1,13 +1,23 @@
+"""
+Main script to run the training pipeline.
+
+It is configured via a gin configuration file (see configs/train.gin for an example).
+The training pipeline includes:
+- Preparing and splitting the data (if train and test paths are not provided explicitly)
+- Training the model (using set hyperparameters or optimizing them via cross-validation)
+- Evaluating the model on the test set
+- Saving the trained model and evaluation metrics to the output directory
+"""
+
 import logging
 import time
 import tempfile
 from src.training_pipeline import TrainingPipeline
+import argparse
+import gin
+import pathlib
 
 if __name__ == "__main__":
-    import argparse
-    import gin
-    import pathlib
-
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "--cfg",
