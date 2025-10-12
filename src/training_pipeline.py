@@ -1,5 +1,5 @@
 import pandas as pd
-from src.utils import clean_smiles, get_nice_class_name
+from src.utils import SmilesCleaner, get_nice_class_name
 import logging
 from src.predictor.predictor_base import PredictorBase
 from src.data.featurizer import (
@@ -80,9 +80,10 @@ class TrainingPipeline:
         df = df.rename(columns={col: "y" for col in df.columns if col in TARGET_COL})
 
         # Sanitize the data
+        cleaner = SmilesCleaner()
         pre_cleaning_length = len(df)
         df.columns = df.columns.str.lower()
-        df["smiles"] = clean_smiles(df["smiles"])
+        df["smiles"] = df["smiles"].apply(cleaner.clean)
         df.dropna(subset=["smiles"], inplace=True)
         if pre_cleaning_length != len(df):
             logging.info(f"Dropped {pre_cleaning_length - len(df)} invalid SMILES")
@@ -119,7 +120,7 @@ class TrainingPipeline:
 
         if self.train_path is None:
             raise ValueError(
-                "The dataset has not been split yet. Use prepare_data method first."
+                "The dataset has not been split yet. Use prepare_data method first"
             )
 
         # Load the data and parse X, y columns
@@ -128,7 +129,7 @@ class TrainingPipeline:
         # Set the working directory (to which the results and model parameters will be saved)
         self.predictor.set_working_dir(f"{self.out_dir}/{self.model_name}")
 
-        # train (either use hyperparameters provided in the predictor .gin config file directly, or
+        # train (either use hyperparameters provided in the predictor .gin config file directly or
         #        conduct hyperparameter optimization over distributions given in the same .gin config file)
         self.predictor.train(X_train, y_train)
 
@@ -142,7 +143,7 @@ class TrainingPipeline:
 
         if self.test_path is None:
             raise ValueError(
-                "The dataset has not been split yet. Use prepare_data method first."
+                "The dataset has not been split yet. Use prepare_data method first"
             )
 
         X_test, y_test = self._parse_data(self.test_path)
@@ -164,7 +165,7 @@ class TrainingPipeline:
         data = pd.read_csv(csv_path)
         logging.debug(f"Reading data from {csv_path}")
         if "smiles" not in data.columns:
-            raise ValueError("""No 'smiles' column detected in the data .csv""")
+            raise ValueError("No 'smiles' column detected in the data .csv")
         if "y" not in data.columns:
-            raise ValueError("""No 'y' column detected in the data .csv""")
+            raise ValueError("No 'y' column detected in the data .csv")
         return data["smiles"], data["y"]

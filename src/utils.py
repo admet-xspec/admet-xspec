@@ -10,30 +10,28 @@ from sklearn import metrics
 RDLogger.DisableLog("rdApp.*")
 
 
-def clean_smiles(smiles_list: List[str]) -> List[str | None]:
+class SmilesCleaner:
     """
-    Remove invalid SMILES from a list of SMILES strings, strip salts, and remove charges from molecules.
+    Strips salts and removes charges from molecules.
     Its purpose is to be the standard procedure for cleaning SMILES strings before using them in our
-    training and inference pipelines. Any modifications to this function should be done with caution.
+    training and inference pipelines. Any modifications to this class should be done with caution.
     """
-    un = Uncharger()
-    salt_remover = SaltRemover()
-    cleaned_smiles = []
 
-    for smiles in smiles_list:
+    def __init__(self):
+        self.un = Uncharger()
+        self.salt_remover = SaltRemover()
+
+    def clean(self, smiles: str) -> str | None:
         mol = Chem.MolFromSmiles(smiles)
         if mol is not None:
             # Remove salts
-            mol = salt_remover.StripMol(mol)
+            mol = self.salt_remover.StripMol(mol)
             # Uncharge the molecule
-            mol = un.uncharge(mol)
+            mol = self.un.uncharge(mol)
             # Convert back to SMILES
-            cleaned_smiles.append(Chem.MolToSmiles(mol))
+            return Chem.MolToSmiles(mol)
         else:
-            logging.debug(f"Invalid SMILES in the dataset: {smiles}")
-            cleaned_smiles.append(None)
-
-    return cleaned_smiles
+            return None
 
 
 def get_nice_class_name(obj):

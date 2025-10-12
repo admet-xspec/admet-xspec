@@ -2,12 +2,12 @@
 #   PREDICT GENERAL CONFIG
 
 #   Provide the name of the task (will be used in the output files)
-    predict.task_name = 'LogD'
+    InferencePipeline.task_name = 'ADMET'
 
 #   Provide a path to the pickled model
-    predict.model_path = 'models/SVC_RDKIT_ECFP_LOGD/model.pkl'
+    InferencePipeline.model_path = 'models/my_model/model.pkl'
 
 #   Provide path to the data
-    predict.data_path = 'results/sirt_mixed/4I5I_2/4I5I_2_CNS_BBBP.csv'
+    InferencePipeline.data_path = 'path/to/data.csv'
 
 #==========================================================================================================#
