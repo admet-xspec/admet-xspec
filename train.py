@@ -101,3 +101,4 @@ if __name__ == "__main__":
     # Move the temporary log file to the output directory
     final_log_path = f"{out_dir}/training.log"
     pathlib.Path(temp_log_file.name).rename(final_log_path)
+    temp_log_file.close()
