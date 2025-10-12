@@ -5,12 +5,12 @@ predictor = @predictor/gin.singleton()
 #   If the parameter below is set to false, the script will not execute hyperparameter optimization step.
 #   Instead, the model will be trained using fixed hyperparameters provided in params dict.
 
-    RfClassifier.optimize_hyperparameters = True
+    RfClassifier.optimize_hyperparameters = False
 
     RfClassifier.params = {
-        'n_estimators': 439,
+        'n_estimators': 500,
         'criterion': 'gini',
-        'max_depth': 21,
+        'max_depth': 20,
         'min_samples_split': 3,
         'min_samples_leaf': 1,
         'max_features': 'sqrt'

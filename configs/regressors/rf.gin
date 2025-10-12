@@ -5,10 +5,10 @@ predictor = @predictor/gin.singleton()
 #   If the parameter below is set to false, the script will not execute hyperparameter optimization step.
 #   Instead, the model will be trained using fixed hyperparameters provided in params dict.
 
-    RfRegressor.optimize_hyperparameters = True
+    RfRegressor.optimize_hyperparameters = False
 
     RfRegressor.params = {
-        'n_estimators': 100,
+        'n_estimators': 1000,
         'max_depth': None,
         'min_samples_split': 2,
         'min_samples_leaf': 1,

@@ -29,7 +29,7 @@ class DataSplitterBase(abc.ABC):
         """
         Return a key representing the state of the splitter.
         """
-        return f"{self.__class__.__name__}_{hash(frozenset(self.__dict__.items()))}"
+        return f"{self.__class__.__name__}_{abs(hash(frozenset([self.test_size, self.random_state, self.stratify])))}"
 
     @staticmethod
     def _get_number_of_classes(labels):
@@ -46,7 +46,7 @@ class RandomSplitter(DataSplitterBase):
     """
 
     def __init__(self, test_size=0.2, random_state=42, stratify=None):
-        super(RandomSplitter).__init__(
+        super().__init__(
             test_size=test_size, random_state=random_state, stratify=stratify
         )
 
@@ -84,9 +84,7 @@ class ScaffoldSplitter(DataSplitterBase):
     """
 
     def __init__(self, test_size=0.2, random_state=42):
-        super(ScaffoldSplitter).__init__(
-            test_size=test_size, random_state=random_state, stratify=False
-        )
+        super().__init__(test_size=test_size, random_state=random_state, stratify=False)
 
     def split(
         self, X: pd.Series, y: pd.Series

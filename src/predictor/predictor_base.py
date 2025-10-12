@@ -59,21 +59,4 @@ class PredictorBase(abc.ABC):
         Set working directory path for the model
         :param path: Path to the working directory
         """
-        self.working_dir = path
-
-    @staticmethod
-    def get_scikit_metric_callable(metric_name: str):
-        metrics_dict = {
-            "accuracy": metrics.accuracy_score,
-            "roc_auc": metrics.roc_auc_score,
-            "f1": metrics.f1_score,
-            "precision": metrics.precision_score,
-            "recall": metrics.recall_score,
-            "mse": metrics.mean_squared_error,
-            "mae": metrics.mean_absolute_error,
-            "r2": metrics.r2_score,
-            "rmse": metrics.root_mean_squared_error,
-        }
-        if metric_name not in metrics_dict.keys():
-            raise ValueError(f"Unknown metric: {metric_name}.")
-        return metrics_dict[metric_name]
+        self.working_dir = pathlib.Path(path)

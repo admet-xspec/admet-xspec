@@ -5,7 +5,7 @@ predictor = @predictor/gin.singleton()
 #   If the parameter below is set to false, the script will not execute hyperparameter optimization step.
 #   Instead, the model will be trained using fixed hyperparameters provided in params dict.
 
-    SvmRegressor.optimize_hyperparameters = True
+    SvmRegressor.optimize_hyperparameters = False
 
     SvmRegressor.params = {
         'C': 1,
