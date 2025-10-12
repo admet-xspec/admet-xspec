@@ -5,9 +5,10 @@ from src.utils import get_nice_class_name
 from src.predictor.predictor_base import PredictorBase
 from src.data.featurizer import FeaturizerBase
 import sklearn
-import gin
 from typing import List
 from sklearn.utils.validation import check_array
+import abc
+from src.utils import get_metric_callable
 
 
 class ScikitPredictor(PredictorBase):
@@ -20,13 +21,13 @@ class ScikitPredictor(PredictorBase):
         params: dict | None = None,
         optimize_hyperparameters: bool = False,
         target_metric: str | None = None,
-        evaluation_metrics: List[str] | None = None,
         params_distribution: dict | None = None,
         optimization_iterations: int | None = None,
         n_folds: int | None = None,
         n_jobs: int | None = None,
+        **kwargs,
     ):
-        super(ScikitPredictor, self).__init__()
+        super().__init__()
 
         # Initialize the model
         self.model = self._init_model()
@@ -46,7 +47,6 @@ class ScikitPredictor(PredictorBase):
 
         # Set the target metric for optimization and metrics for final evaluation
         self.target_metric = target_metric
-        self.evaluation_metrics = evaluation_metrics
 
         self.hyper_opt = {
             "n_iter": optimization_iterations,
@@ -55,13 +55,19 @@ class ScikitPredictor(PredictorBase):
             "params_distribution": params_distribution,
         }
 
+    @abc.abstractmethod
     def _init_model(self):
         """
         Initialize a scikit-learn model
         """
-        raise NotImplementedError(
-            "This method should be implemented in the child class"
-        )
+        pass
+
+    @abc.abstractmethod
+    def evaluate(self, smiles_list: List[str], target_list: List[float]) -> dict:
+        """
+        Return a dictionary with evaluation metrics
+        """
+        pass
 
     def inject_featurizer(self, featurizer):
         """
@@ -72,11 +78,6 @@ class ScikitPredictor(PredictorBase):
             raise ValueError("Featurizer must be an instance of FeaturizerBase")
         logging.info(f"Using {get_nice_class_name(featurizer)} for featurization")
         self.featurizer = featurizer
-
-    def evaluate(self, smiles_list: List[str], target_list: List[float]) -> dict:
-        raise NotImplementedError(
-            "This method should be implemented in the child class"
-        )
 
     def train(self, smiles_list: List[str], target_list: List[float]):
 
@@ -89,9 +90,15 @@ class ScikitPredictor(PredictorBase):
         # Train the model
         if self.optimize:
             # Use random search to optimize hyperparameters
+            logging.info(
+                f"Starting {get_nice_class_name(self.model)} hyperparameter optimization"
+            )
             self.train_optimize(X, y)
         else:
             # Use a set of fixed hyperparameters
+            logging.info(
+                f"Training {get_nice_class_name(self.model)} with fixed hyperparameters"
+            )
             self.model.fit(X, y)
 
         logging.info(f"Fitting of {get_nice_class_name(self.model)} has converged")
@@ -138,7 +145,7 @@ class ScikitPredictor(PredictorBase):
         # Ensure the input is a 2D array with finite values
         X = check_array(X, ensure_all_finite=True, dtype=np.float32)
         if hasattr(self.model, "predict_proba"):
-            # If the model has predict_proba method, return probabilities
+            # If the model has a predict_proba method, return probabilities
             y_pred = self.model.predict_proba(X)
             y_pred = np.array([y[1] for y in y_pred])
         else:
@@ -161,7 +168,7 @@ class ScikitRegressor(ScikitPredictor):
     """
 
     def __init__(self, *args, **kwargs):
-        super(ScikitRegressor).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         # evaluation metrics for regressor models
         self.evaluation_metrics = ["mse", "rmse", "mae", "r2"]
 
@@ -169,7 +176,7 @@ class ScikitRegressor(ScikitPredictor):
         preds = self.predict(smiles_list)
         metrics_dict = {}
         for m in self.evaluation_metrics:
-            metrics_dict[m] = getattr(self, m)(preds, target_list)
+            metrics_dict[m] = get_metric_callable(m)(preds, target_list)
         return metrics_dict
 
 
@@ -179,7 +186,7 @@ class ScikitBinaryClassifier(ScikitPredictor):
     """
 
     def __init__(self, *args, **kwargs):
-        super(ScikitBinaryClassifier).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         self.class_threshold = 0.5
         # evaluation metrics for classifier models
         self.evaluation_metrics = ["accuracy", "roc_auc", "f1", "precision", "recall"]
@@ -189,10 +196,7 @@ class ScikitBinaryClassifier(ScikitPredictor):
         binary_preds = self.classify(preds)
         metrics_dict = {}
         for m in self.evaluation_metrics:
-            if m == "roc_auc":
-                metrics_dict[m] = getattr(self, m)(preds, target_list)
-            else:
-                metrics_dict[m] = getattr(self, m)(binary_preds, target_list)
+            metrics_dict[m] = get_metric_callable(m)(binary_preds, target_list)
         return metrics_dict
 
     def classify(self, preds):

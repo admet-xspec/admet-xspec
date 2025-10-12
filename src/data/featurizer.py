@@ -5,6 +5,7 @@ import pandas as pd
 from typing import List
 import numpy as np
 import gin
+import logging
 from rdkit.Chem import Descriptors
 from sklearn.preprocessing import StandardScaler
 
@@ -24,7 +25,7 @@ class FeaturizerBase(abc.ABC):
 @gin.configurable
 class EcfpFeaturizer(FeaturizerBase):
     def __init__(self, radius: int = 2, n_bits: int = 2048, count: bool = False):
-        super(EcfpFeaturizer, self).__init__()
+        super().__init__()
         self.radius = radius
         self.n_bits = n_bits
         self.count = count
@@ -63,7 +64,7 @@ class EcfpFeaturizer(FeaturizerBase):
 @gin.configurable
 class PropertyFeaturizer(FeaturizerBase):
     def __init__(self):
-        super(PropertyFeaturizer, self).__init__()
+        super().__init__()
         # Initialize a StandardScaler to normalize the descriptors
         self.scaler = StandardScaler()
         self.scaler_fitted = False
@@ -71,11 +72,11 @@ class PropertyFeaturizer(FeaturizerBase):
     def featurize(self, smiles_list: List[str]) -> np.ndarray:
         mols = [Chem.MolFromSmiles(smi) for smi in smiles_list]
         descs = [self.get_descriptors(mol, missing=np.nan) for mol in mols]
-        # Convert list of dicts to DataFrame
+        # Convert a list of dicts to DataFrame
         desc_df = pd.DataFrame(descs)
         # Fill NaN values with 0
         desc_df.fillna(0, inplace=True)
-        # Convert DataFrame to numpy array
+        # Convert DataFrame to a numpy array
         descs = desc_df.to_numpy()
         # Normalize the descriptors
         if not self.scaler_fitted:
@@ -100,7 +101,7 @@ class PropertyFeaturizer(FeaturizerBase):
 @gin.configurable
 class PropertyEcfpFeaturizer(FeaturizerBase):
     def __init__(self, radius: int = 2, n_bits: int = 2048, count: bool = False):
-        super(PropertyEcfpFeaturizer, self).__init__()
+        super().__init__()
         self.ecfp_featurizer = EcfpFeaturizer(radius=radius, n_bits=n_bits, count=count)
         self.property_featurizer = PropertyFeaturizer()
 

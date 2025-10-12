@@ -24,6 +24,8 @@ class TrainingPipeline:
         out_dir: Path | str = "models",
         test_size: float = 0.2,
         stratify: bool = True,
+        train_path: Path | str = None,
+        test_path: Path | str = None,
     ):
 
         self.data_path = Path(data_path)
@@ -43,8 +45,8 @@ class TrainingPipeline:
                 f"Model {get_nice_class_name(predictor)} uses internal featurizer - ignoring {get_nice_class_name(featurizer)}."
             )
 
-        self.train_path = None
-        self.test_path = None
+        self.train_path = Path(train_path) if train_path else None
+        self.test_path = Path(test_path) if test_path else None
 
     def prepare_data(self):
         """
@@ -73,15 +75,15 @@ class TrainingPipeline:
 
         # Rename the columns to standard names
         df = df.rename(
-            columns={col: "smiles" for col in SMILES_COL if col in df.columns}
+            columns={col: "smiles" for col in df.columns if col in SMILES_COL}
         )
-        df = df.rename(columns={col: "y" for col in TARGET_COL if col in df.columns})
+        df = df.rename(columns={col: "y" for col in df.columns if col in TARGET_COL})
 
         # Sanitize the data
         pre_cleaning_length = len(df)
         df.columns = df.columns.str.lower()
         df["smiles"] = clean_smiles(df["smiles"])
-        df = df.dropna(subset=["smiles"]).reset_index(drop=True)
+        df.dropna(subset=["smiles"], inplace=True)
         if pre_cleaning_length != len(df):
             logging.info(f"Dropped {pre_cleaning_length - len(df)} invalid SMILES")
         logging.info(f"Dataset size: {len(df)}")
@@ -91,14 +93,24 @@ class TrainingPipeline:
         logging.info(f"Train size: {len(X_train)}, Test size: {len(X_test)}")
 
         # Save the splits to a designated subdir
-        save_path_train = self.data_path / self.splitter.get_cache_key() / "train.csv"
-        save_path_test = self.data_path / self.splitter.get_cache_key() / "test.csv"
+        self.train_path = (
+            self.data_path.parent / self.splitter.get_cache_key() / "train.csv"
+        )
+        self.test_path = (
+            self.data_path.parent / self.splitter.get_cache_key() / "test.csv"
+        )
 
-        df_train = pd.DataFrame([X_train, y_train], columns=["smiles", "y"])
-        df_test = pd.DataFrame([X_test, y_test], columns=["smiles", "y"])
+        self.train_path.parent.mkdir(parents=True, exist_ok=True)
+        self.test_path.parent.mkdir(parents=True, exist_ok=True)
 
-        df_train.to_csv(save_path_train)
-        df_test.to_csv(save_path_test)
+        df_train = pd.DataFrame({"smiles": X_train, "y": y_train})
+        df_test = pd.DataFrame({"smiles": X_test, "y": y_test})
+
+        df_train.to_csv(self.train_path, index=False)
+        df_test.to_csv(self.test_path, index=False)
+
+        logging.info(f"Train data saved to {self.train_path}")
+        logging.info(f"Test data saved to {self.test_path}")
 
     def train(self):
         """
@@ -120,7 +132,7 @@ class TrainingPipeline:
         #        conduct hyperparameter optimization over distributions given in the same .gin config file)
         self.predictor.train(X_train, y_train)
 
-        # save the traned model
+        # save the trained model
         self.predictor.save()
 
     def evaluate(self):
@@ -140,7 +152,7 @@ class TrainingPipeline:
         logging.info(f"Metrics: {metrics_dict}")
 
         # save metrics
-        metrics_path = f"{self.out_dir}/metrics.json"
+        metrics_path = f"{self.predictor.working_dir}/metrics.json"
         with open(metrics_path, "w") as f:
             json.dump(
                 metrics_dict,
@@ -150,6 +162,7 @@ class TrainingPipeline:
 
     def _parse_data(self, csv_path):
         data = pd.read_csv(csv_path)
+        logging.debug(f"Reading data from {csv_path}")
         if "smiles" not in data.columns:
             raise ValueError("""No 'smiles' column detected in the data .csv""")
         if "y" not in data.columns:
