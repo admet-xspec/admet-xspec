@@ -26,28 +26,32 @@ class ManagementPipeline:
 
     def __init__(
         self,
-        dataset_dir: Path | str,
-        model_name: str,
-        out_dir: Path | str,
+        raw_input_dir: Path | str,
+        normalized_input_dir: Path | str,
+        output_dir: Path | str,
+        mode: str,
+        force_normalize_all: bool = False,
+        explore_datasets_list: list[str] | None = None,
+        explore_datasets_categories: list[str] | None = None,
         explorer: ExplorerBase = None,
         splitter: DataSplitterBase = None,
         predictor: PredictorBase = None,
         featurizer: FeaturizerBase = None,
-        stratify: bool = True,
     ):
+        self._raw_input_dir = raw_input_dir
+        self.normalized_input_dir = normalized_input_dir
+        self.output_dir = output_dir
 
-        self.dataset_dir = Path(dataset_dir)
+        self.mode = mode
+        self.force_normalize_all = force_normalize_all
+        self.explore_datasets_list = explore_datasets_list
+        self.explore_datasets_categories = explore_datasets_categories
+
         self.explorer = explorer
         self.splitter = splitter
         self.splitter = splitter
         self.predictor = predictor
         self.featurizer = featurizer
-        self.model_name = model_name
-        self.out_dir = Path(out_dir)
-        self.stratify = stratify
-
-        self.train_path = None
-        self.test_path = None
 
     @staticmethod
     def _get_smiles_col_in_raw(raw_df) -> str:
@@ -74,17 +78,21 @@ class ManagementPipeline:
             assert self.explorer is not None, (
                 "Ran ManagementPipeline in 'explorer' mode without specifying .explorer: ExplorerBase attribute"
             )
+            assert ((self.explore_datasets_list and not self.explore_datasets_categories)
+                or (not self.explore_datasets_categories and self.explore_datasets_list)
+            ), "Either dataset categories or an explicit list must be specified, not both."
+
             self.dump_exploratory_visualization()
 
     def normalize_datasets(self, force_normalize_all: bool = False):
-        datasets = glob.glob(f"{str(self.dataset_dir)}/**/*.csv", recursive=True)
+        datasets = glob.glob(f"{str(self._raw_input_dir)}/**/*.csv", recursive=True)
 
         # pairs of "before, after" paths
         datasets_paths: list[tuple[Path, Path]] = [
             (
                 Path(ds_glob),
                 self.get_df_output_path(
-                    self.get_normalized_basename(Path(ds_glob))
+                    self.get_normalized_filename(Path(ds_glob))
                 )
             )
             for ds_glob in datasets
@@ -163,13 +171,14 @@ class ManagementPipeline:
 
         return df
 
-    def get_normalized_basename(self, ds_globbed_path: Path) -> str:
-        root_domains = ["brain", "liver", "MAO-A"]
+    def get_normalized_filename(self, ds_globbed_path: Path) -> str:
+        # TODO: make this somehow global?
+        root_categories = ["brain", "liver", "MAO-A"]
 
         dataset_dir_parts = ds_globbed_path.parent.parts
 
         begin_index = None
-        for root_domain in root_domains:
+        for root_domain in root_categories:
             if root_domain in dataset_dir_parts:
                 begin_index = dataset_dir_parts.index(root_domain)
                 break
@@ -177,7 +186,7 @@ class ManagementPipeline:
         if begin_index is None:
             raise ValueError(
                 f"Unable to match any part of Path: {str(ds_globbed_path)} "
-                f"to one of root domains (of interest): {str(root_domains)}"
+                f"to one of root domains (of interest): {str(root_categories)}"
             )
 
         basename_parts = dataset_dir_parts[begin_index:]
@@ -195,88 +204,135 @@ class ManagementPipeline:
             extension: str = ".csv",
     ) -> Path:
         output_path_str = (
-            f"{str(self.normalized_dataset_dir)}/"
+            f"{str(self.normalized_input_dir)}/"
             f"{prefix}_{normalized_basename}_{suffix}.{extension}"
         )
         return Path(output_path_str)
 
-
-
-    # LEGACY
-
-
-
-    def get_dataset_output_basename(self, globbed_dataset_path: str) -> str:
-        """Return filename without extension"""
-        dataset_name = str(Path(*Path(globbed_dataset_path).parent.parts[2:])).replace("/", "_")
-        dataset_name = f"{dataset_name}_{type(self.featurizer).__name__}"
-        return dataset_name
-
-    def featurize_dataset(self, dataset_path: str) -> pd.DataFrame:
-        """Featurizes the entire training dataset"""
-        df_to_featurize = pd.read_csv(dataset_path, delimiter=";")
-        df_to_featurize.columns = df_to_featurize.columns.str.lower()
-
-        smiles_to_featurize: list = self.get_clean_smiles_from_dataframe(df_to_featurize)
-
-        descriptors = self.featurizer.featurize(smiles_to_featurize)
-        descriptors = ["".join([str(bit) for bit in np_array]) for np_array in descriptors]
-
-        df_featurized = pd.DataFrame({
-            "smiles": smiles_to_featurize,
-            "fp_ecfp": descriptors 
-        })
-        
-        return df_featurized
-
-    def save_featurized_dataset(self, dataset_path: str, df_featurized: pd.DataFrame):
-        output_basename = self.get_dataset_output_basename(dataset_path)
-        df_featurized.to_csv(self.out_dir / f"ecfp/{output_basename}.csv")
-
-    def load_featurized_dataset(self, dataset_path) -> pd.DataFrame:
-        output_basename = self.get_dataset_output_basename(dataset_path)
-        dataset_path = self.out_dir / f"ecfp/{output_basename}.csv"
-        
-        df_featurized = pd.read_csv(dataset_path, delimiter=",")
-
-        return df_featurized
-    
-    def get_ecfp_bitcolumn_dataframe(self, df_featurized: pd.DataFrame) -> pd.DataFrame:
+    def get_featurized_dataset_df(self, dataset_path: Path) -> pd.DataFrame:
         """
-        Take in a dataframe containing SMILES with their <n_bits>-long ECFP string
-        Output a dataframe with SMILES and each ECFP bit in separate col, i.e. bit_0, ..., bit_2047 (if n_bits=2048)
+        Featurizes the entire training dataset.
+        Returns pd.DataFrame s.t. smiles: <featurization_str>
+
+        dataset_path: Path to dataset in self.output_dir (normalized data & path).
         """
 
-        bit_columns = df_featurized["fp_ecfp"].apply(
-            lambda s: pd.Series([int(s[i]) for i in range(len(s))], index=[f"bit_{i}" for i in range(len(s))])
+        df_to_featurize = pd.read_csv(dataset_path)
+
+        len_before_feat = len(df_to_featurize)
+
+        feature_col_name = self.featurizer.feature_name
+        df_to_featurize[feature_col_name] = df_to_featurize["smiles"].apply(
+            lambda smiles: self.featurizer.feature_to_str(
+                self.featurizer.featurize(smiles)
+            )
         )
 
-        ecfp_dataframe = pd.concat([df_featurized[["smiles"]], bit_columns], axis=1)
+        len_after_feat = len(df_to_featurize)
+        assert len_before_feat == len_after_feat,(
+            f"{len_before_feat - len_after_feat} SMILES failed to featurize with"
+            f"{self.featurizer.name}. 'get_featurized_dataset_df' expects featurizable SMILES."
+        )
         
-        return ecfp_dataframe
+        return df_to_featurize
 
-    def dump_pca_visualization(self, dataset_df_dict: dict[str, pd.DataFrame]):
-        dataset_smiles_dict = {
-            ds_basename: df["smiles"] for ds_basename, df in dataset_df_dict.items() 
+    def save_featurized_dataset(
+            self,
+            dataset_path: Path,
+            df_featurized: pd.DataFrame
+    ):
+        """dataset_path: Path to dataset in self.output_dir (normalized data & path)."""
+
+        feature_col_name = self.featurizer.feature_name
+        df_featurized[feature_col_name] = df_featurized[feature_col_name].apply(
+            lambda feature: self.featurizer.feature_to_str(feature)
+        )
+
+        basename = dataset_path.name
+        df_featurized.to_csv(
+            self.output_dir / self.featurizer.name / basename
+        )
+
+    def load_featurized_dataset(
+            self,
+            dataset_path: Path,
+            df_featurized: pd.DataFrame
+    ):
+        """dataset_path: Path to dataset in self.output_dir (normalized data & path)."""
+        basename = dataset_path.name
+        df_featurized = pd.read_csv(
+            self.output_dir / self.featurizer.name / basename
+        )
+
+        feature_col_name = self.featurizer.feature_name
+        df_featurized[feature_col_name] = df_featurized[feature_col_name].apply(
+            lambda str_rep: self.featurizer.str_to_feature(str_rep)
+        )
+
+    def get_visualization(self, featurized_df_dict: dict[str, pd.DataFrame]) -> Image.Image:
+        dataset_dict = {
+            k: self.explorer.get_analyzed_form(v) for k, v in featurized_df_dict.items()
         }
 
-        dataset_pca_form_dict = {
-            ds_basename: df.drop(columns=["smiles"]) for ds_basename, df in dataset_df_dict.items()
-        }
+        sklearn_visualizable_form = self.explorer.get_visualizable_form(
+            dataset_dict
+        )
 
-        dataset_after_pca_ndarray_dict = {
-            ds_basename: self.explorer.get_pca(df) for ds_basename, df in dataset_pca_form_dict.items()
-        }
+        visualization = self.explorer.generate_visualization(
+            sklearn_visualizable_form
+        )
 
-        dataset_after_pca_df_dict = {}
-        for ds_basename, ndarray in dataset_after_pca_ndarray_dict.items():
-            dataset_after_pca_df_dict[ds_basename] = pd.DataFrame(
-                {
-                    f"dim_{i + 1}": ndarray[:, i] for i in range(ndarray.shape[1])
-                }
-            )
-        
-        image = self.explorer.visualize(dataset_after_pca_df_dict)
+        return visualization
 
-        image.save("test.png")
+    def dump_exploratory_visualization(self):
+        dataset_paths = None
+        if self.explore_datasets_list:
+            dataset_paths: list[Path] = [
+                self.normalized_input_dir / Path(dataset_path)
+                for dataset_path in self.explore_datasets_list
+            ]
+        elif self.explore_datasets_categories:
+            candidates = glob.glob(str(self.normalized_input_dir / "*.csv"))
+            dataset_paths = [
+                Path(candidate)
+                for candidate in candidates
+                for category in self.explore_datasets_categories
+                if category in candidate.lower()
+            ]
+
+        assert dataset_paths
+
+        ## TODO: finish him!
+        visualization = self.get_visualization(
+            featurized_df_dict
+        )
+
+        self.save_visualization(visualization)
+
+    # def dump_pca_visualization(self, dataset_df_dict: dict[str, pd.DataFrame]):
+    #     dataset_smiles_dict = {
+    #         ds_basename: df["smiles"] for ds_basename, df in dataset_df_dict.items()
+    #     }
+    #
+    #     dataset_pca_form_dict = {
+    #         ds_basename: df.drop(columns=["smiles"]) for ds_basename, df in dataset_df_dict.items()
+    #     }
+    #
+    #     # this is terrible: explorer should know nothing about how the df looks,
+    #     # instead, the form that would be easiest for him to process should be passed
+    #     dataset_after_pca_ndarray_dict = {
+    #         ds_basename: self.explorer.get_pca(df) for ds_basename, df in dataset_pca_form_dict.items()
+    #     }
+    #
+    #     dataset_after_pca_df_dict = {}
+    #     for ds_basename, ndarray in dataset_after_pca_ndarray_dict.items():
+    #         dataset_after_pca_df_dict[ds_basename] = pd.DataFrame(
+    #             {
+    #                 f"dim_{i + 1}": ndarray[:, i] for i in range(ndarray.shape[1])
+    #             }
+    #         )
+    #
+    #     image = self.explorer.visualize(dataset_after_pca_df_dict)
+    #
+    #     image.save("test.png")
         

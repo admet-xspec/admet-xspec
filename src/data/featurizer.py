@@ -20,7 +20,7 @@ class FeaturizerBase(abc.ABC):
         """
         pass
 
-
+# TODO: feature_to_string, string_to_feature
 @gin.configurable
 class EcfpFeaturizer(FeaturizerBase):
     def __init__(self, radius: int = 2, n_bits: int = 2048, count: bool = False):

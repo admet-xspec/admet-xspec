@@ -32,7 +32,8 @@ from src.mgmt_pipeline import ManagementPipeline
 def test_normalize(
         normalize_config,
         mock_raw_datasets_dir,
-        mock_normalized_datasets_dir
+        mock_normalized_datasets_dir,
+        expected_normalized_paths
 ):
     with tempfile.NamedTemporaryFile(mode="w") as fp:
         fp.write(normalize_config)
