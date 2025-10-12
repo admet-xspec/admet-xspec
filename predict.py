@@ -15,6 +15,7 @@ from src.inference_pipeline import InferencePipeline
 import tempfile
 import argparse
 import pathlib
+import time
 
 if __name__ == "__main__":
 
@@ -33,6 +34,8 @@ if __name__ == "__main__":
         default="DEBUG",
     )
     args = parser.parse_args()
+
+    time_start = time.time()
 
     # Load the gin configuration
     if not pathlib.Path(args.cfg).is_file():
@@ -54,19 +57,19 @@ if __name__ == "__main__":
 
     # Run the prediction
     results = pipeline.predict()
-    results_path = pipeline.out_dir / "predictions.csv"
-    results.to_csv(results_path, index=False)
 
     # Compute and save metrics if possible
     if pipeline.can_compute_metrics():
-        metrics = pipeline.get_metrics()
+        logging.info("Labels detected in the data file, computing metrics")
+        metrics = pipeline.evaluate()
 
-        metrics_path = pipeline.out_dir / "metrics.json"
-        with open(metrics_path, "w") as f:
-            import json
-
-            json.dump(metrics, f)
-        logging.info(f"Metrics saved to {metrics_path}")
+    # Log time
+    time_elapsed = time.time() - time_start
+    logging.info(
+        f"Prediction completed in {round(time_elapsed, 2)} seconds."
+        if time_elapsed < 60
+        else f"Prediction completed in {round(time_elapsed / 60, 2)} minutes."
+    )
 
     # Dump operative config
     gin_path = pipeline.out_dir / "operative_config.gin"
@@ -75,6 +78,10 @@ if __name__ == "__main__":
     logging.info(f"Config saved to {gin_path}")
 
     # Move the temporary log file to the output directory
-    final_log_path = pipeline.out_dir / "predict.log"
-    pathlib.Path(temp_log_file.name).rename(final_log_path)
     temp_log_file.close()
+    root_logger = logging.getLogger()
+    handlers = root_logger.handlers[:]
+    for handler in handlers:
+        handler.close()
+        root_logger.removeHandler(handler)
+    pathlib.Path(temp_log_file.name).rename(pipeline.out_dir / "training.log")

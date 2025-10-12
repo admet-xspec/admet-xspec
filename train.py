@@ -54,21 +54,8 @@ if __name__ == "__main__":
     # Initialize the training pipeline
     pipeline = TrainingPipeline()
 
-    # Create a directory for the outputs (model_name)
-    models_dir = pipeline.out_dir
-    model_name = pipeline.model_name
-    out_dir = f"{models_dir}/{model_name}"
-
-    # Create the directory for all results if it doesn't exist
-    if not pathlib.Path(models_dir).exists():
-        pathlib.Path(models_dir).mkdir(parents=True, exist_ok=True)
-
-    # If the output directory already exists, add a timestamp to the name
-    if pathlib.Path(out_dir).exists():
-        out_dir = out_dir + f'_{time.strftime("%Y%m%d-%H%M%S")}'
-
     # Create the output directory for the model
-    pathlib.Path(out_dir).mkdir(parents=True, exist_ok=True)
+    pipeline.out_dir.mkdir(parents=True, exist_ok=True)
 
     # Split the data if train and test paths are not provided explicitly (default behavior)
     if not (pipeline.train_path and pipeline.test_path):
@@ -93,12 +80,16 @@ if __name__ == "__main__":
     )
 
     # Dump operative config
-    gin_path = f"{out_dir}/operative_config.gin"
+    gin_path = pipeline.out_dir / "operative_config.gin"
     with open(gin_path, "w") as f:
         f.write(gin.operative_config_str())
     logging.info(f"Config saved to {gin_path}")
 
     # Move the temporary log file to the output directory
-    final_log_path = f"{out_dir}/training.log"
-    pathlib.Path(temp_log_file.name).rename(final_log_path)
     temp_log_file.close()
+    root_logger = logging.getLogger()
+    handlers = root_logger.handlers[:]
+    for handler in handlers:
+        handler.close()
+        root_logger.removeHandler(handler)
+    pathlib.Path(temp_log_file.name).rename(pipeline.out_dir / "predict.log")

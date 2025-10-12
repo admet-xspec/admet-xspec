@@ -29,9 +29,6 @@ class ScikitPredictor(PredictorBase):
     ):
         super().__init__()
 
-        # Initialize the model
-        self.model = self._init_model()
-
         # Initialize the featurizer
         self.featurizer = None
 
@@ -39,7 +36,6 @@ class ScikitPredictor(PredictorBase):
         if not (params is None or optimize_hyperparameters):
             # Check if params will be recognized by the model
             self._check_params(self.model, params)
-
             self.model.set_params(**params)
 
         # Params for hyperparameter optimalization with randomized search CV
@@ -54,20 +50,6 @@ class ScikitPredictor(PredictorBase):
             "n_jobs": n_jobs,
             "params_distribution": params_distribution,
         }
-
-    @abc.abstractmethod
-    def _init_model(self):
-        """
-        Initialize a scikit-learn model
-        """
-        pass
-
-    @abc.abstractmethod
-    def evaluate(self, smiles_list: List[str], target_list: List[float]) -> dict:
-        """
-        Return a dictionary with evaluation metrics
-        """
-        pass
 
     def inject_featurizer(self, featurizer):
         """
@@ -176,7 +158,7 @@ class ScikitRegressor(ScikitPredictor):
         preds = self.predict(smiles_list)
         metrics_dict = {}
         for m in self.evaluation_metrics:
-            metrics_dict[m] = get_metric_callable(m)(preds, target_list)
+            metrics_dict[m] = get_metric_callable(m)(target_list, preds)
         return metrics_dict
 
 
@@ -196,7 +178,11 @@ class ScikitBinaryClassifier(ScikitPredictor):
         binary_preds = self.classify(preds)
         metrics_dict = {}
         for m in self.evaluation_metrics:
-            metrics_dict[m] = get_metric_callable(m)(binary_preds, target_list)
+            if m == "roc_auc":
+                # roc_auc needs class probabilities
+                metrics_dict[m] = get_metric_callable(m)(target_list, preds)
+            else:
+                metrics_dict[m] = get_metric_callable(m)(target_list, binary_preds)
         return metrics_dict
 
     def classify(self, preds):

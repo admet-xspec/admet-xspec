@@ -2,8 +2,9 @@ import pandas as pd
 import gin
 import logging
 import pickle
-from src.utils import SmilesCleaner, get_nice_class_name, get_metric_callable
+from src.utils import SmilesCleaner, get_nice_class_name
 from pathlib import Path
+import json
 
 
 @gin.configurable
@@ -20,12 +21,9 @@ class InferencePipeline:
         self.data_path = Path(data_path)
         self.out_dir = self.data_path.parent / task_name
         self.out_dir.mkdir(parents=True, exist_ok=True)
-        self.smiles_column_names = ["smiles", "SMILES", "molecule"]
-        self.y_column_names = ["y", "Y", "target", "Target"]
 
         # Load and prepare data
         self.data = self._prepare_data(data_path)
-        self.preds = None
 
     def predict(self):
 
@@ -36,10 +34,8 @@ class InferencePipeline:
         y_pred = self.model.predict(valid_data["smiles"].tolist())
         if hasattr(self.model, "classify"):
             y_class = self.model.classify(y_pred)
-            self.preds = y_class
         else:
             y_class = None
-            self.preds = y_pred
 
         pred_df = pd.DataFrame(
             {"original_index": valid_data["original_index"], "pred": y_pred}
@@ -51,28 +47,28 @@ class InferencePipeline:
         # Merge predictions back to the original data
         result_df = pd.merge(self.data, pred_df, on="original_index", how="left")
         result_df = result_df.drop(columns=["original_index", "is_valid"])
-        return result_df
 
-    def get_metrics(self):
+        # Save results
+        results_path = self.out_dir / "predictions.csv"
+        result_df.to_csv(results_path, index=False)
+        logging.info(f"Predictions saved to {results_path}")
+
+    def evaluate(self):
         valid_data = self.data[self.data["is_valid"]]
+        X = valid_data["smiles"].tolist()
         y_true = valid_data["y"].tolist()
-        metrics_dict = {}
-        for m in self.model.evaluation_metrics:
-            metrics_dict[m] = get_metric_callable(m)(y_true, self.preds)
-        return metrics_dict
+        # TODO: Make this more robust, as model.evaluate() method uses predict() internally
+        metrics = self.model.evaluate(X, y_true)
+        logging.info(f"Evaluation metrics: {metrics}")
+
+        # Save metrics
+        metrics_path = self.out_dir / "metrics.json"
+        with open(metrics_path, "w") as f:
+            json.dump(metrics, f)
 
     def can_compute_metrics(self):
-        valid_data = self.data[self.data["is_valid"]]
-        if valid_data.empty:
-            logging.warning("No valid SMILES in the data - cannot compute metrics.")
-            return False
-        if "y" not in valid_data.columns:
-            logging.warning(
-                "No target column 'y' in the data - cannot compute metrics."
-            )
-            return False
-        if not hasattr(self.model, "evaluation_metrics"):
-            logging.warning("The model does not have any defined evaluation metrics.")
+        if "y" not in self.data.columns:
+            logging.debug("No target column 'y' in the data - cannot compute metrics.")
             return False
         return True
 
@@ -95,28 +91,10 @@ class InferencePipeline:
         logging.info(f"Loaded data from {data_path}")
 
         # Parse the SMILES column
-        smiles_col = None
-        for col in self.smiles_column_names:
-            if col in data.columns:
-                smiles_col = data[col]
-                logging.info(
-                    f"Found {len(smiles_col)} SMILES strings in column '{col}'"
-                )
-                break
+        smiles_col = data["smiles"] if "smiles" in data.columns else None
         if smiles_col is None:
-            raise ValueError(
-                "No valid SMILES column found in the input data. Expected one of: "
-                + ", ".join(self.smiles_column_names)
-            )
-
-        target_col = None
-        for col in self.y_column_names:
-            if col in data.columns:
-                target_col = data[col]
-                logging.info(
-                    f"Note: Found a target column '{col}' in the input data. It will be used to compute metrics."
-                )
-                break
+            raise ValueError("No 'smiles' column found in the data")
+        target_col = data["y"] if "y" in data.columns else None
 
         # Clean the SMILES strings
         cleaner = SmilesCleaner()
