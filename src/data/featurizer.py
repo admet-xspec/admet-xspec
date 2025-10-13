@@ -10,7 +10,7 @@ from sklearn.preprocessing import StandardScaler
 
 
 class FeaturizerBase(abc.ABC):
-    def __init__(self):
+    def __init__(self, feature_name):
         pass
 
     @abc.abstractmethod
@@ -20,7 +20,23 @@ class FeaturizerBase(abc.ABC):
         """
         pass
 
-# TODO: feature_to_string, string_to_feature
+    @property
+    @abc.abstractmethod
+    def feature_name(self) -> str:
+        pass
+
+    @property
+    @abc.abstractmethod
+    def name(self) -> str:
+        pass
+
+    #TODO: make abstract, dunno what the rest should implement yet
+    def feature_to_str(self, feature) -> str:
+        pass
+
+    def str_to_feature(self, string: str):
+        pass
+
 @gin.configurable
 class EcfpFeaturizer(FeaturizerBase):
     def __init__(self, radius: int = 2, n_bits: int = 2048, count: bool = False):
@@ -48,6 +64,21 @@ class EcfpFeaturizer(FeaturizerBase):
             fp_list = [self.generator.GetFingerprintAsNumPy(mol) for mol in mols]
 
         return np.stack(fp_list)
+
+    @property
+    def feature_name(self) -> str:
+        return "fp_ecfp"
+
+    @property
+    def name(self) -> str:
+        return "ecfp_featurizer"
+
+    def feature_to_str(self, feature) -> str:
+        inner = feature[0]
+        return "".join([str(num) for num in inner])
+
+    def str_to_feature(self, string: str):
+        return np.array([[int(bit) for bit in string]])
 
     def __getstate__(self):
         state = self.__dict__.copy()
@@ -85,6 +116,14 @@ class PropertyFeaturizer(FeaturizerBase):
 
         return descs
 
+    @property
+    def feature_name(self) -> str:
+        return "prop_desc"
+
+    @property
+    def name(self) -> str:
+        return "prop_featurizer"
+
     @staticmethod
     def get_descriptors(mol, missing=None):
         desc_dict = {}
@@ -111,3 +150,11 @@ class PropertyEcfpFeaturizer(FeaturizerBase):
         # Combine features
         combined_features = np.hstack((ecfp_features, property_features))
         return combined_features
+
+    @property
+    def feature_name(self) -> str:
+        return "prop_ecfp"
+
+    @property
+    def name(self) -> str:
+        return "prop_ecfp_featurizer"

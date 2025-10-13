@@ -111,9 +111,9 @@ class ManagementPipeline:
                 ds_glob
             )
 
-            self.save_dataframe(
-                normalized_dataset_df, 
-                ds_path
+            self.save_featurized_dataset(
+                ds_path,
+                normalized_dataset_df
             )
 
     def get_normalized_df(self, ds_globbed_path: Path, delimiter: str = ";") -> pd.DataFrame:
@@ -269,20 +269,40 @@ class ManagementPipeline:
             lambda str_rep: self.featurizer.str_to_feature(str_rep)
         )
 
+    def get_pca_input_form(self, featurized_dataset_df: pd.DataFrame) -> pd.DataFrame:
+        featurized_dataset_df.drop(columns="smiles", inplace=True)
+        pca_ready_df = pd.concat([
+            featurized_dataset_df[
+                self.featurizer.feature_name
+            ].apply(lambda s: pd.Series(list(map(int, s))))
+            .add_prefix('bit_')
+        ], axis=1)
+
+        return pca_ready_df
+
     def get_visualization(self, featurized_df_dict: dict[str, pd.DataFrame]) -> Image.Image:
         dataset_dict = {
-            k: self.explorer.get_analyzed_form(v) for k, v in featurized_df_dict.items()
+            k: self.explorer.get_analyzed_form(
+                self.get_pca_input_form(v)
+            ) for k, v in featurized_df_dict.items()
         }
 
         sklearn_visualizable_form = self.explorer.get_visualizable_form(
             dataset_dict
         )
 
-        visualization = self.explorer.generate_visualization(
+        visualization = self.explorer.get_visualization(
             sklearn_visualizable_form
         )
 
         return visualization
+
+    def save_visualization(self, visualization: Image.Image):
+        output_path = Path(
+            self.output_dir
+        ) / f"{self.featurizer.name}_visualization.jpg"
+
+        visualization.save(output_path)
 
     def dump_exploratory_visualization(self):
         dataset_paths = None
@@ -302,37 +322,14 @@ class ManagementPipeline:
 
         assert dataset_paths
 
-        ## TODO: finish him!
+        featurized_df_dict: dict[str, pd.DataFrame] = {
+            str(ds_path): self.get_featurized_dataset_df(ds_path)
+            for ds_path in dataset_paths
+        }
+
         visualization = self.get_visualization(
             featurized_df_dict
         )
 
         self.save_visualization(visualization)
-
-    # def dump_pca_visualization(self, dataset_df_dict: dict[str, pd.DataFrame]):
-    #     dataset_smiles_dict = {
-    #         ds_basename: df["smiles"] for ds_basename, df in dataset_df_dict.items()
-    #     }
-    #
-    #     dataset_pca_form_dict = {
-    #         ds_basename: df.drop(columns=["smiles"]) for ds_basename, df in dataset_df_dict.items()
-    #     }
-    #
-    #     # this is terrible: explorer should know nothing about how the df looks,
-    #     # instead, the form that would be easiest for him to process should be passed
-    #     dataset_after_pca_ndarray_dict = {
-    #         ds_basename: self.explorer.get_pca(df) for ds_basename, df in dataset_pca_form_dict.items()
-    #     }
-    #
-    #     dataset_after_pca_df_dict = {}
-    #     for ds_basename, ndarray in dataset_after_pca_ndarray_dict.items():
-    #         dataset_after_pca_df_dict[ds_basename] = pd.DataFrame(
-    #             {
-    #                 f"dim_{i + 1}": ndarray[:, i] for i in range(ndarray.shape[1])
-    #             }
-    #         )
-    #
-    #     image = self.explorer.visualize(dataset_after_pca_df_dict)
-    #
-    #     image.save("test.png")
         

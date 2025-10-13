@@ -22,6 +22,18 @@ class ExplorerBase(abc.ABC):
         """Initialize the model."""
         pass
 
+    @abc.abstractmethod
+    def get_analyzed_form(self, df: pd.DataFrame):
+        pass
+
+    @abc.abstractmethod
+    def get_visualizable_form(self, dataset_dict: dict):
+        pass
+
+    @abc.abstractmethod
+    def get_visualization(self, dataset_dict: dict):
+        pass
+
 @gin.configurable
 class PcaExplorer(ExplorerBase):
     def __init__(self, n_dims: int = 2):
@@ -32,6 +44,18 @@ class PcaExplorer(ExplorerBase):
         """Initialize the model."""
         pca = PCA(n_components=self.n_dims)
         return pca
+
+    def get_analyzed_form(self, df: pd.DataFrame) -> np.ndarray:
+        return self.model.fit_transform(df)
+
+    def get_visualizable_form(self, dataset_dict: dict[str, np.ndarray]) -> dict[str, pd.DataFrame]:
+        out_dict = {}
+        for ds, ndarray in dataset_dict.items():
+            out_dict[ds] = pd.DataFrame({
+                f"dim_{i + 1}": ndarray[:, i] for i in range(ndarray.shape[1])
+            })
+
+        return out_dict
 
     def get_pca(self, df: pd.DataFrame) -> np.ndarray:
         """Perform PCA on a dataframe"""
@@ -122,7 +146,7 @@ class PcaExplorer(ExplorerBase):
         
         return img
 
-    def visualize(self, reduced_df_dict: dict[str, pd.DataFrame]) -> Image.Image:
+    def get_visualization(self, reduced_df_dict: dict[str, pd.DataFrame]) -> Image.Image:
         class_series = pd.concat(
             [pd.Series([i] * len(df)) for i, df in enumerate(reduced_df_dict.values())], 
             ignore_index=True
@@ -136,13 +160,13 @@ class PcaExplorer(ExplorerBase):
             img = self._visualize_2d(
                 concatenated_ndarray,
                 class_series,
-                reduced_df_dict.keys()
+                list(reduced_df_dict.keys())
             )
         elif self.n_dims == 3:
             img = self._visualize_3d(
                 concatenated_ndarray,
                 class_series,
-                reduced_df_dict.keys()
+                list(reduced_df_dict.keys())
             )
 
         return img

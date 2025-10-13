@@ -54,21 +54,7 @@ if __name__ == "__main__":
     # Initialize the management pipeline
     pipeline = ManagementPipeline()
 
-    datasets = glob.glob(str(pipeline.dataset_dir) + "/**/*.csv", recursive=True)
-    dataset_basenames = [pipeline.get_dataset_output_basename(ds) for ds in datasets]
-    
-    # Featurize the data
-    if not any(Path("data/preprocessing/ecfp").iterdir()):
-        featurized_dataset_dfs: list[pd.DataFrame] = [pipeline.featurize_dataset(ds) for ds in datasets]
-        for dataset, df in zip(datasets, featurized_dataset_dfs):
-            pipeline.save_featurized_dataset(dataset, df)
-    else:
-        featurized_dataset_dfs = [pipeline.load_featurized_dataset(ds) for ds in datasets]
-
-    ecfp_dataset_dfs: list[pd.DataFrame] = [pipeline.get_ecfp_bitcolumn_dataframe(df) for df in featurized_dataset_dfs]
-
-    dataset_df_dict = {ds: df for (ds, df) in zip(dataset_basenames, ecfp_dataset_dfs)}
-    pipeline.dump_pca_visualization(dataset_df_dict)
+    pipeline.run()
     
     # Log time
     time_elapsed = time.time() - time_start
