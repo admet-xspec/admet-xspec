@@ -5,7 +5,6 @@ import pandas as pd
 from typing import List
 import numpy as np
 import gin
-import logging
 from rdkit.Chem import Descriptors
 from sklearn.preprocessing import StandardScaler
 

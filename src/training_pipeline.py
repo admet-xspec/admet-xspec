@@ -1,5 +1,5 @@
 import pandas as pd
-from src.utils import clean_smiles, get_nice_class_name
+from src.utils import SmilesCleaner, get_nice_class_name
 import logging
 from src.predictor.predictor_base import PredictorBase
 from src.data.featurizer import (
@@ -8,6 +8,7 @@ from src.data.featurizer import (
 from src.data.split import DataSplitterBase
 import json
 import gin
+import time
 from pathlib import Path
 
 
@@ -31,8 +32,12 @@ class TrainingPipeline:
         self.data_path = Path(data_path)
         self.splitter = splitter
         self.predictor = predictor
-        self.model_name = model_name
-        self.out_dir = out_dir
+        self.out_dir = Path(out_dir) / model_name
+        # If the output directory already exists, add a timestamp to the name
+        if self.out_dir.exists():
+            self.out_dir = self.out_dir.with_name(
+                f'{model_name}_{time.strftime("%Y%m%d-%H%M%S")}'
+            )
         self.test_size = test_size
         self.stratify = stratify
 
@@ -57,32 +62,14 @@ class TrainingPipeline:
         -> Saves the training and testing sets to CSV files.
         """
 
-        SMILES_COL = ["smiles", "SMILES", "molecule"]
-        TARGET_COL = ["y", "Y", "label", "LABEL"]
-
         # Load the data
         df = pd.read_csv(self.data_path)
 
-        # Check if the necessary columns are present
-        if not any(col in df.columns for col in SMILES_COL):
-            raise ValueError(
-                f"Input CSV must contain one of the following columns for SMILES: {SMILES_COL}"
-            )
-        if not any(col in df.columns for col in TARGET_COL):
-            raise ValueError(
-                f"Input CSV must contain one of the following columns for target variable: {TARGET_COL}"
-            )
-
-        # Rename the columns to standard names
-        df = df.rename(
-            columns={col: "smiles" for col in df.columns if col in SMILES_COL}
-        )
-        df = df.rename(columns={col: "y" for col in df.columns if col in TARGET_COL})
-
         # Sanitize the data
+        cleaner = SmilesCleaner()
         pre_cleaning_length = len(df)
         df.columns = df.columns.str.lower()
-        df["smiles"] = clean_smiles(df["smiles"])
+        df["smiles"] = df["smiles"].apply(cleaner.clean)
         df.dropna(subset=["smiles"], inplace=True)
         if pre_cleaning_length != len(df):
             logging.info(f"Dropped {pre_cleaning_length - len(df)} invalid SMILES")
@@ -119,21 +106,18 @@ class TrainingPipeline:
 
         if self.train_path is None:
             raise ValueError(
-                "The dataset has not been split yet. Use prepare_data method first."
+                "The dataset has not been split yet. Use prepare_data method first"
             )
 
         # Load the data and parse X, y columns
         X_train, y_train = self._parse_data(self.train_path)
 
-        # Set the working directory (to which the results and model parameters will be saved)
-        self.predictor.set_working_dir(f"{self.out_dir}/{self.model_name}")
-
-        # train (either use hyperparameters provided in the predictor .gin config file directly, or
+        # train (either use hyperparameters provided in the predictor .gin config file directly or
         #        conduct hyperparameter optimization over distributions given in the same .gin config file)
         self.predictor.train(X_train, y_train)
 
         # save the trained model
-        self.predictor.save()
+        self.predictor.save(self.out_dir)
 
     def evaluate(self):
         """
@@ -142,7 +126,7 @@ class TrainingPipeline:
 
         if self.test_path is None:
             raise ValueError(
-                "The dataset has not been split yet. Use prepare_data method first."
+                "The dataset has not been split yet. Use prepare_data method first"
             )
 
         X_test, y_test = self._parse_data(self.test_path)
@@ -152,7 +136,7 @@ class TrainingPipeline:
         logging.info(f"Metrics: {metrics_dict}")
 
         # save metrics
-        metrics_path = f"{self.predictor.working_dir}/metrics.json"
+        metrics_path = self.out_dir / "metrics.json"
         with open(metrics_path, "w") as f:
             json.dump(
                 metrics_dict,
@@ -164,7 +148,7 @@ class TrainingPipeline:
         data = pd.read_csv(csv_path)
         logging.debug(f"Reading data from {csv_path}")
         if "smiles" not in data.columns:
-            raise ValueError("""No 'smiles' column detected in the data .csv""")
+            raise ValueError("No 'smiles' column detected in the data .csv")
         if "y" not in data.columns:
-            raise ValueError("""No 'y' column detected in the data .csv""")
+            raise ValueError("No 'y' column detected in the data .csv")
         return data["smiles"], data["y"]

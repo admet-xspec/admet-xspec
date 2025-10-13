@@ -1,14 +1,12 @@
 from typing import List
 import abc
-import pathlib
-from sklearn import metrics
+from pathlib import Path
 import pickle
 
 
 class PredictorBase(abc.ABC):
     def __init__(self):
         self.model = self._init_model()
-        self.working_dir = None  # working directory for training and inference
         self.evaluation_metrics = []  # will be set by the child
 
     @abc.abstractmethod
@@ -34,12 +32,12 @@ class PredictorBase(abc.ABC):
         """
         pass
 
-    def save(self):
+    def save(self, dir_path: str | Path):
         """
-        Pickle the model to working_dir/model.pkl
+        Pickle the model to dir_path/model.pkl
         """
-        path = self.working_dir / "model.pkl"
-        pathlib.Path(path).parent.mkdir(parents=True, exist_ok=True)
+        path = Path(dir_path) / "model.pkl"
+        Path(path).parent.mkdir(parents=True, exist_ok=True)
         # Pickle the model
         with open(path, "wb") as f:
             pickle.dump(self, f)
@@ -47,16 +45,9 @@ class PredictorBase(abc.ABC):
     def load(self, path: str):
         """Load the model from the given path."""
         # Check if the path exists
-        if not pathlib.Path(path).exists():
+        if not Path(path).exists():
             raise FileNotFoundError(f"Model file not found at {path}")
         # Load the model
         with open(path, "rb") as f:
             loaded_model = pickle.load(f)
             self.__dict__.update(loaded_model.__dict__)
-
-    def set_working_dir(self, path: str):
-        """
-        Set working directory path for the model
-        :param path: Path to the working directory
-        """
-        self.working_dir = pathlib.Path(path)
