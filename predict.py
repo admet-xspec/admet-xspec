@@ -84,4 +84,4 @@ if __name__ == "__main__":
     for handler in handlers:
         handler.close()
         root_logger.removeHandler(handler)
-    pathlib.Path(temp_log_file.name).rename(pipeline.out_dir / "training.log")
+    pathlib.Path(temp_log_file.name).rename(pipeline.out_dir / "predict.log")
