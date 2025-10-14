@@ -2,7 +2,7 @@ import glob
 import pandas as pd
 from PIL import Image
 from src.utils import (
-    clean_smiles,
+    SmilesCleaner,
     get_canonical_smiles,
     get_nice_class_name
 )
@@ -52,6 +52,9 @@ class ManagementPipeline:
         self.splitter = splitter
         self.predictor = predictor
         self.featurizer = featurizer
+
+        #TODO: make more elegant
+        self.smiles_cleaner = SmilesCleaner()
 
     @staticmethod
     def _get_smiles_col_in_raw(raw_df) -> str:
@@ -111,13 +114,15 @@ class ManagementPipeline:
                 ds_glob
             )
 
-            self.save_featurized_dataset(
-                ds_path,
-                normalized_dataset_df
-            )
+            normalized_dataset_df.to_csv(ds_path, index=False)
 
     def get_normalized_df(self, ds_globbed_path: Path, delimiter: str = ";") -> pd.DataFrame:
         """Get ready-to-save df without NaNs and with canonical SMILES"""
+        with ds_globbed_path.open(encoding="utf-8", mode="r") as f:
+            contents = f.read()
+            if "," in contents and ";" not in contents:
+                delimiter = ","
+
         df_to_normalize = pd.read_csv(ds_globbed_path, delimiter=delimiter)
         df_to_normalize.rename(
             columns={
@@ -143,7 +148,7 @@ class ManagementPipeline:
         df = df.dropna(subset=smiles_col)
 
         pre_cleaning_len = len(df)
-        df[smiles_col] = clean_smiles(df[smiles_col].to_list())
+        df[smiles_col].apply(lambda s: self.smiles_cleaner.clean(s))
 
         df = df.dropna(subset=[smiles_col]).reset_index(drop=True)
         
@@ -173,7 +178,7 @@ class ManagementPipeline:
 
     def get_normalized_filename(self, ds_globbed_path: Path) -> str:
         # TODO: make this somehow global?
-        root_categories = ["brain", "liver", "MAO-A"]
+        root_categories = ["AChE", "brain", "liver", "MAO-A"]
 
         dataset_dir_parts = ds_globbed_path.parent.parts
 
@@ -190,9 +195,7 @@ class ManagementPipeline:
             )
 
         basename_parts = dataset_dir_parts[begin_index:]
-        normalized_basename = str(Path(*basename_parts)).replace("/", "_")
-        normalized_basename = normalized_basename.replace("-", "")
-        normalized_basename = normalized_basename.lower()
+        normalized_basename = "_".join(basename_parts).replace("-", "").lower()
 
         return normalized_basename
 
@@ -201,11 +204,16 @@ class ManagementPipeline:
             normalized_basename: str,
             prefix: str = "",
             suffix: str = "",
-            extension: str = ".csv",
+            extension: str = "csv",
     ) -> Path:
+        if prefix:
+            normalized_basename = f"{prefix}_{normalized_basename}"
+        if suffix:
+            normalized_basename = f"{normalized_basename}_{suffix}"
+
         output_path_str = (
             f"{str(self.normalized_input_dir)}/"
-            f"{prefix}_{normalized_basename}_{suffix}.{extension}"
+            f"{normalized_basename}.{extension}"
         )
         return Path(output_path_str)
 
@@ -214,7 +222,7 @@ class ManagementPipeline:
         Featurizes the entire training dataset.
         Returns pd.DataFrame s.t. smiles: <featurization_str>
 
-        dataset_path: Path to dataset in self.output_dir (normalized data & path).
+        dataset_path: Path to dataset in self.normalized_input_dir
         """
 
         df_to_featurize = pd.read_csv(dataset_path)
