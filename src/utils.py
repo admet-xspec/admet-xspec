@@ -1,3 +1,5 @@
+import logging
+
 import rdkit.Chem as Chem
 from rdkit.Chem.SaltRemover import SaltRemover
 from rdkit.Chem.MolStandardize.rdMolStandardize import Uncharger
@@ -56,3 +58,53 @@ def get_metric_callable(metric_name: str):
     if metric_name not in metrics_dict.keys():
         raise ValueError
     return metrics_dict[metric_name]
+
+def get_converted_unit(
+        val: float,
+        from_unit: str,
+        to_unit: str,
+        mol_weight: float | None = None,
+        tissue_density: float | None = 1,
+    ):
+    """Convert a measurment from one unit to another."""
+    to_unit_implemented = {"uM"}
+    assert to_unit in to_unit_implemented, f"Conversion to unit {to_unit} not implemented yet."
+
+    if to_unit == "ug ml-1":
+        to_unit = "ug/ml"
+    if to_unit == "umol/L":
+        to_unit = "uM"
+
+    if to_unit == "uM":
+        assert mol_weight is not None, (
+            f"Molecular weight not provided "
+            f"for {from_unit}->{to_unit} conversion."
+        )
+
+        match from_unit:
+            case "ng/g":
+                return (val * tissue_density / mol_weight) / 1000
+            case "ug/g":
+                return val / mol_weight
+            case "ng/ml":
+                return (val / mol_weight) / 1000
+            case "ug/ml":
+                return val / mol_weight
+            case "ug/L":
+                return (val / mol_weight) / 1000
+            case "mg%":
+                mg_per_liter = val * 10
+                return (mg_per_liter * 1000) / mol_weight
+            case "nM":
+                return val / 1000
+            case "uM":
+                return val
+            case "nmol/g":
+                return val * tissue_density / 1000
+            case "pmol/g":
+                return val * tissue_density / 1_000_000
+            case "umol/Kg":
+                return val * tissue_density / 1000
+            case _:
+                logging.info(f"Do not support conversion from {from_unit}, returning None.")
+                return None

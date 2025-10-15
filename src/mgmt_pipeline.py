@@ -1,7 +1,7 @@
 import glob
 import pandas as pd
 from PIL import Image
-from src.utils import get_clean_smiles
+from src.utils import get_clean_smiles, get_converted_unit
 
 import logging
 from src.predictor.predictor_base import PredictorBase
@@ -9,6 +9,7 @@ from src.data.featurizer import FeaturizerBase
 from src.data.explorer import ExplorerBase
 from src.data.split import DataSplitterBase
 import gin
+import numpy as np
 from pathlib import Path
 
 
@@ -24,6 +25,9 @@ class ManagementPipeline:
         mode: str,
         force_normalize_all: bool = False,
         root_categories: list[str] | None = None,
+        classify_datasets_list: list[str] | None = None,
+        classify_thresholds: list[float] | None = None,
+        classify_target_unit: str | None = "uM",
         explore_datasets_list: list[str] | None = None,
         explore_datasets_categories: list[str] | None = None,
         explorer: ExplorerBase = None,
@@ -31,12 +35,18 @@ class ManagementPipeline:
         predictor: PredictorBase = None,
         featurizer: FeaturizerBase = None,
     ):
-        self._raw_input_dir = raw_input_dir
-        self.normalized_input_dir = normalized_input_dir
-        self.output_dir = output_dir
+        self.possible_smiles_cols = ["smiles", "SMILES", "Smiles", "molecule"]
+
+        self._raw_input_dir: Path = Path(raw_input_dir)
+        self.normalized_input_dir: Path = Path(normalized_input_dir)
+        self.output_dir: Path = Path(output_dir)
 
         self.mode = mode
         self.force_normalize_all = force_normalize_all
+        self.root_categories = root_categories
+        self.classify_datasets_list = classify_datasets_list
+        self.classify_thresholds = classify_thresholds
+        self.classify_target_unit = classify_target_unit
         self.explore_datasets_list = explore_datasets_list
         self.explore_datasets_categories = explore_datasets_categories
 
@@ -48,36 +58,36 @@ class ManagementPipeline:
 
 
     def run(self):
-        if self.mode == "normalize":
+        if self.mode == "classify":
+            assert self.classify_datasets_list, (
+                "Ran ManagementPipeline in 'classify' mode without " 
+                "specifying which datasets to convert to classification"
+            )
+            assert self.classify_thresholds, (
+                "Ran ManagementPipeline in 'classify' mode without "
+                "specifying thresholds with which to convert to classification"
+            )
+            assert self.classify_target_unit, (
+                "Ran ManagementPipeline in 'classify' mode without "
+                "specifying which unit to convert all of the Standard Values to"
+            )
+            self.make_datasets_into_classification()
+        elif self.mode == "normalize":
             assert self.force_normalize_all is not None, (
-                "Ran ManagementPipeline in 'normalize' mode without specifying .force_normalize_all attribute"
+                "Ran ManagementPipeline in 'normalize' mode without "
+                "specifying .force_normalize_all attribute"
             )
             self.normalize_datasets()
-        if self.mode == "explorer":
+        elif self.mode == "explorer":
             assert self.explorer is not None, (
-                "Ran ManagementPipeline in 'explorer' mode without specifying .explorer: ExplorerBase attribute"
+                "Ran ManagementPipeline in 'explorer' mode without "
+                "specifying .explorer: ExplorerBase attribute"
             )
             assert ((self.explore_datasets_list and not self.explore_datasets_categories)
                 or (not self.explore_datasets_categories and self.explore_datasets_list)
             ), "Either dataset categories or an explicit list must be specified, not both."
 
             self.dump_exploratory_visualization()
-
-
-    @staticmethod
-    def _get_smiles_col_in_raw(raw_df) -> str:
-        possible_variants = ["smiles", "SMILES", "Smiles", "molecule"]
-        for smiles_col_variant in possible_variants:
-            if smiles_col_variant in raw_df.columns:
-                return smiles_col_variant
-
-        # Failed
-        raise ValueError(
-            "Failed to find one of SMILES column name variants:",
-            str(possible_variants),
-            "in dataframe:",
-            str(raw_df),
-        )
 
     @staticmethod
     def get_clean_smiles_df(self, df: pd.DataFrame, smiles_col: str) -> pd.DataFrame:
@@ -114,7 +124,7 @@ class ManagementPipeline:
         return df
 
     @staticmethod
-    def get_normalized_filename(self, ds_globbed_path: Path) -> str:
+    def get_normalized_filename(ds_globbed_path: Path) -> str:
         # TODO: make this somehow global?
         root_categories = ["AChE", "brain", "liver", "MAO-A"]
 
@@ -137,6 +147,120 @@ class ManagementPipeline:
 
         return normalized_basename
 
+    def _get_smiles_col_in_raw(self, raw_df) -> str:
+        for smiles_col_variant in self.possible_smiles_cols:
+            if smiles_col_variant in raw_df.columns:
+                return smiles_col_variant
+
+        # Failed
+        raise ValueError(
+            "Failed to find one of SMILES column name variants:",
+            str(self.possible_smiles_cols),
+            "in dataframe:",
+            str(raw_df),
+        )
+
+    def make_datasets_into_classification(self):
+        for dataset in self.classify_datasets_list:
+            dataset_path = self.normalized_input_dir / dataset
+
+            dataset_df = pd.read_csv(dataset_path)
+            if "Standard Units" not in dataset_df.columns:
+                logging.info(f"Dataset '{dataset}' has no 'Standard Units' column, skipping.")
+                continue
+
+            classification_df = self.get_dataset_as_classification(dataset_df)
+
+            (self.output_dir / "classification").mkdir(parents=True, exist_ok=True)
+
+            classification_df.to_csv(
+                self.output_dir / "classification" / dataset, index=False
+            )
+
+    def get_dataset_as_classification(self, dataset_df: pd.DataFrame) -> pd.DataFrame:
+        normalized_value_colname = f"normalized_value_{self.classify_target_unit}"
+        classification_colname = "class"
+
+        def normalize_row_value(pd_row):
+            val = float(pd_row["Standard Value"])
+            from_unit = pd_row["Standard Units"]
+            mol_weight = pd_row["Molecular Weight"]
+
+            normalized_value: float = get_converted_unit(
+                val,
+                from_unit,
+                self.classify_target_unit,
+                mol_weight=mol_weight
+            )
+
+            return normalized_value
+
+        def assign_class(pd_row):
+            relation = pd_row["Standard Relation"]
+            normalized_val = pd_row[normalized_value_colname]
+
+            if "'" in relation:
+                relation = relation.split("'")[1]
+
+            min_class_val = self.classify_thresholds[0]
+            max_class_val = self.classify_thresholds[-1]
+
+            if relation == "<" and normalized_val < min_class_val:
+                return 0
+            elif relation == "<=" and normalized_val <= min_class_val:
+                return 0
+            # recall that 1 threshold => 2 classes, hence not "len - 1"
+            elif relation == ">" and normalized_val > max_class_val:
+                return len(self.classify_thresholds)
+            elif relation == ">=" and normalized_val >= min_class_val:
+                return len(self.classify_thresholds)
+
+            return np.nan
+
+        leave_cols = {
+            "smiles",
+            "Standard Value",
+            "Standard Units",
+            "Standard Relation",
+            "Molecular Weight",
+            normalized_value_colname,
+            classification_colname
+        }
+
+        pre_normalization_len = len(dataset_df)
+
+        dataset_df[
+            normalized_value_colname
+        ] = dataset_df.apply(
+            normalize_row_value, axis=1
+        )
+
+        dataset_df.dropna(subset=[normalized_value_colname], inplace=True)
+        pre_classification_len = len(dataset_df)
+
+        if pre_normalization_len != pre_classification_len:
+            logging.info(
+                f"Dropped {pre_normalization_len - pre_classification_len} 'nan' "
+                f"SMILES after value unit normalization"
+            )
+
+        if pre_classification_len > 0:
+            dataset_df[classification_colname] = dataset_df.apply(
+                assign_class, axis=1
+            )
+            dataset_df.dropna(subset=[classification_colname], inplace=True)
+            dataset_df[classification_colname] = dataset_df[classification_colname].astype("int32")
+
+        if pre_classification_len != len(dataset_df):
+            logging.info(
+                f"Dropped {pre_classification_len - len(dataset_df)} 'nan' SMILES after "
+                f"'real-valued => class' conversion"
+            )
+
+        cols_to_drop = [col for col in dataset_df.columns if col not in leave_cols]
+        dataset_df.drop(cols_to_drop, axis=1, inplace=True)
+
+        return dataset_df
 
     def normalize_datasets(self, force_normalize_all: bool = False):
         datasets = glob.glob(f"{str(self._raw_input_dir)}/**/*.csv", recursive=True)
