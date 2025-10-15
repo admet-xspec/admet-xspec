@@ -8,3 +8,7 @@
 */__pycache__
 /notebooks
 /external/DeepChemStable
+/data/preprocessing
+**/*.log
+**/logs/*
+.vscode

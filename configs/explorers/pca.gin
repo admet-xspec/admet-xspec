@@ -1,0 +1,4 @@
+PcaExplorer.n_dims = 2
+
+explorer/gin.singleton.constructor = @PcaExplorer
+explorer = @explorer/gin.singleton()

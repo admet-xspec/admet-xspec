@@ -2,7 +2,7 @@ import pandas as pd
 import gin
 import logging
 import pickle
-from src.utils import SmilesCleaner, get_nice_class_name
+from src.utils import get_clean_smiles, get_nice_class_name
 from pathlib import Path
 import json
 
@@ -97,8 +97,7 @@ class InferencePipeline:
         target_col = data["y"] if "y" in data.columns else None
 
         # Clean the SMILES strings
-        cleaner = SmilesCleaner()
-        processed_smiles = smiles_col.apply(cleaner.clean)
+        processed_smiles = smiles_col.apply(get_clean_smiles)
 
         df = pd.DataFrame(
             {

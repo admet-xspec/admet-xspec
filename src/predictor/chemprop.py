@@ -1,5 +1,5 @@
 import logging
-from src.predictor.base import PredictorBase
+from src.predictor.predictor_base import PredictorBase
 import chemprop as chp
 from chemprop.featurizers import SimpleMoleculeMolGraphFeaturizer
 import ray

@@ -1,0 +1,339 @@
+import glob
+import pandas as pd
+from PIL import Image
+from src.utils import get_clean_smiles
+
+import logging
+from src.predictor.predictor_base import PredictorBase
+from src.data.featurizer import FeaturizerBase
+from src.data.explorer import ExplorerBase
+from src.data.split import DataSplitterBase
+import gin
+from pathlib import Path
+
+
+@gin.configurable()
+class ManagementPipeline:
+    """ 'meta-Pipeline' (sounds cool, eh?) for handling temporary/one-off work """
+
+    def __init__(
+        self,
+        raw_input_dir: Path | str,
+        normalized_input_dir: Path | str,
+        output_dir: Path | str,
+        mode: str,
+        force_normalize_all: bool = False,
+        root_categories: list[str] | None = None,
+        explore_datasets_list: list[str] | None = None,
+        explore_datasets_categories: list[str] | None = None,
+        explorer: ExplorerBase = None,
+        splitter: DataSplitterBase = None,
+        predictor: PredictorBase = None,
+        featurizer: FeaturizerBase = None,
+    ):
+        self._raw_input_dir = raw_input_dir
+        self.normalized_input_dir = normalized_input_dir
+        self.output_dir = output_dir
+
+        self.mode = mode
+        self.force_normalize_all = force_normalize_all
+        self.explore_datasets_list = explore_datasets_list
+        self.explore_datasets_categories = explore_datasets_categories
+
+        self.explorer = explorer
+        self.splitter = splitter
+        self.splitter = splitter
+        self.predictor = predictor
+        self.featurizer = featurizer
+
+
+    def run(self):
+        if self.mode == "normalize":
+            assert self.force_normalize_all is not None, (
+                "Ran ManagementPipeline in 'normalize' mode without specifying .force_normalize_all attribute"
+            )
+            self.normalize_datasets()
+        if self.mode == "explorer":
+            assert self.explorer is not None, (
+                "Ran ManagementPipeline in 'explorer' mode without specifying .explorer: ExplorerBase attribute"
+            )
+            assert ((self.explore_datasets_list and not self.explore_datasets_categories)
+                or (not self.explore_datasets_categories and self.explore_datasets_list)
+            ), "Either dataset categories or an explicit list must be specified, not both."
+
+            self.dump_exploratory_visualization()
+
+
+    @staticmethod
+    def _get_smiles_col_in_raw(raw_df) -> str:
+        possible_variants = ["smiles", "SMILES", "Smiles", "molecule"]
+        for smiles_col_variant in possible_variants:
+            if smiles_col_variant in raw_df.columns:
+                return smiles_col_variant
+
+        # Failed
+        raise ValueError(
+            "Failed to find one of SMILES column name variants:",
+            str(possible_variants),
+            "in dataframe:",
+            str(raw_df),
+        )
+
+    @staticmethod
+    def get_clean_smiles_df(self, df: pd.DataFrame, smiles_col: str) -> pd.DataFrame:
+        """Consolidate pandas, our-internal NaN-dropping into one function"""
+        pre_dropna_len = len(df)
+        df = df.dropna(subset=smiles_col)
+
+        pre_cleaning_len = len(df)
+        df[smiles_col].apply(get_clean_smiles)
+
+        df = df.dropna(subset=[smiles_col]).reset_index(drop=True)
+
+        if pre_dropna_len != pre_cleaning_len:
+            logging.info(f"Dropped {pre_dropna_len - pre_cleaning_len} 'nan' SMILES after pd.read_csv")
+        if pre_cleaning_len != len(df):
+            logging.info(f"Dropped {pre_cleaning_len - len(df)} invalid SMILES")
+        logging.info(f"Dataset size: {len(df)}")
+
+        return df
+
+    @staticmethod
+    def get_canon_smiles_df(self, df: pd.DataFrame, smiles_col: str) -> pd.DataFrame:
+        pre_canonicalization_len = len(df)
+        df[smiles_col].apply(get_clean_smiles)
+
+        df = df.dropna(subset=[smiles_col]).reset_index(drop=True)
+
+        if pre_canonicalization_len != len(df):
+            logging.info(
+                f"Canonicalization resulted in {pre_canonicalization_len - len(df)} "
+                "'None' SMILES, all were dropped."
+            )
+
+        return df
+
+    @staticmethod
+    def get_normalized_filename(self, ds_globbed_path: Path) -> str:
+        # TODO: make this somehow global?
+        root_categories = ["AChE", "brain", "liver", "MAO-A"]
+
+        dataset_dir_parts = ds_globbed_path.parent.parts
+
+        begin_index = None
+        for root_domain in root_categories:
+            if root_domain in dataset_dir_parts:
+                begin_index = dataset_dir_parts.index(root_domain)
+                break
+
+        if begin_index is None:
+            raise ValueError(
+                f"Unable to match any part of Path: {str(ds_globbed_path)} "
+                f"to one of root domains (of interest): {str(root_categories)}"
+            )
+
+        basename_parts = dataset_dir_parts[begin_index:]
+        normalized_basename = "_".join(basename_parts).replace("-", "").lower()
+
+        return normalized_basename
+
+
+    def normalize_datasets(self, force_normalize_all: bool = False):
+        datasets = glob.glob(f"{str(self._raw_input_dir)}/**/*.csv", recursive=True)
+
+        # pairs of "before, after" paths
+        datasets_paths: list[tuple[Path, Path]] = [
+            (
+                Path(ds_glob),
+                self.get_df_output_path(
+                    self.get_normalized_filename(Path(ds_glob))
+                )
+            )
+            for ds_glob in datasets
+        ]
+
+        # filter already normalized
+        if not force_normalize_all:
+            datasets_paths = [
+                (ds_glob, ds_path) 
+                for ds_glob, ds_path in datasets_paths 
+                if not ds_path.exists()
+            ]
+        
+        for ds_glob, ds_path in datasets_paths:
+            normalized_dataset_df = self.get_normalized_df(
+                ds_glob
+            )
+
+            normalized_dataset_df.to_csv(ds_path, index=False)
+
+    def get_normalized_df(self, ds_globbed_path: Path, delimiter: str = ";") -> pd.DataFrame:
+        """Get ready-to-save df without NaNs and with canonical SMILES"""
+
+        #TODO: temp solution! remove
+        with ds_globbed_path.open(encoding="utf-8", mode="r") as f:
+            contents = f.read()
+            if "," in contents and ";" not in contents:
+                delimiter = ","
+
+        df_to_normalize = pd.read_csv(ds_globbed_path, delimiter=delimiter)
+        df_to_normalize.rename(
+            columns={
+                self._get_smiles_col_in_raw(df_to_normalize): "smiles"
+            }, inplace=True
+        )
+
+        df_to_normalize = self.get_clean_smiles_df(
+            df_to_normalize,
+            smiles_col="smiles"
+        )
+
+        df_to_normalize = self.get_canon_smiles_df(
+            df_to_normalize,
+            smiles_col="smiles"
+        )
+
+        return df_to_normalize
+
+    def get_df_output_path(
+            self,
+            normalized_basename: str,
+            prefix: str = "",
+            suffix: str = "",
+            extension: str = "csv",
+    ) -> Path:
+        if prefix:
+            normalized_basename = f"{prefix}_{normalized_basename}"
+        if suffix:
+            normalized_basename = f"{normalized_basename}_{suffix}"
+
+        output_path_str = (
+            f"{str(self.normalized_input_dir)}/"
+            f"{normalized_basename}.{extension}"
+        )
+        return Path(output_path_str)
+
+    def get_featurized_dataset_df(self, dataset_path: Path) -> pd.DataFrame:
+        """
+        Featurizes the entire training dataset.
+        Returns pd.DataFrame s.t. smiles: <featurization_str>
+
+        dataset_path: Path to dataset in self.normalized_input_dir
+        """
+
+        df_to_featurize = pd.read_csv(dataset_path)
+
+        len_before_feat = len(df_to_featurize)
+
+        feature_col_name = self.featurizer.feature_name
+        df_to_featurize[feature_col_name] = df_to_featurize["smiles"].apply(
+            lambda smiles: self.featurizer.feature_to_str(
+                self.featurizer.featurize(smiles)
+            )
+        )
+
+        len_after_feat = len(df_to_featurize)
+        assert len_before_feat == len_after_feat,(
+            f"{len_before_feat - len_after_feat} SMILES failed to featurize with"
+            f"{self.featurizer.name}. 'get_featurized_dataset_df' expects featurizable SMILES."
+        )
+        
+        return df_to_featurize
+
+    def save_featurized_dataset(
+            self,
+            dataset_path: Path,
+            df_featurized: pd.DataFrame
+    ):
+        """dataset_path: Path to dataset in self.output_dir (normalized data & path)."""
+
+        feature_col_name = self.featurizer.feature_name
+        df_featurized[feature_col_name] = df_featurized[feature_col_name].apply(
+            lambda feature: self.featurizer.feature_to_str(feature)
+        )
+
+        basename = dataset_path.name
+        df_featurized.to_csv(
+            self.output_dir / self.featurizer.name / basename
+        )
+
+    def load_featurized_dataset(
+            self,
+            dataset_path: Path,
+            df_featurized: pd.DataFrame
+    ):
+        """dataset_path: Path to dataset in self.output_dir (normalized data & path)."""
+        basename = dataset_path.name
+        df_featurized = pd.read_csv(
+            self.output_dir / self.featurizer.name / basename
+        )
+
+        feature_col_name = self.featurizer.feature_name
+        df_featurized[feature_col_name] = df_featurized[feature_col_name].apply(
+            lambda str_rep: self.featurizer.str_to_feature(str_rep)
+        )
+
+    def get_pca_input_form(self, featurized_dataset_df: pd.DataFrame) -> pd.DataFrame:
+        featurized_dataset_df.drop(columns="smiles", inplace=True)
+        pca_ready_df = pd.concat([
+            featurized_dataset_df[
+                self.featurizer.feature_name
+            ].apply(lambda s: pd.Series(list(map(int, s))))
+            .add_prefix('bit_')
+        ], axis=1)
+
+        return pca_ready_df
+
+    def get_visualization(self, featurized_df_dict: dict[str, pd.DataFrame]) -> Image.Image:
+        dataset_dict = {
+            k: self.explorer.get_analyzed_form(
+                self.get_pca_input_form(v)
+            ) for k, v in featurized_df_dict.items()
+        }
+
+        sklearn_visualizable_form = self.explorer.get_visualizable_form(
+            dataset_dict
+        )
+
+        visualization = self.explorer.get_visualization(
+            sklearn_visualizable_form
+        )
+
+        return visualization
+
+    def save_visualization(self, visualization: Image.Image):
+        output_path = Path(
+            self.output_dir
+        ) / f"{self.featurizer.name}_visualization.jpg"
+
+        visualization.save(output_path)
+
+    def dump_exploratory_visualization(self):
+        dataset_paths = None
+        if self.explore_datasets_list:
+            dataset_paths: list[Path] = [
+                self.normalized_input_dir / Path(dataset_path)
+                for dataset_path in self.explore_datasets_list
+            ]
+        elif self.explore_datasets_categories:
+            candidates = glob.glob(str(self.normalized_input_dir / "*.csv"))
+            dataset_paths = [
+                Path(candidate)
+                for candidate in candidates
+                for category in self.explore_datasets_categories
+                if category in candidate.lower()
+            ]
+
+        assert dataset_paths
+
+        featurized_df_dict: dict[str, pd.DataFrame] = {
+            str(ds_path): self.get_featurized_dataset_df(ds_path)
+            for ds_path in dataset_paths
+        }
+
+        visualization = self.get_visualization(
+            featurized_df_dict
+        )
+
+        self.save_visualization(visualization)
+        

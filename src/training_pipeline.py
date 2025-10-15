@@ -1,5 +1,5 @@
 import pandas as pd
-from src.utils import SmilesCleaner, get_nice_class_name
+from src.utils import get_clean_smiles, get_nice_class_name
 import logging
 from src.predictor.predictor_base import PredictorBase
 from src.data.featurizer import (
@@ -66,10 +66,9 @@ class TrainingPipeline:
         df = pd.read_csv(self.data_path)
 
         # Sanitize the data
-        cleaner = SmilesCleaner()
         pre_cleaning_length = len(df)
         df.columns = df.columns.str.lower()
-        df["smiles"] = df["smiles"].apply(cleaner.clean)
+        df["smiles"] = df["smiles"].apply(get_clean_smiles)
         df.dropna(subset=["smiles"], inplace=True)
         if pre_cleaning_length != len(df):
             logging.info(f"Dropped {pre_cleaning_length - len(df)} invalid SMILES")
