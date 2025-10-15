@@ -1,22 +1,14 @@
 import glob
 import pandas as pd
 from PIL import Image
-from src.utils import (
-    SmilesCleaner,
-    get_canonical_smiles,
-    get_nice_class_name
-)
+from src.utils import get_clean_smiles
+
 import logging
 from src.predictor.predictor_base import PredictorBase
-from src.data.featurizer import (
-    FeaturizerBase,
-)
+from src.data.featurizer import FeaturizerBase
 from src.data.explorer import ExplorerBase
 from src.data.split import DataSplitterBase
-from src.training_pipeline import TrainingPipeline
-import json
 import gin
-import numpy as np
 from pathlib import Path
 
 
@@ -31,6 +23,7 @@ class ManagementPipeline:
         output_dir: Path | str,
         mode: str,
         force_normalize_all: bool = False,
+        root_categories: list[str] | None = None,
         explore_datasets_list: list[str] | None = None,
         explore_datasets_categories: list[str] | None = None,
         explorer: ExplorerBase = None,
@@ -53,23 +46,6 @@ class ManagementPipeline:
         self.predictor = predictor
         self.featurizer = featurizer
 
-        #TODO: make more elegant
-        self.smiles_cleaner = SmilesCleaner()
-
-    @staticmethod
-    def _get_smiles_col_in_raw(raw_df) -> str:
-        possible_variants = ["smiles", "SMILES", "Smiles", "molecule"]
-        for smiles_col_variant in possible_variants:
-            if smiles_col_variant in raw_df.columns:
-                return smiles_col_variant
-
-        # Failed
-        raise ValueError(
-            "Failed to find one of SMILES column name variants:",
-            str(possible_variants),
-            "in dataframe:",
-            str(raw_df),
-        )
 
     def run(self):
         if self.mode == "normalize":
@@ -86,6 +62,81 @@ class ManagementPipeline:
             ), "Either dataset categories or an explicit list must be specified, not both."
 
             self.dump_exploratory_visualization()
+
+
+    @staticmethod
+    def _get_smiles_col_in_raw(raw_df) -> str:
+        possible_variants = ["smiles", "SMILES", "Smiles", "molecule"]
+        for smiles_col_variant in possible_variants:
+            if smiles_col_variant in raw_df.columns:
+                return smiles_col_variant
+
+        # Failed
+        raise ValueError(
+            "Failed to find one of SMILES column name variants:",
+            str(possible_variants),
+            "in dataframe:",
+            str(raw_df),
+        )
+
+    @staticmethod
+    def get_clean_smiles_df(self, df: pd.DataFrame, smiles_col: str) -> pd.DataFrame:
+        """Consolidate pandas, our-internal NaN-dropping into one function"""
+        pre_dropna_len = len(df)
+        df = df.dropna(subset=smiles_col)
+
+        pre_cleaning_len = len(df)
+        df[smiles_col].apply(get_clean_smiles)
+
+        df = df.dropna(subset=[smiles_col]).reset_index(drop=True)
+
+        if pre_dropna_len != pre_cleaning_len:
+            logging.info(f"Dropped {pre_dropna_len - pre_cleaning_len} 'nan' SMILES after pd.read_csv")
+        if pre_cleaning_len != len(df):
+            logging.info(f"Dropped {pre_cleaning_len - len(df)} invalid SMILES")
+        logging.info(f"Dataset size: {len(df)}")
+
+        return df
+
+    @staticmethod
+    def get_canon_smiles_df(self, df: pd.DataFrame, smiles_col: str) -> pd.DataFrame:
+        pre_canonicalization_len = len(df)
+        df[smiles_col].apply(get_clean_smiles)
+
+        df = df.dropna(subset=[smiles_col]).reset_index(drop=True)
+
+        if pre_canonicalization_len != len(df):
+            logging.info(
+                f"Canonicalization resulted in {pre_canonicalization_len - len(df)} "
+                "'None' SMILES, all were dropped."
+            )
+
+        return df
+
+    @staticmethod
+    def get_normalized_filename(self, ds_globbed_path: Path) -> str:
+        # TODO: make this somehow global?
+        root_categories = ["AChE", "brain", "liver", "MAO-A"]
+
+        dataset_dir_parts = ds_globbed_path.parent.parts
+
+        begin_index = None
+        for root_domain in root_categories:
+            if root_domain in dataset_dir_parts:
+                begin_index = dataset_dir_parts.index(root_domain)
+                break
+
+        if begin_index is None:
+            raise ValueError(
+                f"Unable to match any part of Path: {str(ds_globbed_path)} "
+                f"to one of root domains (of interest): {str(root_categories)}"
+            )
+
+        basename_parts = dataset_dir_parts[begin_index:]
+        normalized_basename = "_".join(basename_parts).replace("-", "").lower()
+
+        return normalized_basename
+
 
     def normalize_datasets(self, force_normalize_all: bool = False):
         datasets = glob.glob(f"{str(self._raw_input_dir)}/**/*.csv", recursive=True)
@@ -118,6 +169,8 @@ class ManagementPipeline:
 
     def get_normalized_df(self, ds_globbed_path: Path, delimiter: str = ";") -> pd.DataFrame:
         """Get ready-to-save df without NaNs and with canonical SMILES"""
+
+        #TODO: temp solution! remove
         with ds_globbed_path.open(encoding="utf-8", mode="r") as f:
             contents = f.read()
             if "," in contents and ";" not in contents:
@@ -141,63 +194,6 @@ class ManagementPipeline:
         )
 
         return df_to_normalize
-
-    def get_clean_smiles_df(self, df: pd.DataFrame, smiles_col: str) -> pd.DataFrame:
-        """Consolidate pandas, our-internal NaN-dropping into one function"""
-        pre_dropna_len = len(df)
-        df = df.dropna(subset=smiles_col)
-
-        pre_cleaning_len = len(df)
-        df[smiles_col].apply(lambda s: self.smiles_cleaner.clean(s))
-
-        df = df.dropna(subset=[smiles_col]).reset_index(drop=True)
-        
-        if pre_dropna_len != pre_cleaning_len:
-            logging.info(f"Dropped {pre_dropna_len - pre_cleaning_len} 'nan' SMILES after pd.read_csv")
-        if pre_cleaning_len != len(df):
-            logging.info(f"Dropped {pre_cleaning_len - len(df)} invalid SMILES")
-        logging.info(f"Dataset size: {len(df)}")
-
-        return df
-
-    def get_canon_smiles_df(self, df: pd.DataFrame, smiles_col: str) -> pd.DataFrame:
-        pre_canonicalization_len = len(df)
-        df[smiles_col].apply(
-            lambda smiles: get_canonical_smiles(smiles)
-        )
-
-        df = df.dropna(subset=[smiles_col]).reset_index(drop=True)
-
-        if pre_canonicalization_len != len(df):
-            logging.info(
-                f"Canonicalization resulted in {pre_canonicalization_len - len(df)} "
-                "'None' SMILES, all were dropped."
-            )
-
-        return df
-
-    def get_normalized_filename(self, ds_globbed_path: Path) -> str:
-        # TODO: make this somehow global?
-        root_categories = ["AChE", "brain", "liver", "MAO-A"]
-
-        dataset_dir_parts = ds_globbed_path.parent.parts
-
-        begin_index = None
-        for root_domain in root_categories:
-            if root_domain in dataset_dir_parts:
-                begin_index = dataset_dir_parts.index(root_domain)
-                break
-
-        if begin_index is None:
-            raise ValueError(
-                f"Unable to match any part of Path: {str(ds_globbed_path)} "
-                f"to one of root domains (of interest): {str(root_categories)}"
-            )
-
-        basename_parts = dataset_dir_parts[begin_index:]
-        normalized_basename = "_".join(basename_parts).replace("-", "").lower()
-
-        return normalized_basename
 
     def get_df_output_path(
             self,
