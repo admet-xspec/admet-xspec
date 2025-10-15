@@ -1,14 +1,12 @@
 import glob
 import pandas as pd
 from PIL import Image
-
 from src.utils import get_clean_smiles, get_converted_unit
 
 import logging
 from src.predictor.predictor_base import PredictorBase
 from src.data.featurizer import FeaturizerBase
-from src.data.visualizer import VisualizerBase
-from src.data.reducer import ReducerBase
+from src.data.explorer import ExplorerBase
 from src.data.split import DataSplitterBase
 import gin
 import numpy as np
@@ -18,9 +16,6 @@ from pathlib import Path
 @gin.configurable()
 class ManagementPipeline:
     """ 'meta-Pipeline' (sounds cool, eh?) for handling temporary/one-off work """
-
-    possible_smiles_cols = ["SMILES", "Smiles", "molecule"]
-    root_categories = None
 
     def __init__(
         self,
@@ -35,27 +30,28 @@ class ManagementPipeline:
         classify_target_unit: str | None = "uM",
         explore_datasets_list: list[str] | None = None,
         explore_datasets_categories: list[str] | None = None,
-        reducer: ReducerBase = None,
+        explorer: ExplorerBase = None,
         splitter: DataSplitterBase = None,
         predictor: PredictorBase = None,
         featurizer: FeaturizerBase = None,
     ):
+        self.possible_smiles_cols = ["smiles", "SMILES", "Smiles", "molecule"]
+
         self._raw_input_dir: Path = Path(raw_input_dir)
         self.normalized_input_dir: Path = Path(normalized_input_dir)
         self.output_dir: Path = Path(output_dir)
 
         self.mode = mode
         self.force_normalize_all = force_normalize_all
+        self.root_categories = root_categories
         self.classify_datasets_list = classify_datasets_list
         self.classify_thresholds = classify_thresholds
         self.classify_target_unit = classify_target_unit
         self.explore_datasets_list = explore_datasets_list
         self.explore_datasets_categories = explore_datasets_categories
 
-        ManagementPipeline.root_categories = root_categories
-
-        self.reducer = reducer
-        self.visualizer = reducer.get_associated_visualizer()
+        self.explorer = explorer
+        self.splitter = splitter
         self.splitter = splitter
         self.predictor = predictor
         self.featurizer = featurizer
@@ -82,19 +78,19 @@ class ManagementPipeline:
                 "specifying .force_normalize_all attribute"
             )
             self.normalize_datasets()
-        elif self.mode == "visualize":
-            assert self.reducer is not None, (
-                "Ran ManagementPipeline in 'visualize' mode without "
-                "specifying .reducer: ReducerBase attribute"
+        elif self.mode == "explorer":
+            assert self.explorer is not None, (
+                "Ran ManagementPipeline in 'explorer' mode without "
+                "specifying .explorer: ExplorerBase attribute"
             )
             assert ((self.explore_datasets_list and not self.explore_datasets_categories)
-                or (not self.explore_datasets_list and self.explore_datasets_categories)
+                or (not self.explore_datasets_categories and self.explore_datasets_list)
             ), "Either dataset categories or an explicit list must be specified, not both."
 
             self.dump_exploratory_visualization()
 
     @staticmethod
-    def get_clean_smiles_df(df: pd.DataFrame, smiles_col: str) -> pd.DataFrame:
+    def get_clean_smiles_df(self, df: pd.DataFrame, smiles_col: str) -> pd.DataFrame:
         """Consolidate pandas, our-internal NaN-dropping into one function"""
         pre_dropna_len = len(df)
         df = df.dropna(subset=smiles_col)
@@ -113,7 +109,7 @@ class ManagementPipeline:
         return df
 
     @staticmethod
-    def get_canon_smiles_df(df: pd.DataFrame, smiles_col: str) -> pd.DataFrame:
+    def get_canon_smiles_df(self, df: pd.DataFrame, smiles_col: str) -> pd.DataFrame:
         pre_canonicalization_len = len(df)
         df[smiles_col].apply(get_clean_smiles)
 
@@ -127,12 +123,15 @@ class ManagementPipeline:
 
         return df
 
-    @classmethod
-    def get_normalized_filename(cls, ds_globbed_path: Path) -> str:
+    @staticmethod
+    def get_normalized_filename(ds_globbed_path: Path) -> str:
+        # TODO: make this somehow global?
+        root_categories = ["AChE", "brain", "liver", "MAO-A"]
+
         dataset_dir_parts = ds_globbed_path.parent.parts
 
         begin_index = None
-        for root_domain in cls.root_categories:
+        for root_domain in root_categories:
             if root_domain in dataset_dir_parts:
                 begin_index = dataset_dir_parts.index(root_domain)
                 break
@@ -140,7 +139,7 @@ class ManagementPipeline:
         if begin_index is None:
             raise ValueError(
                 f"Unable to match any part of Path: {str(ds_globbed_path)} "
-                f"to one of root domains (of interest): {str(cls.root_categories)}"
+                f"to one of root domains (of interest): {str(root_categories)}"
             )
 
         basename_parts = dataset_dir_parts[begin_index:]
@@ -148,16 +147,15 @@ class ManagementPipeline:
 
         return normalized_basename
 
-    @classmethod
-    def get_smiles_col_in_raw(cls, raw_df) -> str:
-        for smiles_col_variant in cls.possible_smiles_cols:
+    def _get_smiles_col_in_raw(self, raw_df) -> str:
+        for smiles_col_variant in self.possible_smiles_cols:
             if smiles_col_variant in raw_df.columns:
                 return smiles_col_variant
 
         # Failed
         raise ValueError(
             "Failed to find one of SMILES column name variants:",
-            str(cls.possible_smiles_cols),
+            str(self.possible_smiles_cols),
             "in dataframe:",
             str(raw_df),
         )
@@ -296,10 +294,16 @@ class ManagementPipeline:
     def get_normalized_df(self, ds_globbed_path: Path, delimiter: str = ";") -> pd.DataFrame:
         """Get ready-to-save df without NaNs and with canonical SMILES"""
 
+        #TODO: temp solution! remove
+        with ds_globbed_path.open(encoding="utf-8", mode="r") as f:
+            contents = f.read()
+            if "," in contents and ";" not in contents:
+                delimiter = ","
+
         df_to_normalize = pd.read_csv(ds_globbed_path, delimiter=delimiter)
         df_to_normalize.rename(
             columns={
-                self.get_smiles_col_in_raw(df_to_normalize): "smiles"
+                self._get_smiles_col_in_raw(df_to_normalize): "smiles"
             }, inplace=True
         )
 
@@ -322,7 +326,6 @@ class ManagementPipeline:
             suffix: str = "",
             extension: str = "csv",
     ) -> Path:
-        """Get path to save normalized df at"""
         if prefix:
             normalized_basename = f"{prefix}_{normalized_basename}"
         if suffix:
@@ -337,7 +340,7 @@ class ManagementPipeline:
     def get_featurized_dataset_df(self, dataset_path: Path) -> pd.DataFrame:
         """
         Featurizes the entire training dataset.
-        Returns pd.DataFrame with a featurized input column.
+        Returns pd.DataFrame s.t. smiles: <featurization_str>
 
         dataset_path: Path to dataset in self.normalized_input_dir
         """
@@ -349,7 +352,7 @@ class ManagementPipeline:
         feature_col_name = self.featurizer.feature_name
         df_to_featurize[feature_col_name] = df_to_featurize["smiles"].apply(
             lambda smiles: self.featurizer.feature_to_str(
-                self.featurizer.featurize([smiles])
+                self.featurizer.featurize(smiles)
             )
         )
 
@@ -380,7 +383,8 @@ class ManagementPipeline:
 
     def load_featurized_dataset(
             self,
-            dataset_path: Path
+            dataset_path: Path,
+            df_featurized: pd.DataFrame
     ):
         """dataset_path: Path to dataset in self.output_dir (normalized data & path)."""
         basename = dataset_path.name
@@ -393,10 +397,7 @@ class ManagementPipeline:
             lambda str_rep: self.featurizer.str_to_feature(str_rep)
         )
 
-        return df_featurized
-
     def get_pca_input_form(self, featurized_dataset_df: pd.DataFrame) -> pd.DataFrame:
-        """Get the form that PCA dim reduction anticipates from a featurized dataset (curr.: ECFP)"""
         featurized_dataset_df.drop(columns="smiles", inplace=True)
         pca_ready_df = pd.concat([
             featurized_dataset_df[
@@ -408,37 +409,30 @@ class ManagementPipeline:
         return pca_ready_df
 
     def get_visualization(self, featurized_df_dict: dict[str, pd.DataFrame]) -> Image.Image:
-        """Take in the featurized versions of dataframes, dim-reduce them and return a vis. image"""
-        reduced_df_dict = {
-            k: self.reducer.get_reduced_df(
+        dataset_dict = {
+            k: self.explorer.get_analyzed_form(
                 self.get_pca_input_form(v)
             ) for k, v in featurized_df_dict.items()
         }
 
-        visualization = self.visualizer.get_visualization(
-            reduced_df_dict
+        sklearn_visualizable_form = self.explorer.get_visualizable_form(
+            dataset_dict
+        )
+
+        visualization = self.explorer.get_visualization(
+            sklearn_visualizable_form
         )
 
         return visualization
 
     def save_visualization(self, visualization: Image.Image):
-        """Take a visualization image and save it to visualization output dir."""
-        vis_output_dir = Path(
+        output_path = Path(
             self.output_dir
-        ) / "visualizations"
-
-        vis_output_dir.mkdir(parents=True, exist_ok=True)
-
-        if self.explore_datasets_categories:
-            categories_prefix = "_".join([cat[:2] for cat in self.explore_datasets_categories])
-            output_path = vis_output_dir / f"{categories_prefix}_{self.featurizer.name}_visualization.png"
-        else:
-            output_path = vis_output_dir / f"{self.featurizer.name}_visualization.png"
+        ) / f"{self.featurizer.name}_visualization.jpg"
 
         visualization.save(output_path)
 
     def dump_exploratory_visualization(self):
-        """Go over what is to be visualized from .cfg and save it to disk."""
         dataset_paths = None
         if self.explore_datasets_list:
             dataset_paths: list[Path] = [
