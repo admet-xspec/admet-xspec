@@ -25,8 +25,8 @@ class TrainingPipeline:
         out_dir: Path | str = "models",
         test_size: float = 0.2,
         stratify: bool = True,
-        train_path: list[Path] | list[str] | Path | str = None,
-        test_path: list[Path] | list[str] | Path | str = None,
+        train_paths: list[Path] | list[str] | Path | str = None,
+        test_paths: list[Path] | list[str] | Path | str = None,
         refit_on_full_data: bool = False,
     ):
 
@@ -43,6 +43,13 @@ class TrainingPipeline:
         self.stratify = stratify
         self.refit_on_full_data = refit_on_full_data
 
+        self.train_path = (
+            self._handle_multiple_data_input_paths(train_paths) if train_path else []
+        )
+        self.test_path = (
+            self._handle_multiple_data_input_paths(test_paths) if test_path else []
+        )
+
         # If the predictor has an inject_featurizer method, invoke it
         if hasattr(predictor, "inject_featurizer"):
             predictor.inject_featurizer(featurizer)
@@ -51,20 +58,6 @@ class TrainingPipeline:
             logging.info(
                 f"Model {get_nice_class_name(predictor)} uses internal featurizer - ignoring {get_nice_class_name(featurizer)}."
             )
-
-        if train_path:
-            if not isinstance(train_path, list):
-                train_path = [train_path]
-            self.train_path = [Path(train_path) for train_path in train_path]
-        else:
-            self.train_path = []
-
-        if test_path:
-            if not isinstance(test_path, list):
-                test_path = [test_path]
-            self.test_path = [Path(test_path) for test_path in test_path]
-        else:
-            self.test_path = []
 
     def prepare_data(self):
         """
@@ -139,7 +132,7 @@ class TrainingPipeline:
         Evaluates model performance on a holdout test set and saves the metrics to a file.
         """
 
-        if self.test_path is None:
+        if not self.test_path:
             raise ValueError(
                 "The dataset has not been split yet. Use prepare_data method first"
             )
@@ -171,7 +164,7 @@ class TrainingPipeline:
         Refits the model on the entire dataset (train + test) and saves the parameters.
         """
 
-        if self.train_path is None or self.test_path is None:
+        if not self.train_path or not self.test_path:
             raise ValueError(
                 "The dataset has not been split yet. Use prepare_data method first"
             )
@@ -213,3 +206,11 @@ class TrainingPipeline:
         return pd.concat(all_smiles, ignore_index=True), pd.concat(
             all_y, ignore_index=True
         )
+
+    def _handle_multiple_data_input_paths(
+        self, paths: list[Path] | list[str] | Path | str
+    ) -> list[Path]:
+        if isinstance(paths, (str, Path)):
+            return [Path(paths)]
+        else:
+            return [Path(p) for p in paths]
