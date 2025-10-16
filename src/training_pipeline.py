@@ -201,11 +201,15 @@ class TrainingPipeline:
             raise ValueError("No 'y' column detected in the data .csv")
         return data["smiles"], data["y"]
 
-    def _parse_multiple_datasets(self, csv_paths: str | Path) -> tuple[pd.Series, pd.Series]:
+    def _parse_multiple_datasets(
+        self, csv_paths: str | Path
+    ) -> tuple[pd.Series, pd.Series]:
         all_smiles = []
         all_y = []
         for path in csv_paths:
             smiles, y = self._parse_data(path)
             all_smiles.append(smiles)
             all_y.append(y)
-        return pd.concat(all_smiles, ignore_index=True), pd.concat(all_y, ignore_index=True)
+        return pd.concat(all_smiles, ignore_index=True), pd.concat(
+            all_y, ignore_index=True
+        )

@@ -30,12 +30,13 @@ class FeaturizerBase(abc.ABC):
     def name(self) -> str:
         pass
 
-    #TODO: make abstract, dunno what the rest should implement yet
+    # TODO: make abstract, dunno what the rest should implement yet
     def feature_to_str(self, feature) -> str:
         pass
 
     def str_to_feature(self, string: str):
         pass
+
 
 @gin.configurable
 class EcfpFeaturizer(FeaturizerBase):

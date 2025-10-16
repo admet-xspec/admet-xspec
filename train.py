@@ -38,7 +38,7 @@ if __name__ == "__main__":
     temp_log_file = tempfile.NamedTemporaryFile(delete=False)
     logging.basicConfig(
         level=args.log_level,
-        format='%(message)s',
+        format="%(message)s",
         handlers=[
             logging.FileHandler(temp_log_file.name),
             logging.StreamHandler(),
@@ -62,8 +62,7 @@ if __name__ == "__main__":
     if not (pipeline.train_path and pipeline.test_path):
         pipeline.prepare_data()
     else:
-        logging.info(
-            f"Using explicit train and test datasets:")
+        logging.info(f"Using explicit train and test datasets:")
 
         logging.info("Train data paths:")
         for p in pipeline.train_path:

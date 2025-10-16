@@ -11,6 +11,7 @@ RDLogger.DisableLog("rdApp.*")
 _RdkitUncharger = Uncharger()
 _RdkitSaltRemover = SaltRemover()
 
+
 def get_clean_smiles(smiles: str, remove_salt: bool = True) -> str | None:
     """
     Strips salts and removes charges from a molecule. Returns SMILES in canonical form.
@@ -23,7 +24,7 @@ def get_clean_smiles(smiles: str, remove_salt: bool = True) -> str | None:
             return None
         if remove_salt:
             mol = SaltRemover().StripMol(mol)
-            mol = _RdkitUncharger.un.uncharge(mol) # (*) except for this
+            mol = _RdkitUncharger.un.uncharge(mol)  # (*) except for this
             # leave only the largest fragment
             mol_fragments = Chem.GetMolFrags(mol, asMols=True)
             if len(mol_fragments) > 0:
@@ -34,6 +35,7 @@ def get_clean_smiles(smiles: str, remove_salt: bool = True) -> str | None:
     else:
         return None
 
+
 def get_nice_class_name(obj):
     """
     Takes an object of any class and returns a clean name of the class.
@@ -41,6 +43,7 @@ def get_nice_class_name(obj):
     :return: str
     """
     return type(obj).__name__
+
 
 def get_metric_callable(metric_name: str):
     metrics_dict = {
@@ -58,6 +61,7 @@ def get_metric_callable(metric_name: str):
         raise ValueError
     return metrics_dict[metric_name]
 
+
 def log_markdown_table(dictionary: dict):
     """
     Logs a dictionary as a horizonatal markdown table.
@@ -72,7 +76,16 @@ def log_markdown_table(dictionary: dict):
 
     header = "| " + " | ".join(dictionary.keys()) + " |"
     separator = "| " + " | ".join(["---"] * len(dictionary)) + " |"
-    values = "| " + " | ".join([f"{v:.3f}" if isinstance(v, float) else str(v) for v in dictionary.values()]) + " |"
+    values = (
+        "| "
+        + " | ".join(
+            [
+                f"{v:.3f}" if isinstance(v, float) else str(v)
+                for v in dictionary.values()
+            ]
+        )
+        + " |"
+    )
 
     table = "\n".join([header, separator, values])
     logging.info("\n" + table)
