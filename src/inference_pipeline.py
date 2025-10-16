@@ -2,7 +2,13 @@ import pandas as pd
 import gin
 import logging
 import pickle
-from src.utils import get_clean_smiles, get_nice_class_name, log_markdown_table
+from src.utils import (
+    get_clean_smiles,
+    get_nice_class_name,
+    log_markdown_table,
+    parse_smiles_from_messy_csv,
+    parse_targets_from_messy_csv,
+)
 from pathlib import Path
 import json
 
@@ -89,16 +95,13 @@ class InferencePipeline:
     def _prepare_data(self, data_path):
         """
         Loads the data and cleans it up in preparation for inference
+        The inference pipeline expects a .csv file with at least one column named 'smiles'.
+        Optionally, a second column named 'y' can be present for evaluation purposes.
         :return:
         """
-        data = pd.read_csv(data_path)
-        logging.info(f"Loaded data from {data_path}")
-
-        # Parse the SMILES column
-        smiles_col = data["smiles"] if "smiles" in data.columns else None
-        if smiles_col is None:
-            raise ValueError("No 'smiles' column found in the data")
-        target_col = data["y"] if "y" in data.columns else None
+        logging.info(f"Loading data from {data_path}")
+        smiles_col = parse_smiles_from_messy_csv(data_path)
+        target_col = parse_targets_from_messy_csv(data_path)
 
         # Clean the SMILES strings
         processed_smiles = smiles_col.apply(get_clean_smiles)

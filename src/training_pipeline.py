@@ -1,5 +1,11 @@
 import pandas as pd
-from src.utils import get_clean_smiles, get_nice_class_name, log_markdown_table
+from src.utils import (
+    get_clean_smiles,
+    get_nice_class_name,
+    log_markdown_table,
+    parse_smiles_from_messy_csv,
+    parse_targets_from_messy_csv,
+)
 import logging
 from src.predictor.predictor_base import PredictorBase
 from src.data.featurizer import (
@@ -186,13 +192,10 @@ class TrainingPipeline:
         self.predictor.save(self.out_dir, name="model_full_refit")
 
     def _parse_data(self, csv_path: str | Path) -> tuple[pd.Series, pd.Series]:
-        data = pd.read_csv(csv_path)
-        logging.debug(f"Reading data from {csv_path}")
-        if "smiles" not in data.columns:
-            raise ValueError("No 'smiles' column detected in the data .csv")
-        if "y" not in data.columns:
-            raise ValueError("No 'y' column detected in the data .csv")
-        return data["smiles"], data["y"]
+        logging.info(f"Loading data from {csv_path}")
+        smiles_col = parse_smiles_from_messy_csv(csv_path)
+        y_col = parse_targets_from_messy_csv(csv_path)
+        return smiles_col, y_col
 
     def _parse_multiple_datasets(
         self, csv_paths: str | Path
