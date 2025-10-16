@@ -2,7 +2,7 @@ import pandas as pd
 import gin
 import logging
 import pickle
-from src.utils import get_clean_smiles, get_nice_class_name
+from src.utils import get_clean_smiles, get_nice_class_name, log_markdown_table
 from pathlib import Path
 import json
 
@@ -60,6 +60,10 @@ class InferencePipeline:
         # TODO: Make this more robust, as model.evaluate() method uses predict() internally
         metrics = self.model.evaluate(X, y_true)
         logging.info(f"Evaluation metrics: {metrics}")
+
+        # Log metrics in markdown format
+        logging.info("Metrics (markdown):")
+        log_markdown_table(metrics)
 
         # Save metrics
         metrics_path = self.out_dir / "metrics.json"

@@ -1,7 +1,7 @@
 """
 Main script to run the training pipeline.
 
-It is configured via a gin configuration file (see configs/train.gin for an example).
+It is configured via a gin configuration file (see configs/RFF_AChE_ECFP_human.gin for an example).
 The training pipeline includes:
 - Preparing and splitting the data (if train and test paths are not provided explicitly)
 - Training the model (using set hyperparameters or optimizing them via cross-validation)
@@ -24,7 +24,7 @@ if __name__ == "__main__":
         "-c",
         type=str,
         help="Path to the config file",
-        default="configs/train.gin",
+        default="configs/RFF_AChE_ECFP_human.gin",
     )
     parser.add_argument(
         "--log-level",
@@ -38,6 +38,7 @@ if __name__ == "__main__":
     temp_log_file = tempfile.NamedTemporaryFile(delete=False)
     logging.basicConfig(
         level=args.log_level,
+        format='%(message)s',
         handlers=[
             logging.FileHandler(temp_log_file.name),
             logging.StreamHandler(),
@@ -62,14 +63,26 @@ if __name__ == "__main__":
         pipeline.prepare_data()
     else:
         logging.info(
-            f"Using explicit train and test datasets: {pipeline.train_path}, {pipeline.test_path}"
-        )
+            f"Using explicit train and test datasets:")
+
+        logging.info("Train data paths:")
+        for p in pipeline.train_path:
+            logging.info(f" - {p}")
+
+        logging.info("Test data paths:")
+        for p in pipeline.test_path:
+            logging.info(f" - {p}")
 
     # Train the model
     pipeline.train()
 
     # Evaluate the model
     pipeline.evaluate()
+
+    # Refit on the entire dataset (train + test) if specified in the gin config
+    if pipeline.refit_on_full_data:
+        logging.info("Refitting the model on the entire dataset (train + test).")
+        pipeline.refit()
 
     # Log time
     time_elapsed = time.time() - time_start

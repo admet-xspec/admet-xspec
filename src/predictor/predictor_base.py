@@ -32,11 +32,11 @@ class PredictorBase(abc.ABC):
         """
         pass
 
-    def save(self, dir_path: str | Path):
+    def save(self, dir_path: str | Path, name: str = "model"):
         """
         Pickle the model to dir_path/model.pkl
         """
-        path = Path(dir_path) / "model.pkl"
+        path = Path(dir_path) / f"{name}.pkl"
         Path(path).parent.mkdir(parents=True, exist_ok=True)
         # Pickle the model
         with open(path, "wb") as f:

@@ -10,7 +10,7 @@ from sklearn.preprocessing import StandardScaler
 
 
 class FeaturizerBase(abc.ABC):
-    def __init__(self, feature_name):
+    def __init__(self):
         pass
 
     @abc.abstractmethod

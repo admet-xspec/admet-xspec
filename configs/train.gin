@@ -25,3 +25,6 @@
 #   (The .csv files should contain 'smiles' and 'y' columns)
     TrainingPipeline.train_path = None
     TrainingPipeline.test_path = None
+
+#   [ADVANCED USAGE] Whether to refit the model on the whole dataset (train + test) after evaluation
+    TrainingPipeline.refit_on_full_data = False

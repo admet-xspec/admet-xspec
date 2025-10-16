@@ -3,6 +3,7 @@ from rdkit.Chem.SaltRemover import SaltRemover
 from rdkit.Chem.MolStandardize.rdMolStandardize import Uncharger
 from rdkit import RDLogger
 from sklearn import metrics
+import logging
 
 # disable RDKit warnings
 RDLogger.DisableLog("rdApp.*")
@@ -56,3 +57,22 @@ def get_metric_callable(metric_name: str):
     if metric_name not in metrics_dict.keys():
         raise ValueError
     return metrics_dict[metric_name]
+
+def log_markdown_table(dictionary: dict):
+    """
+    Logs a dictionary as a horizonatal markdown table.
+    :param dictionary: dict
+    :return: None
+    """
+    if not isinstance(dictionary, dict):
+        raise ValueError("Input must be a dictionary")
+    if len(dictionary) == 0:
+        logging.info("Empty dictionary - nothing to log")
+        return
+
+    header = "| " + " | ".join(dictionary.keys()) + " |"
+    separator = "| " + " | ".join(["---"] * len(dictionary)) + " |"
+    values = "| " + " | ".join([f"{v:.3f}" if isinstance(v, float) else str(v) for v in dictionary.values()]) + " |"
+
+    table = "\n".join([header, separator, values])
+    logging.info("\n" + table)
