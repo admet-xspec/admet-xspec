@@ -1,25 +1,12 @@
-# dont change
-ManagementPipeline.explorer = @explorer/gin.singleton()
+include 'configs/_global.gin'
+
+ManagementPipeline.reducer = @reducer/gin.singleton()
 ManagementPipeline.featurizer = @featurizer/gin.singleton()
-ManagementPipeline.predictor = @predictor/gin.singleton()
-ManagementPipeline.splitter = @splitter/gin.singleton()
 
+ManagementPipeline.mode = 'visualize'
+ManagementPipeline.explore_datasets_categories = %root_categories # so: all of them
 
-# Provide a name for the model
-ManagementPipeline.model_name = None
-
-
-# Directory to which the models are saved
+ManagementPipeline.normalized_input_dir = 'data/preprocessing'
 ManagementPipeline.out_dir = 'data/preprocessing'
 
-
-# Provide paths to the .gin config files of a data splitter, a featurizer and a predictor
-include 'configs/data_splitters/100.gin'
-include 'configs/explorers/pca.gin'
-include 'configs/featurizers/ecfp.gin'
-include 'configs/classifiers/rf.gin'
-
-
-# Provide path to the dataset
-# (The dataset should be in .csv format and contain 'smiles' and 'y' columns)
-ManagementPipeline.dataset_dir = 'data/admet_transfer'
+include 'configs/reducers/pca.gin'

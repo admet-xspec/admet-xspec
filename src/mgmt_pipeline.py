@@ -6,7 +6,7 @@ from src.utils import get_clean_smiles, get_converted_unit
 import logging
 from src.predictor.predictor_base import PredictorBase
 from src.data.featurizer import FeaturizerBase
-from src.data.explorer import ExplorerBase
+from src.data.reducer import ReducerBase
 from src.data.split import DataSplitterBase
 import gin
 import numpy as np
@@ -18,6 +18,7 @@ class ManagementPipeline:
     """ 'meta-Pipeline' (sounds cool, eh?) for handling temporary/one-off work """
 
     possible_smiles_cols = ["SMILES", "Smiles", "molecule"]
+    root_categories = None
 
     def __init__(
         self,
@@ -32,7 +33,7 @@ class ManagementPipeline:
         classify_target_unit: str | None = "uM",
         explore_datasets_list: list[str] | None = None,
         explore_datasets_categories: list[str] | None = None,
-        explorer: ExplorerBase = None,
+        reducer: ReducerBase = None,
         splitter: DataSplitterBase = None,
         predictor: PredictorBase = None,
         featurizer: FeaturizerBase = None,
@@ -43,15 +44,15 @@ class ManagementPipeline:
 
         self.mode = mode
         self.force_normalize_all = force_normalize_all
-        self.root_categories = root_categories
         self.classify_datasets_list = classify_datasets_list
         self.classify_thresholds = classify_thresholds
         self.classify_target_unit = classify_target_unit
         self.explore_datasets_list = explore_datasets_list
         self.explore_datasets_categories = explore_datasets_categories
 
-        self.explorer = explorer
-        self.splitter = splitter
+        ManagementPipeline.root_categories = root_categories
+
+        self.reducer = reducer
         self.splitter = splitter
         self.predictor = predictor
         self.featurizer = featurizer
@@ -78,10 +79,10 @@ class ManagementPipeline:
                 "specifying .force_normalize_all attribute"
             )
             self.normalize_datasets()
-        elif self.mode == "explorer":
-            assert self.explorer is not None, (
-                "Ran ManagementPipeline in 'explorer' mode without "
-                "specifying .explorer: ExplorerBase attribute"
+        elif self.mode == "visualize":
+            assert self.reducer is not None, (
+                "Ran ManagementPipeline in 'visualize' mode without "
+                "specifying .reducer: ReducerBase attribute"
             )
             assert ((self.explore_datasets_list and not self.explore_datasets_categories)
                 or (not self.explore_datasets_categories and self.explore_datasets_list)
@@ -123,15 +124,12 @@ class ManagementPipeline:
 
         return df
 
-    @staticmethod
-    def get_normalized_filename(ds_globbed_path: Path) -> str:
-        # TODO: make this somehow global?
-        root_categories = ["AChE", "brain", "liver", "MAO-A"]
-
+    @classmethod
+    def get_normalized_filename(cls, ds_globbed_path: Path) -> str:
         dataset_dir_parts = ds_globbed_path.parent.parts
 
         begin_index = None
-        for root_domain in root_categories:
+        for root_domain in cls.root_categories:
             if root_domain in dataset_dir_parts:
                 begin_index = dataset_dir_parts.index(root_domain)
                 break
@@ -139,7 +137,7 @@ class ManagementPipeline:
         if begin_index is None:
             raise ValueError(
                 f"Unable to match any part of Path: {str(ds_globbed_path)} "
-                f"to one of root domains (of interest): {str(root_categories)}"
+                f"to one of root domains (of interest): {str(cls.root_categories)}"
             )
 
         basename_parts = dataset_dir_parts[begin_index:]
@@ -410,17 +408,13 @@ class ManagementPipeline:
         return pca_ready_df
 
     def get_visualization(self, featurized_df_dict: dict[str, pd.DataFrame]) -> Image.Image:
-        dataset_dict = {
-            k: self.explorer.get_analyzed_form(
+        reduced_df_dict = {
+            k: self.reducer.get_reduced_df(
                 self.get_pca_input_form(v)
             ) for k, v in featurized_df_dict.items()
         }
 
-        sklearn_visualizable_form = self.explorer.get_visualizable_form(
-            dataset_dict
-        )
-
-        visualization = self.explorer.get_visualization(
+        visualization = self.visualizer.get_visualization(
             sklearn_visualizable_form
         )
 
