@@ -17,6 +17,8 @@ from pathlib import Path
 class ManagementPipeline:
     """ 'meta-Pipeline' (sounds cool, eh?) for handling temporary/one-off work """
 
+    possible_smiles_cols = ["SMILES", "Smiles", "molecule"]
+
     def __init__(
         self,
         raw_input_dir: Path | str,
@@ -35,8 +37,6 @@ class ManagementPipeline:
         predictor: PredictorBase = None,
         featurizer: FeaturizerBase = None,
     ):
-        self.possible_smiles_cols = ["smiles", "SMILES", "Smiles", "molecule"]
-
         self._raw_input_dir: Path = Path(raw_input_dir)
         self.normalized_input_dir: Path = Path(normalized_input_dir)
         self.output_dir: Path = Path(output_dir)
@@ -90,7 +90,7 @@ class ManagementPipeline:
             self.dump_exploratory_visualization()
 
     @staticmethod
-    def get_clean_smiles_df(self, df: pd.DataFrame, smiles_col: str) -> pd.DataFrame:
+    def get_clean_smiles_df(df: pd.DataFrame, smiles_col: str) -> pd.DataFrame:
         """Consolidate pandas, our-internal NaN-dropping into one function"""
         pre_dropna_len = len(df)
         df = df.dropna(subset=smiles_col)
@@ -109,7 +109,7 @@ class ManagementPipeline:
         return df
 
     @staticmethod
-    def get_canon_smiles_df(self, df: pd.DataFrame, smiles_col: str) -> pd.DataFrame:
+    def get_canon_smiles_df(df: pd.DataFrame, smiles_col: str) -> pd.DataFrame:
         pre_canonicalization_len = len(df)
         df[smiles_col].apply(get_clean_smiles)
 
@@ -147,15 +147,16 @@ class ManagementPipeline:
 
         return normalized_basename
 
-    def _get_smiles_col_in_raw(self, raw_df) -> str:
-        for smiles_col_variant in self.possible_smiles_cols:
+    @classmethod
+    def get_smiles_col_in_raw(cls, raw_df) -> str:
+        for smiles_col_variant in cls.possible_smiles_cols:
             if smiles_col_variant in raw_df.columns:
                 return smiles_col_variant
 
         # Failed
         raise ValueError(
             "Failed to find one of SMILES column name variants:",
-            str(self.possible_smiles_cols),
+            str(cls.possible_smiles_cols),
             "in dataframe:",
             str(raw_df),
         )
@@ -303,7 +304,7 @@ class ManagementPipeline:
         df_to_normalize = pd.read_csv(ds_globbed_path, delimiter=delimiter)
         df_to_normalize.rename(
             columns={
-                self._get_smiles_col_in_raw(df_to_normalize): "smiles"
+                self.get_smiles_col_in_raw(df_to_normalize): "smiles"
             }, inplace=True
         )
 
