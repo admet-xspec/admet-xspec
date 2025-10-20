@@ -2,16 +2,13 @@ import abc
 import io
 import gin
 import matplotlib.pyplot as plt
-import pathlib
 
 from PIL import Image
-import pickle
 import pandas as pd
 import numpy as np
-from sklearn.decomposition import PCA
 
 
-class ExplorerBase(abc.ABC):
+class VisualizerBase(abc.ABC):
     def __init__(self):
         self.model = self._init_model()
         self.input_dir = None
@@ -23,11 +20,7 @@ class ExplorerBase(abc.ABC):
         pass
 
     @abc.abstractmethod
-    def get_analyzed_form(self, df: pd.DataFrame):
-        pass
-
-    @abc.abstractmethod
-    def get_visualizable_form(self, dataset_dict: dict):
+    def _get_visualizable_form(self, dataset_dict: dict):
         pass
 
     @abc.abstractmethod
@@ -36,37 +29,18 @@ class ExplorerBase(abc.ABC):
 
 
 @gin.configurable
-class PcaExplorer(ExplorerBase):
+class PcaVisualizer(VisualizerBase):
     def __init__(self, n_dims: int = 2):
         self.n_dims = n_dims
-        self.model = self._init_model()
 
-    def _init_model(self):
-        """Initialize the model."""
-        pca = PCA(n_components=self.n_dims)
-        return pca
-
-    def get_analyzed_form(self, df: pd.DataFrame) -> np.ndarray:
-        return self.model.fit_transform(df)
-
-    def get_visualizable_form(
-        self, dataset_dict: dict[str, np.ndarray]
-    ) -> dict[str, pd.DataFrame]:
-        out_dict = {}
-        for ds, ndarray in dataset_dict.items():
-            out_dict[ds] = pd.DataFrame(
-                {f"dim_{i + 1}": ndarray[:, i] for i in range(ndarray.shape[1])}
-            )
-
-        return out_dict
-
-    def get_pca(self, df: pd.DataFrame) -> np.ndarray:
-        """Perform PCA on a dataframe"""
-        reduced_data = self.model.fit_transform(df)
-        return reduced_data
+    def _get_visualizable_form(self, dataset_dict: dict[str, pd.DataFrame]) -> dict[str, pd.DataFrame]:
+        pass
 
     def _visualize_2d(
-        self, ndarray: np.ndarray, class_series: pd.Series, class_names: list[str]
+            self,
+            ndarray: np.ndarray,
+            class_series: pd.Series,
+            class_names: list[str]
     ) -> Image.Image:
 
         fig, ax = plt.subplots(figsize=(8, 6))
@@ -103,7 +77,10 @@ class PcaExplorer(ExplorerBase):
         return img
 
     def _visualize_3d(
-        self, ndarray: np.ndarray, class_series: pd.Series, class_names: list[str]
+            self,
+            ndarray: np.ndarray,
+            class_series: pd.Series,
+            class_names: list[str]
     ) -> Image.Image:
 
         fig = plt.figure(1, figsize=(8, 6))
@@ -143,27 +120,27 @@ class PcaExplorer(ExplorerBase):
 
         return img
 
-    def get_visualization(
-        self, reduced_df_dict: dict[str, pd.DataFrame]
-    ) -> Image.Image:
+    def get_visualization(self, reduced_df_dict: dict[str, pd.DataFrame]) -> Image.Image:
         class_series = pd.concat(
             [pd.Series([i] * len(df)) for i, df in enumerate(reduced_df_dict.values())],
-            ignore_index=True,
+            ignore_index=True
         )
 
-        concatenated_df = pd.concat(
-            [df for df in reduced_df_dict.values()], ignore_index=True
-        )
+        concatenated_df = pd.concat([df for df in reduced_df_dict.values()], ignore_index=True)
         concatenated_ndarray = concatenated_df.to_numpy()
 
         img = None
         if self.n_dims == 2:
             img = self._visualize_2d(
-                concatenated_ndarray, class_series, list(reduced_df_dict.keys())
+                concatenated_ndarray,
+                class_series,
+                list(reduced_df_dict.keys())
             )
         elif self.n_dims == 3:
             img = self._visualize_3d(
-                concatenated_ndarray, class_series, list(reduced_df_dict.keys())
+                concatenated_ndarray,
+                class_series,
+                list(reduced_df_dict.keys())
             )
 
         return img

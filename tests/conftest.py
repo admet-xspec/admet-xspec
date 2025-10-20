@@ -50,11 +50,49 @@ def normalize_config(
     return "\n".join(normalize_config)
 
 @pytest.fixture()
+def pca_config(
+    mock_raw_input_dir,
+    mock_normalized_input_dir,
+    mock_output_dir,
+):
+    pca_config = (
+        "include 'configs/_global.gin'",
+        "ManagementPipeline.reducer = @reducer/gin.singleton()",
+        "ManagementPipeline.featurizer = @featurizer/gin.singleton()",
+        "ManagementPipeline.mode = 'visualize'",
+        "ManagementPipeline.explore_datasets_list = [",
+        "    'brain_mouse_uptake'",
+        "    'maoa_rat_property_inhibition'",
+        "]",
+        f"ManagementPipeline.normalized_input_dir = '{str(mock_normalized_input_dir)}'",
+        f"ManagementPipeline.output_dir = '{str(mock_output_dir)}'",
+        "include 'configs/reducers/pca.gin'",
+    )
+
+    return "\n".join(pca_config)
+
+@pytest.fixture()
 def mgmt_pipeline_normalize_mode(
     normalize_config,
     config_dir
 ):
     temp_config_path = config_dir / "_mock_normalize_config.gin"
+    with open(temp_config_path, "w") as fp:
+        fp.write(normalize_config)
+
+    gin.parse_config_file(str(temp_config_path))
+    pipeline = ManagementPipeline()
+
+    yield pipeline
+
+    os.remove(temp_config_path)
+
+@pytest.fixture()
+def mgmt_pipeline_pca_mode(
+    normalize_config,
+    config_dir
+):
+    temp_config_path = config_dir / "_mock_pca_config.gin"
     with open(temp_config_path, "w") as fp:
         fp.write(normalize_config)
 
