@@ -4,9 +4,11 @@ ManagementPipeline.reducer = @reducer/gin.singleton()
 ManagementPipeline.featurizer = @featurizer/gin.singleton()
 
 ManagementPipeline.mode = 'visualize'
-ManagementPipeline.explore_datasets_categories = %root_categories # so: all of them
+ManagementPipeline.explore_datasets_categories = ['brain']
 
+ManagementPipeline.raw_input_dir = 'data/admet_transfer'
 ManagementPipeline.normalized_input_dir = 'data/preprocessing'
-ManagementPipeline.out_dir = 'data/preprocessing'
+ManagementPipeline.output_dir = 'data/preprocessing'
 
 include 'configs/reducers/pca.gin'
+include 'configs/featurizers/ecfp.gin'

@@ -3,6 +3,7 @@ from rdkit.Chem.rdFingerprintGenerator import GetMorganGenerator
 from rdkit import Chem
 import pandas as pd
 from typing import List
+import logging
 import numpy as np
 import gin
 from rdkit.Chem import Descriptors
@@ -55,10 +56,14 @@ class EcfpFeaturizer(FeaturizerBase):
         Featurize the given SMILES string
         """
         mols = [Chem.MolFromSmiles(smi) for smi in smiles_list]
-        if any(mol is None for mol in mols):
-            raise ValueError(
-                "One or more SMILES strings could not be converted to RDKit mol object"
-            )
+        for i, mol in enumerate(mols):
+            if not mol:
+                logging.info(f"Failed to featurize {i}: {smiles_list[i]}")
+
+        # if any(mol is None for mol in mols):
+        #     raise ValueError(
+        #         "One or more SMILES strings could not be converted to RDKit mol object"
+        #     )
         if self.count:
             fp_list = [self.generator.GetCountFingerprintAsNumPy(mol) for mol in mols]
         else:
