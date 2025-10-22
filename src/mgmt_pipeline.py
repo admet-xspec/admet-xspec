@@ -1,11 +1,13 @@
 import glob
 import pandas as pd
 from PIL import Image
+
 from src.utils import get_clean_smiles, get_converted_unit
 
 import logging
 from src.predictor.predictor_base import PredictorBase
 from src.data.featurizer import FeaturizerBase
+from src.data.visualizer import VisualizerBase
 from src.data.reducer import ReducerBase
 from src.data.split import DataSplitterBase
 import gin
@@ -53,6 +55,7 @@ class ManagementPipeline:
         ManagementPipeline.root_categories = root_categories
 
         self.reducer = reducer
+        self.visualizer = reducer.get_associated_visualizer()
         self.splitter = splitter
         self.predictor = predictor
         self.featurizer = featurizer
@@ -85,7 +88,7 @@ class ManagementPipeline:
                 "specifying .reducer: ReducerBase attribute"
             )
             assert ((self.explore_datasets_list and not self.explore_datasets_categories)
-                or (not self.explore_datasets_categories and self.explore_datasets_list)
+                or (not self.explore_datasets_list and self.explore_datasets_categories)
             ), "Either dataset categories or an explicit list must be specified, not both."
 
             self.dump_exploratory_visualization()
@@ -351,7 +354,7 @@ class ManagementPipeline:
         feature_col_name = self.featurizer.feature_name
         df_to_featurize[feature_col_name] = df_to_featurize["smiles"].apply(
             lambda smiles: self.featurizer.feature_to_str(
-                self.featurizer.featurize(smiles)
+                self.featurizer.featurize([smiles])
             )
         )
 
@@ -382,8 +385,7 @@ class ManagementPipeline:
 
     def load_featurized_dataset(
             self,
-            dataset_path: Path,
-            df_featurized: pd.DataFrame
+            dataset_path: Path
     ):
         """dataset_path: Path to dataset in self.output_dir (normalized data & path)."""
         basename = dataset_path.name
@@ -395,6 +397,8 @@ class ManagementPipeline:
         df_featurized[feature_col_name] = df_featurized[feature_col_name].apply(
             lambda str_rep: self.featurizer.str_to_feature(str_rep)
         )
+
+        return df_featurized
 
     def get_pca_input_form(self, featurized_dataset_df: pd.DataFrame) -> pd.DataFrame:
         featurized_dataset_df.drop(columns="smiles", inplace=True)
@@ -415,15 +419,19 @@ class ManagementPipeline:
         }
 
         visualization = self.visualizer.get_visualization(
-            sklearn_visualizable_form
+            reduced_df_dict
         )
 
         return visualization
 
     def save_visualization(self, visualization: Image.Image):
-        output_path = Path(
+        vis_output_dir = Path(
             self.output_dir
-        ) / f"{self.featurizer.name}_visualization.jpg"
+        ) / "visualizations"
+
+        vis_output_dir.mkdir(parents=True, exist_ok=True)
+
+        output_path = vis_output_dir / f"{self.featurizer.name}_visualization.png"
 
         visualization.save(output_path)
 
