@@ -15,11 +15,6 @@ class VisualizerBase(abc.ABC):
         self.output_dir = None
 
     @abc.abstractmethod
-    def _init_model(self):
-        """Initialize the model."""
-        pass
-
-    @abc.abstractmethod
     def _get_visualizable_form(self, dataset_dict: dict):
         pass
 
@@ -33,8 +28,16 @@ class PcaVisualizer(VisualizerBase):
     def __init__(self, n_dims: int = 2):
         self.n_dims = n_dims
 
-    def _get_visualizable_form(self, dataset_dict: dict[str, pd.DataFrame]) -> dict[str, pd.DataFrame]:
-        pass
+    def _get_visualizable_form(self, reduced_df_dict: dict[str, pd.DataFrame]) -> tuple[pd.Series, np.ndarray]:
+        class_series = pd.concat(
+            [pd.Series([i] * len(df)) for i, df in enumerate(reduced_df_dict.values())],
+            ignore_index=True
+        )
+
+        concatenated_df = pd.concat([df for df in reduced_df_dict.values()], ignore_index=True)
+        concatenated_ndarray = concatenated_df.to_numpy()
+
+        return class_series, concatenated_ndarray
 
     def _visualize_2d(
             self,
@@ -121,24 +124,18 @@ class PcaVisualizer(VisualizerBase):
         return img
 
     def get_visualization(self, reduced_df_dict: dict[str, pd.DataFrame]) -> Image.Image:
-        class_series = pd.concat(
-            [pd.Series([i] * len(df)) for i, df in enumerate(reduced_df_dict.values())],
-            ignore_index=True
-        )
-
-        concatenated_df = pd.concat([df for df in reduced_df_dict.values()], ignore_index=True)
-        concatenated_ndarray = concatenated_df.to_numpy()
+        class_series, concated_ndarray = self._get_visualizable_form(reduced_df_dict)
 
         img = None
         if self.n_dims == 2:
             img = self._visualize_2d(
-                concatenated_ndarray,
+                concated_ndarray,
                 class_series,
                 list(reduced_df_dict.keys())
             )
         elif self.n_dims == 3:
             img = self._visualize_3d(
-                concatenated_ndarray,
+                concated_ndarray,
                 class_series,
                 list(reduced_df_dict.keys())
             )
