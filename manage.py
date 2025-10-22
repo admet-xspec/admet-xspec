@@ -37,7 +37,7 @@ if __name__ == "__main__":
 
     logs_dir = Path("data/preprocessing/logs")
     logging_path = logs_dir / "console.log"
-    
+
     if not logging_path.exists():
         logging_path.parent.mkdir(parents=True, exist_ok=True)
         logging_path.touch(exist_ok=True)
@@ -55,7 +55,7 @@ if __name__ == "__main__":
     pipeline = ManagementPipeline()
 
     pipeline.run()
-    
+
     # Log time
     time_elapsed = time.time() - time_start
     logging.info(

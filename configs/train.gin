@@ -20,8 +20,14 @@
 #   (The dataset should be in .csv format and contain 'smiles' and 'y' columns)
     TrainingPipeline.data_path = 'path/to/dataset.csv'
 
-#   [ADVANCED USAGE] The arguments below should be None, unless you want to override the default
+
+#   Whether to refit the model on the whole dataset (train + test) after evaluation
+    TrainingPipeline.refit_on_full_data = False
+
+#   [ADVANCED USAGE] The arguments below should be []], unless you want to override the default
 #   strategy of generating train/test splits and provide your own pre-cleaned train/test data as .csv files
-#   (The .csv files should contain 'smiles' and 'y' columns)
-    TrainingPipeline.train_path = None
-    TrainingPipeline.test_path = None
+#   (The .csv files should contain 'smiles' and 'y' columns. If you provide multiple paths, the datasets will
+#   be concatenated)
+
+    TrainingPipeline.train_paths = []
+    TrainingPipeline.test_paths = []

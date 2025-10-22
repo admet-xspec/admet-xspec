@@ -46,6 +46,7 @@ if __name__ == "__main__":
     temp_log_file = tempfile.NamedTemporaryFile(delete=False)
     logging.basicConfig(
         level=args.log_level,
+        format="%(message)s",
         handlers=[
             logging.FileHandler(temp_log_file.name),
             logging.StreamHandler(),
