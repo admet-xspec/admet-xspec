@@ -12,7 +12,7 @@ ManagementPipeline.explore_datasets_list = [
 
 ManagementPipeline.raw_input_dir = 'data/admet_transfer'
 ManagementPipeline.normalized_input_dir = 'data/preprocessing'
-ManagementPipeline.output_dir = 'data/preprocessing'
+ManagementPipeline.output_dir = 'data/mgmt_output'
 
-include 'configs/reducers/pca3.gin'
+include 'configs/reducers/pca2.gin'
 include 'configs/featurizers/ecfp.gin'
