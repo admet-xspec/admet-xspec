@@ -7,6 +7,7 @@ from src.data.visualizer import PcaVisualizer
 
 
 class ReducerBase(abc.ABC):
+    """Dimensionality reduction class."""
     def __init__(self):
         self.model = self._init_model()
         self.input_dir = None
@@ -38,6 +39,7 @@ class PcaReducer(ReducerBase):
         return pca
 
     def get_associated_visualizer(self):
+        """Return the visualizer object for this reducer."""
         return self.visualizer
 
     def get_reduced_df(self, df: pd.DataFrame) -> pd.DataFrame:
@@ -48,5 +50,4 @@ class PcaReducer(ReducerBase):
             for i in range(reduced_data_ndarray.shape[1])
         })
 
-        df.join(reduced_df)
-        return df
+        return reduced_df

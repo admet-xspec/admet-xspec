@@ -29,6 +29,7 @@ class PcaVisualizer(VisualizerBase):
         self.n_dims = n_dims
 
     def _get_visualizable_form(self, reduced_df_dict: dict[str, pd.DataFrame]) -> tuple[pd.Series, np.ndarray]:
+        """Convert reduced-dimensionality dataframes into form that can be fed into plt."""
         class_series = pd.concat(
             [pd.Series([i] * len(df)) for i, df in enumerate(reduced_df_dict.values())],
             ignore_index=True
@@ -45,14 +46,15 @@ class PcaVisualizer(VisualizerBase):
             class_series: pd.Series,
             class_names: list[str]
     ) -> Image.Image:
+        """Return a 2D visualization image."""
 
-        fig, ax = plt.subplots(figsize=(8, 6))
+        fig, ax = plt.subplots()
 
         scatter = ax.scatter(
             ndarray[:, 0],
             ndarray[:, 1],
             c=class_series,
-            s=40,
+            s=10,
         )
 
         ax.set(
@@ -64,16 +66,16 @@ class PcaVisualizer(VisualizerBase):
         ax.set_yticklabels([])
 
         # Add a legend
-        legend1 = ax.legend(
+        fig.legend(
             scatter.legend_elements()[0],
             class_names,
-            loc="upper right",
+            loc="outside left center",
+            bbox_to_anchor=(1, 1),
             title="Classes",
         )
-        ax.add_artist(legend1)
 
         buf = io.BytesIO()
-        fig.savefig(buf)
+        fig.savefig(buf, bbox_inches='tight', pad_inches=0.2)
         buf.seek(0)
         img = Image.open(buf)
 
@@ -85,8 +87,9 @@ class PcaVisualizer(VisualizerBase):
             class_series: pd.Series,
             class_names: list[str]
     ) -> Image.Image:
+        """Return a 3D visualization image."""
 
-        fig = plt.figure(1, figsize=(8, 6))
+        fig = plt.figure(1)
         ax = fig.add_subplot(111, projection="3d", elev=-150, azim=110)
 
         scatter = ax.scatter(
@@ -94,7 +97,7 @@ class PcaVisualizer(VisualizerBase):
             ndarray[:, 1],
             ndarray[:, 2],
             c=class_series,
-            s=40,
+            s=10,
         )
 
         ax.set(
@@ -108,16 +111,16 @@ class PcaVisualizer(VisualizerBase):
         ax.zaxis.set_ticklabels([])
 
         # Add a legend
-        legend1 = ax.legend(
+        fig.legend(
             scatter.legend_elements()[0],
             class_names,
-            loc="upper right",
+            loc="outside left center",
             title="Classes",
+            bbox_to_anchor=(1, 1), # legend outside of plot
         )
-        ax.add_artist(legend1)
 
         buf = io.BytesIO()
-        fig.savefig(buf)
+        fig.savefig(buf, bbox_inches='tight', pad_inches=0.2)
         buf.seek(0)
         img = Image.open(buf)
 
