@@ -66,7 +66,7 @@ def pca_config(
         "]",
         f"ManagementPipeline.normalized_input_dir = '{str(mock_normalized_input_dir)}'",
         f"ManagementPipeline.output_dir = '{str(mock_output_dir)}'",
-        "include 'configs/reducers/pca.gin'",
+        "include 'configs/reducers/pca2.gin'",
     )
 
     return "\n".join(pca_config)
