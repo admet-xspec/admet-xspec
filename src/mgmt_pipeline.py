@@ -296,12 +296,6 @@ class ManagementPipeline:
     def get_normalized_df(self, ds_globbed_path: Path, delimiter: str = ";") -> pd.DataFrame:
         """Get ready-to-save df without NaNs and with canonical SMILES"""
 
-        #TODO: temp solution! remove
-        with ds_globbed_path.open(encoding="utf-8", mode="r") as f:
-            contents = f.read()
-            if "," in contents and ";" not in contents:
-                delimiter = ","
-
         df_to_normalize = pd.read_csv(ds_globbed_path, delimiter=delimiter)
         df_to_normalize.rename(
             columns={
@@ -328,6 +322,7 @@ class ManagementPipeline:
             suffix: str = "",
             extension: str = "csv",
     ) -> Path:
+        """Get path to save normalized df at"""
         if prefix:
             normalized_basename = f"{prefix}_{normalized_basename}"
         if suffix:
@@ -342,7 +337,7 @@ class ManagementPipeline:
     def get_featurized_dataset_df(self, dataset_path: Path) -> pd.DataFrame:
         """
         Featurizes the entire training dataset.
-        Returns pd.DataFrame s.t. smiles: <featurization_str>
+        Returns pd.DataFrame with a featurized input column.
 
         dataset_path: Path to dataset in self.normalized_input_dir
         """
@@ -401,6 +396,7 @@ class ManagementPipeline:
         return df_featurized
 
     def get_pca_input_form(self, featurized_dataset_df: pd.DataFrame) -> pd.DataFrame:
+        """Get the form that PCA dim reduction anticipates from a featurized dataset (curr.: ECFP)"""
         featurized_dataset_df.drop(columns="smiles", inplace=True)
         pca_ready_df = pd.concat([
             featurized_dataset_df[
@@ -412,6 +408,7 @@ class ManagementPipeline:
         return pca_ready_df
 
     def get_visualization(self, featurized_df_dict: dict[str, pd.DataFrame]) -> Image.Image:
+        """Take in the featurized versions of dataframes, dim-reduce them and return a vis. image"""
         reduced_df_dict = {
             k: self.reducer.get_reduced_df(
                 self.get_pca_input_form(v)
@@ -425,17 +422,23 @@ class ManagementPipeline:
         return visualization
 
     def save_visualization(self, visualization: Image.Image):
+        """Take a visualization image and save it to visualization output dir."""
         vis_output_dir = Path(
             self.output_dir
         ) / "visualizations"
 
         vis_output_dir.mkdir(parents=True, exist_ok=True)
 
-        output_path = vis_output_dir / f"{self.featurizer.name}_visualization.png"
+        if self.explore_datasets_categories:
+            categories_prefix = "_".join([cat[:2] for cat in self.explore_datasets_categories])
+            output_path = vis_output_dir / f"{categories_prefix}_{self.featurizer.name}_visualization.png"
+        else:
+            output_path = vis_output_dir / f"{self.featurizer.name}_visualization.png"
 
         visualization.save(output_path)
 
     def dump_exploratory_visualization(self):
+        """Go over what is to be visualized from .cfg and save it to disk."""
         dataset_paths = None
         if self.explore_datasets_list:
             dataset_paths: list[Path] = [
