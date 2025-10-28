@@ -2,7 +2,7 @@ import glob
 import pandas as pd
 from PIL import Image
 
-from src.utils import get_clean_smiles, get_converted_unit
+from src.utils import get_clean_smiles, get_converted_unit, detect_csv_delimiter
 
 import logging
 from src.predictor.predictor_base import PredictorBase
@@ -169,7 +169,7 @@ class ManagementPipeline:
         for dataset in self.classify_datasets_list:
             dataset_path = self.normalized_input_dir / dataset
 
-            dataset_df = pd.read_csv(dataset_path)
+            dataset_df = pd.read_csv(dataset_path, delimiter=detect_csv_delimiter(dataset_path))
             if "Standard Units" not in dataset_df.columns:
                 logging.info(
                     f"Dataset '{dataset}' has no 'Standard Units' column, skipping."
@@ -290,29 +290,15 @@ class ManagementPipeline:
             normalized_dataset_df.to_csv(ds_path, index=False)
 
     def get_normalized_df(
-        self, ds_globbed_path: Path, delimiter: str = ";"
-    ) -> pd.DataFrame:
+        self, ds_globbed_path: Path) -> pd.DataFrame:
         """Get ready-to-save df without NaNs and with canonical SMILES"""
 
         logging.info(f"Reading dataset: {str(ds_globbed_path)}")
-        df_to_normalize = pd.read_csv(ds_globbed_path, delimiter=delimiter)
+        df_to_normalize = pd.read_csv(ds_globbed_path, delimiter=detect_csv_delimiter(ds_globbed_path))
         logging.debug(f"Raw dataset size: {len(df_to_normalize)}")
         logging.debug(f"Raw dataset columns: {df_to_normalize.columns.tolist()}")
 
-        try:
-            smiles_col_name = self.get_smiles_col_in_raw(df_to_normalize)
-        except ValueError as e:
-            if delimiter != ",":
-                # Retry parsing the dataset with ',' delimiter
-                logging.debug(
-                    f"Failed to find SMILES column in dataset {str(ds_globbed_path)} read with delimiter '{delimiter}'. Parsing again with ',' delimiter."
-                )
-                df_to_normalize = pd.read_csv(ds_globbed_path, delimiter=",")
-                smiles_col_name = self.get_smiles_col_in_raw(df_to_normalize)
-            else:
-                raise e
-
-        df_to_normalize.rename(columns={smiles_col_name: "smiles"}, inplace=True)
+        df_to_normalize.rename(columns={self.get_smiles_col_in_raw(df_to_normalize): "smiles"}, inplace=True)
 
         df_to_normalize = self.get_clean_smiles_df(df_to_normalize, smiles_col="smiles")
 
@@ -346,7 +332,7 @@ class ManagementPipeline:
         dataset_path: Path to dataset in self.normalized_input_dir
         """
 
-        df_to_featurize = pd.read_csv(dataset_path)
+        df_to_featurize = pd.read_csv(dataset_path, delimiter=detect_csv_delimiter(dataset_path))
 
         len_before_feat = len(df_to_featurize)
 
