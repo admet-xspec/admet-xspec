@@ -19,7 +19,7 @@ from pathlib import Path
 class ManagementPipeline:
     """ 'meta-Pipeline' (sounds cool, eh?) for handling temporary/one-off work """
 
-    possible_smiles_cols = ["SMILES", "Smiles", "molecule"]
+    possible_smiles_cols = ["SMILES", "Smiles", "smiles", "molecule"]
     root_categories = None
 
     def __init__(
@@ -55,7 +55,7 @@ class ManagementPipeline:
         ManagementPipeline.root_categories = root_categories
 
         self.reducer = reducer
-        self.visualizer = reducer.get_associated_visualizer()
+        self.visualizer = reducer.get_associated_visualizer() if reducer else None
         self.splitter = splitter
         self.predictor = predictor
         self.featurizer = featurizer
@@ -159,7 +159,7 @@ class ManagementPipeline:
             "Failed to find one of SMILES column name variants:",
             str(cls.possible_smiles_cols),
             "in dataframe:",
-            str(raw_df),
+            str(raw_df.head()),
         )
 
     def make_datasets_into_classification(self):
@@ -296,10 +296,27 @@ class ManagementPipeline:
     def get_normalized_df(self, ds_globbed_path: Path, delimiter: str = ";") -> pd.DataFrame:
         """Get ready-to-save df without NaNs and with canonical SMILES"""
 
+        logging.info(f"Reading dataset: {str(ds_globbed_path)}")
         df_to_normalize = pd.read_csv(ds_globbed_path, delimiter=delimiter)
+        logging.debug(f"Raw dataset size: {len(df_to_normalize)}")
+        logging.debug(f"Raw dataset columns: {df_to_normalize.columns.tolist()}")
+
+        try:
+            smiles_col_name = self.get_smiles_col_in_raw(df_to_normalize)
+        except ValueError as e:
+            if delimiter != ",":
+                # Retry parsing the dataset with ',' delimiter
+                logging.debug(
+                    f"Failed to find SMILES column in dataset {str(ds_globbed_path)} read with delimiter '{delimiter}'. Parsing again with ',' delimiter."
+                )
+                df_to_normalize = pd.read_csv(ds_globbed_path, delimiter=",")
+                smiles_col_name = self.get_smiles_col_in_raw(df_to_normalize)
+            else:
+                raise e
+
         df_to_normalize.rename(
             columns={
-                self.get_smiles_col_in_raw(df_to_normalize): "smiles"
+                smiles_col_name: "smiles"
             }, inplace=True
         )
 

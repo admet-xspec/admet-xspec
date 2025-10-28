@@ -1,7 +1,7 @@
 include 'configs/_global.gin'
 
 ManagementPipeline.mode = 'normalize'
-ManagementPipeline.root_categories = @root_categories
+ManagementPipeline.root_categories = %root_categories
 
 # Provide path to the datasets
 ManagementPipeline.raw_input_dir = 'data/admet_transfer'
