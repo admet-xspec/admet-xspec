@@ -6,6 +6,7 @@ from sklearn import metrics
 import pandas as pd
 import logging
 from pathlib import Path
+import csv
 
 # disable RDKit warnings
 RDLogger.DisableLog("rdApp.*")
@@ -198,3 +199,15 @@ def parse_targets_from_messy_csv(
             f"Multiple target columns found: {target_cols_present}. Expected only one of {TARGET_COLS}."
         )
     return df[target_cols_present[0]]
+
+def detect_csv_delimiter(path: str | Path) -> str:
+    """
+    Detects the delimiter used in a CSV file.
+    :param path: str | Path, path to the .csv file
+    :return: str, detected delimiter
+    """
+    with open(path, 'r') as file:
+        sample = file.read(1024)
+    sniffer = csv.Sniffer()
+    dialect = sniffer.sniff(sample)
+    return dialect.delimiter
