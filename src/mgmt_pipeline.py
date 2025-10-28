@@ -2,7 +2,7 @@ import glob
 import pandas as pd
 from PIL import Image
 
-from src.utils import get_clean_smiles, get_converted_unit
+from src.utils import get_clean_smiles, get_converted_unit, detect_csv_delimiter
 
 import logging
 from src.predictor.predictor_base import PredictorBase
@@ -17,9 +17,9 @@ from pathlib import Path
 
 @gin.configurable()
 class ManagementPipeline:
-    """ 'meta-Pipeline' (sounds cool, eh?) for handling temporary/one-off work """
+    """'meta-Pipeline' (sounds cool, eh?) for handling temporary/one-off work"""
 
-    possible_smiles_cols = ["SMILES", "Smiles", "molecule"]
+    possible_smiles_cols = ["SMILES", "Smiles", "smiles", "molecule"]
     root_categories = None
 
     def __init__(
@@ -55,16 +55,15 @@ class ManagementPipeline:
         ManagementPipeline.root_categories = root_categories
 
         self.reducer = reducer
-        self.visualizer = reducer.get_associated_visualizer()
+        self.visualizer = reducer.get_associated_visualizer() if reducer else None
         self.splitter = splitter
         self.predictor = predictor
         self.featurizer = featurizer
 
-
     def run(self):
         if self.mode == "classify":
             assert self.classify_datasets_list, (
-                "Ran ManagementPipeline in 'classify' mode without " 
+                "Ran ManagementPipeline in 'classify' mode without "
                 "specifying which datasets to convert to classification"
             )
             assert self.classify_thresholds, (
@@ -87,8 +86,10 @@ class ManagementPipeline:
                 "Ran ManagementPipeline in 'visualize' mode without "
                 "specifying .reducer: ReducerBase attribute"
             )
-            assert ((self.explore_datasets_list and not self.explore_datasets_categories)
-                or (not self.explore_datasets_list and self.explore_datasets_categories)
+            assert (
+                self.explore_datasets_list and not self.explore_datasets_categories
+            ) or (
+                not self.explore_datasets_list and self.explore_datasets_categories
             ), "Either dataset categories or an explicit list must be specified, not both."
 
             self.dump_exploratory_visualization()
@@ -105,7 +106,9 @@ class ManagementPipeline:
         df = df.dropna(subset=[smiles_col]).reset_index(drop=True)
 
         if pre_dropna_len != pre_cleaning_len:
-            logging.info(f"Dropped {pre_dropna_len - pre_cleaning_len} 'nan' SMILES after pd.read_csv")
+            logging.info(
+                f"Dropped {pre_dropna_len - pre_cleaning_len} 'nan' SMILES after pd.read_csv"
+            )
         if pre_cleaning_len != len(df):
             logging.info(f"Dropped {pre_cleaning_len - len(df)} invalid SMILES")
         logging.info(f"Dataset size: {len(df)}")
@@ -159,16 +162,18 @@ class ManagementPipeline:
             "Failed to find one of SMILES column name variants:",
             str(cls.possible_smiles_cols),
             "in dataframe:",
-            str(raw_df),
+            str(raw_df.head()),
         )
 
     def make_datasets_into_classification(self):
         for dataset in self.classify_datasets_list:
             dataset_path = self.normalized_input_dir / dataset
 
-            dataset_df = pd.read_csv(dataset_path)
+            dataset_df = pd.read_csv(dataset_path, delimiter=detect_csv_delimiter(dataset_path))
             if "Standard Units" not in dataset_df.columns:
-                logging.info(f"Dataset '{dataset}' has no 'Standard Units' column, skipping.")
+                logging.info(
+                    f"Dataset '{dataset}' has no 'Standard Units' column, skipping."
+                )
                 continue
 
             classification_df = self.get_dataset_as_classification(dataset_df)
@@ -189,10 +194,7 @@ class ManagementPipeline:
             mol_weight = pd_row["Molecular Weight"]
 
             normalized_value: float = get_converted_unit(
-                val,
-                from_unit,
-                self.classify_target_unit,
-                mol_weight=mol_weight
+                val, from_unit, self.classify_target_unit, mol_weight=mol_weight
             )
 
             return normalized_value
@@ -226,14 +228,12 @@ class ManagementPipeline:
             "Standard Relation",
             "Molecular Weight",
             normalized_value_colname,
-            classification_colname
+            classification_colname,
         }
 
         pre_normalization_len = len(dataset_df)
 
-        dataset_df[
-            normalized_value_colname
-        ] = dataset_df.apply(
+        dataset_df[normalized_value_colname] = dataset_df.apply(
             normalize_row_value, axis=1
         )
 
@@ -247,11 +247,11 @@ class ManagementPipeline:
             )
 
         if pre_classification_len > 0:
-            dataset_df[classification_colname] = dataset_df.apply(
-                assign_class, axis=1
-            )
+            dataset_df[classification_colname] = dataset_df.apply(assign_class, axis=1)
             dataset_df.dropna(subset=[classification_colname], inplace=True)
-            dataset_df[classification_colname] = dataset_df[classification_colname].astype("int32")
+            dataset_df[classification_colname] = dataset_df[
+                classification_colname
+            ].astype("int32")
 
         if pre_classification_len != len(dataset_df):
             logging.info(
@@ -271,9 +271,7 @@ class ManagementPipeline:
         datasets_paths: list[tuple[Path, Path]] = [
             (
                 Path(ds_glob),
-                self.get_df_output_path(
-                    self.get_normalized_filename(Path(ds_glob))
-                )
+                self.get_df_output_path(self.get_normalized_filename(Path(ds_glob))),
             )
             for ds_glob in datasets
         ]
@@ -281,46 +279,39 @@ class ManagementPipeline:
         # filter already normalized
         if not force_normalize_all:
             datasets_paths = [
-                (ds_glob, ds_path) 
-                for ds_glob, ds_path in datasets_paths 
+                (ds_glob, ds_path)
+                for ds_glob, ds_path in datasets_paths
                 if not ds_path.exists()
             ]
-        
+
         for ds_glob, ds_path in datasets_paths:
-            normalized_dataset_df = self.get_normalized_df(
-                ds_glob
-            )
+            normalized_dataset_df = self.get_normalized_df(ds_glob)
 
             normalized_dataset_df.to_csv(ds_path, index=False)
 
-    def get_normalized_df(self, ds_globbed_path: Path, delimiter: str = ";") -> pd.DataFrame:
+    def get_normalized_df(
+        self, ds_globbed_path: Path) -> pd.DataFrame:
         """Get ready-to-save df without NaNs and with canonical SMILES"""
 
-        df_to_normalize = pd.read_csv(ds_globbed_path, delimiter=delimiter)
-        df_to_normalize.rename(
-            columns={
-                self.get_smiles_col_in_raw(df_to_normalize): "smiles"
-            }, inplace=True
-        )
+        logging.info(f"Reading dataset: {str(ds_globbed_path)}")
+        df_to_normalize = pd.read_csv(ds_globbed_path, delimiter=detect_csv_delimiter(ds_globbed_path))
+        logging.debug(f"Raw dataset size: {len(df_to_normalize)}")
+        logging.debug(f"Raw dataset columns: {df_to_normalize.columns.tolist()}")
 
-        df_to_normalize = self.get_clean_smiles_df(
-            df_to_normalize,
-            smiles_col="smiles"
-        )
+        df_to_normalize.rename(columns={self.get_smiles_col_in_raw(df_to_normalize): "smiles"}, inplace=True)
 
-        df_to_normalize = self.get_canon_smiles_df(
-            df_to_normalize,
-            smiles_col="smiles"
-        )
+        df_to_normalize = self.get_clean_smiles_df(df_to_normalize, smiles_col="smiles")
+
+        df_to_normalize = self.get_canon_smiles_df(df_to_normalize, smiles_col="smiles")
 
         return df_to_normalize
 
     def get_df_output_path(
-            self,
-            normalized_basename: str,
-            prefix: str = "",
-            suffix: str = "",
-            extension: str = "csv",
+        self,
+        normalized_basename: str,
+        prefix: str = "",
+        suffix: str = "",
+        extension: str = "csv",
     ) -> Path:
         """Get path to save normalized df at"""
         if prefix:
@@ -329,8 +320,7 @@ class ManagementPipeline:
             normalized_basename = f"{normalized_basename}_{suffix}"
 
         output_path_str = (
-            f"{str(self.normalized_input_dir)}/"
-            f"{normalized_basename}.{extension}"
+            f"{str(self.normalized_input_dir)}/" f"{normalized_basename}.{extension}"
         )
         return Path(output_path_str)
 
@@ -342,7 +332,7 @@ class ManagementPipeline:
         dataset_path: Path to dataset in self.normalized_input_dir
         """
 
-        df_to_featurize = pd.read_csv(dataset_path)
+        df_to_featurize = pd.read_csv(dataset_path, delimiter=detect_csv_delimiter(dataset_path))
 
         len_before_feat = len(df_to_featurize)
 
@@ -354,18 +344,14 @@ class ManagementPipeline:
         )
 
         len_after_feat = len(df_to_featurize)
-        assert len_before_feat == len_after_feat,(
+        assert len_before_feat == len_after_feat, (
             f"{len_before_feat - len_after_feat} SMILES failed to featurize with"
             f"{self.featurizer.name}. 'get_featurized_dataset_df' expects featurizable SMILES."
         )
-        
+
         return df_to_featurize
 
-    def save_featurized_dataset(
-            self,
-            dataset_path: Path,
-            df_featurized: pd.DataFrame
-    ):
+    def save_featurized_dataset(self, dataset_path: Path, df_featurized: pd.DataFrame):
         """dataset_path: Path to dataset in self.output_dir (normalized data & path)."""
 
         feature_col_name = self.featurizer.feature_name
@@ -374,19 +360,12 @@ class ManagementPipeline:
         )
 
         basename = dataset_path.name
-        df_featurized.to_csv(
-            self.output_dir / self.featurizer.name / basename
-        )
+        df_featurized.to_csv(self.output_dir / self.featurizer.name / basename)
 
-    def load_featurized_dataset(
-            self,
-            dataset_path: Path
-    ):
+    def load_featurized_dataset(self, dataset_path: Path):
         """dataset_path: Path to dataset in self.output_dir (normalized data & path)."""
         basename = dataset_path.name
-        df_featurized = pd.read_csv(
-            self.output_dir / self.featurizer.name / basename
-        )
+        df_featurized = pd.read_csv(self.output_dir / self.featurizer.name / basename)
 
         feature_col_name = self.featurizer.feature_name
         df_featurized[feature_col_name] = df_featurized[feature_col_name].apply(
@@ -398,40 +377,44 @@ class ManagementPipeline:
     def get_pca_input_form(self, featurized_dataset_df: pd.DataFrame) -> pd.DataFrame:
         """Get the form that PCA dim reduction anticipates from a featurized dataset (curr.: ECFP)"""
         featurized_dataset_df.drop(columns="smiles", inplace=True)
-        pca_ready_df = pd.concat([
-            featurized_dataset_df[
-                self.featurizer.feature_name
-            ].apply(lambda s: pd.Series(list(map(int, s))))
-            .add_prefix('bit_')
-        ], axis=1)
+        pca_ready_df = pd.concat(
+            [
+                featurized_dataset_df[self.featurizer.feature_name]
+                .apply(lambda s: pd.Series(list(map(int, s))))
+                .add_prefix("bit_")
+            ],
+            axis=1,
+        )
 
         return pca_ready_df
 
-    def get_visualization(self, featurized_df_dict: dict[str, pd.DataFrame]) -> Image.Image:
+    def get_visualization(
+        self, featurized_df_dict: dict[str, pd.DataFrame]
+    ) -> Image.Image:
         """Take in the featurized versions of dataframes, dim-reduce them and return a vis. image"""
         reduced_df_dict = {
-            k: self.reducer.get_reduced_df(
-                self.get_pca_input_form(v)
-            ) for k, v in featurized_df_dict.items()
+            k: self.reducer.get_reduced_df(self.get_pca_input_form(v))
+            for k, v in featurized_df_dict.items()
         }
 
-        visualization = self.visualizer.get_visualization(
-            reduced_df_dict
-        )
+        visualization = self.visualizer.get_visualization(reduced_df_dict)
 
         return visualization
 
     def save_visualization(self, visualization: Image.Image):
         """Take a visualization image and save it to visualization output dir."""
-        vis_output_dir = Path(
-            self.output_dir
-        ) / "visualizations"
+        vis_output_dir = Path(self.output_dir) / "visualizations"
 
         vis_output_dir.mkdir(parents=True, exist_ok=True)
 
         if self.explore_datasets_categories:
-            categories_prefix = "_".join([cat[:2] for cat in self.explore_datasets_categories])
-            output_path = vis_output_dir / f"{categories_prefix}_{self.featurizer.name}_visualization.png"
+            categories_prefix = "_".join(
+                [cat[:2] for cat in self.explore_datasets_categories]
+            )
+            output_path = (
+                vis_output_dir
+                / f"{categories_prefix}_{self.featurizer.name}_visualization.png"
+            )
         else:
             output_path = vis_output_dir / f"{self.featurizer.name}_visualization.png"
 
@@ -461,9 +444,6 @@ class ManagementPipeline:
             for ds_path in dataset_paths
         }
 
-        visualization = self.get_visualization(
-            featurized_df_dict
-        )
+        visualization = self.get_visualization(featurized_df_dict)
 
         self.save_visualization(visualization)
-        
