@@ -1,0 +1,6 @@
+UmapReducer.n_dims = 2
+UmapReducer.n_neighbors = 15
+UmapReducer.min_dist = 0.1
+
+reducer/gin.singleton.constructor = @UmapReducer
+reducer = @explorer/gin.singleton()

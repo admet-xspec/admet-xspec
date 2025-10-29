@@ -1,0 +1,6 @@
+TsneReducer.n_dims = 2
+TsneReducer.perplexity = 30
+TsneReducer.max_iter = 1000
+
+reducer/gin.singleton.constructor = @TsneReducer
+reducer = @explorer/gin.singleton()
