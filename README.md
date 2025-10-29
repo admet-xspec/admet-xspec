@@ -3,7 +3,6 @@ ADMET prediction module for GenProSyn
 
 #### Quick start
 ```bash
-# inside folder after git clone
 git clone https://github.com/hubertrybka/admet-prediction.git
 cd ./admet-prediction
 
