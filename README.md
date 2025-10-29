@@ -1,9 +1,22 @@
 # admet-prediction
 ADMET prediction module for GenProSyn
 
-## Training
+#### Quick start
+```bash
+# inside folder after git clone
+git clone https://github.com/hubertrybka/admet-prediction.git
+cd ./admet-prediction
 
-Before working with this repository, please take a look at [gin-config docs](https://github.com/google/gin-config). 
+conda create -n admet-prediction python=3.11.8
+conda activate admet-prediction
+
+pip install -r requirements.txt
+pre-commit install
+```
+
+### Training
+
+Before working with this repository, please take a look at [gin-config docs](https://github.com/google/gin-config).
 All configuration in this repository is handled exclusively with gin-config.
 
 ### Workflow
@@ -13,22 +26,22 @@ This is the main configuration file for the training script.
 
 Now, let's discuss the general strategy. Each of the classifiers, regressors and featurizers is implemented as a class
 and has their own .gin config file somewhere in the `configs/` subdirectories. The `configs/train.gin` file is constructed in
-such that it only takes care of model-agnostic parameters and settings, as well as gathers (imports) other .gin files needed for 
-configuration of different machine leraning models and data preparation protocols. 
+such that it only takes care of model-agnostic parameters and settings, as well as gathers (imports) other .gin files needed for
+configuration of different machine leraning models and data preparation protocols.
 
-All the model hyperparameters, as well as settings that influence the training process of only one specific model or a family of models 
+All the model hyperparameters, as well as settings that influence the training process of only one specific model or a family of models
 are included in `configs/classifiers` and `configs/regressors` subdirectories. All the train-test splitting protocols and featurizers
 exist as .gin config files in `configs/data_splitters` and `configs/featurizers` subdirectories, respectively.
 
-**Example:** 
-If we would want to train a simple svm-based classifier, perform a random train-test split and use ECFP4 fingerprint featurizer for 
+**Example:**
+If we would want to train a simple svm-based classifier, perform a random train-test split and use ECFP4 fingerprint featurizer for
 construction of the feature matix, we should start by including paths to the configs of the classes somewhere in `configs/train.gin`.
 
     include 'configs/data_splitters/random.gin'
     include 'configs/featurizers/ecfp.gin'
     include 'configs/classifiers/svm.gin'
 
-Next we provide a path to the dataset in .csv format. The data file should contain at least two columns: 'smiles', 
+Next we provide a path to the dataset in .csv format. The data file should contain at least two columns: 'smiles',
 containing only SMILES strings, and 'y', containing true labels (target values) as floats.
 
     TrainingPipeline.data_path = 'data/permeability/bbbp_pampa.csv'
@@ -41,7 +54,7 @@ We can choose the name under which our model will be saved by modifying the `Tra
 
 ## configs/predictors/svm.gin
 
-An example configuration file `svm.gin` for a predictor class (SvmClassifier) is presented below. It can be found in 
+An example configuration file `svm.gin` for a predictor class (SvmClassifier) is presented below. It can be found in
 `configs/classifiers` directory. All the options relevent to SvmClassifier class are to be configured here.
 
 ```
@@ -119,7 +132,7 @@ configured in `params` dictionary.
     SvmClassifier.params = {'C': 1, 'kernel': 'rbf', 'gamma': 'scale'}
 
 If, however, we set `SvmClassifier.optimize_hyperparameters = True`, the model will first be tuned using
-k-fold cross-validation randomized search strategy, and the best set of hyperparameters will be used to re-train 
+k-fold cross-validation randomized search strategy, and the best set of hyperparameters will be used to re-train
 the final model on the whole training set. The user can modify parameters of hyperparameter search with:
 
     SvmClassifier.optimization_iterations = 20        # how many sets of hyperparameter values to be drawn
@@ -138,7 +151,7 @@ model tuning. Again, the hyperparameters and their distributions are defined in 
                 }
 
 - Passing a python list to one of the hyperparameter keys is equivalent to passing a uniform discrete distribution to it.
-- If we intead wanted to assign a continuous non-uniform distribution to one (or a few) of the hyperparameters, some basic understanding 
+- If we intead wanted to assign a continuous non-uniform distribution to one (or a few) of the hyperparameters, some basic understanding
 of gin-config is needed. Currently, there are two continuous and two discrete distributions at our disposal: `Uniform`, `LogUniform`, `QUniform`, `QLogUniform`,
 each parametrized by `min` and `max` values.
 
@@ -155,17 +168,17 @@ Imagine, that the param dict for this hypotetical model looks like this:
                 'learning rate': ?
                 }
 
-Let's say that for our for `layer_1_size`, `layer_2_size` and `layer_3_size` hyperparameters we want to sample *integers*, 
+Let's say that for our for `layer_1_size`, `layer_2_size` and `layer_3_size` hyperparameters we want to sample *integers*,
 from a discrete LogUniform distribution, for all layer size hyperparameters. We cannot just pass the same
 distribution class to all three of them. **As gin-config works on the principle of replacing default arguments in classes'
 constructors with the ones provided in config file**, if we would pass the same distribution class to all three of them,
-we wouldn't be able to parametrize them separately. 
+we wouldn't be able to parametrize them separately.
 
 The solution is to use **scopes**. Scopes are a gin-config feature that allows us to create a unique instance of a class
 for each scope. Scopes are denoted with `/`, so `@C/LogUniform` that we saw in previous example is an object of class
-`LogUniform`, in scope `C/`, which was chosen as it was the C hyperparameter that we wanted to tune. 
+`LogUniform`, in scope `C/`, which was chosen as it was the C hyperparameter that we wanted to tune.
 
-Now, If we were interested in creating a separate LogUniformDiscrete object for each of the three layer sizes, we can 
+Now, If we were interested in creating a separate LogUniformDiscrete object for each of the three layer sizes, we can
 approach it like this:
 
     FFN.params_distribution = {
@@ -187,7 +200,7 @@ Now, we can set the parameters for each distribution class separately, using the
     layer_3_size/LogUniform.min = 16
     layer_3_size/LogUniform.max = 64
 
-For the dropout rate, which is a float in range, we can use a continuous distribution, such as `Uniform` or `LogUniform`, 
+For the dropout rate, which is a float in range, we can use a continuous distribution, such as `Uniform` or `LogUniform`,
 and parametrize it in the same way. Learning rate is also a float, so we can use `Uniform` here as well.
 
     dropout_rate/Uniform.min = 0.1
