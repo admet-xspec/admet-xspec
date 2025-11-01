@@ -13,10 +13,9 @@ class DataSplitterBase(abc.ABC):
     Abstract base class for data splitters.
     """
 
-    def __init__(self, test_size=0.2, random_state=42, stratify=True):
+    def __init__(self, test_size=0.2, random_state=42):
         self.test_size = test_size
         self.random_state = random_state
-        self.stratify = stratify
 
     @abc.abstractmethod
     def split(self, X: pd.Series, y: pd.Series):
@@ -29,7 +28,7 @@ class DataSplitterBase(abc.ABC):
         """
         Return a key representing the state of the splitter.
         """
-        return f"{self.__class__.__name__}_{abs(hash(frozenset([self.test_size, self.random_state, self.stratify])))}"
+        return f"{self.__class__.__name__}_{abs(hash(frozenset([self.test_size, self.random_state])))}"
 
     @staticmethod
     def _get_number_of_classes(labels):
@@ -46,14 +45,14 @@ class RandomSplitter(DataSplitterBase):
     """
 
     def __init__(self, test_size=0.2, random_state=42, stratify=None):
-        super().__init__(
-            test_size=test_size, random_state=random_state, stratify=stratify
-        )
+        super().__init__(test_size=test_size, random_state=random_state)
+        self.stratify = stratify
 
     def split(
         self, X: pd.Series, y: pd.Series
     ) -> tuple[pd.Series, pd.Series, pd.Series, pd.Series]:
 
+        labels_to_stratify = None
         if self.stratify:
             if self._get_number_of_classes(y) == 2:
                 labels_to_stratify = y
@@ -76,20 +75,22 @@ class RandomSplitter(DataSplitterBase):
 
 @gin.configurable
 class ScaffoldSplitter(DataSplitterBase):
-    # TODO: Verify this implementation!!!
     """
-    Splits the dataset into training and testing sets based on molecular scaffolds.
+    Splits the dataset into training and testing sets based on molecular (Murcko) scaffolds.
     This ensures that molecules with similar scaffolds are not split between training and testing sets,
     providing a more challenging and realistic task for model evaluation.
     """
 
     def __init__(self, test_size=0.2, random_state=42):
-        super().__init__(test_size=test_size, random_state=random_state, stratify=False)
+        super().__init__(test_size=test_size, random_state=random_state)
 
     def split(
         self, X: pd.Series, y: pd.Series
     ) -> tuple[pd.Series, pd.Series, pd.Series, pd.Series]:
         scaffolds = {}
+
+        # Group molecules by their scaffolds, storing indices of molecules with the same scaffold
+        # in a dictionary with scaffold SMILES as keys.
         for i, smi in enumerate(X):
             mol = Chem.MolFromSmiles(smi)
             scaffold = MurckoScaffold.GetScaffoldForMol(mol)
@@ -98,10 +99,12 @@ class ScaffoldSplitter(DataSplitterBase):
                 scaffolds[scaffold_smiles] = []
             scaffolds[scaffold_smiles].append(i)
 
+        # Shuffle the scaffold sets to ensure randomness in the split
         scaffold_sets = list(scaffolds.values())
         np.random.seed(self.random_state)
         np.random.shuffle(scaffold_sets)
 
+        # Split the scaffold sets into training and testing sets
         train_indices, test_indices = [], []
         n_test = int(len(X) * self.test_size)
         for scaffold_set in scaffold_sets:

@@ -6,7 +6,6 @@
 *.pyc
 /models
 */__pycache__
-/notebooks
 /external/DeepChemStable
 /data/preprocessing
 **/*.log
