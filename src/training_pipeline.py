@@ -49,11 +49,11 @@ class TrainingPipeline:
         self.stratify = stratify
         self.refit_on_full_data = refit_on_full_data
 
-        self.train_path = (
-            self._handle_multiple_data_input_paths(train_paths) if train_path else []
+        self.train_paths = (
+            self._handle_multiple_data_input_paths(train_paths) if train_paths else []
         )
-        self.test_path = (
-            self._handle_multiple_data_input_paths(test_paths) if test_path else []
+        self.test_paths = (
+            self._handle_multiple_data_input_paths(test_paths) if test_paths else []
         )
 
         # If the predictor has an inject_featurizer method, invoke it
@@ -91,37 +91,37 @@ class TrainingPipeline:
         logging.info(f"Train size: {len(X_train)}, Test size: {len(X_test)}")
 
         # Save the splits to a designated subdir
-        self.train_path = (
-            self.data_path.parent / self.splitter.get_cache_key() / "train.csv"
-        )
-        self.test_path = (
-            self.data_path.parent / self.splitter.get_cache_key() / "test.csv"
-        )
+        train_path = self.data_path.parent / self.splitter.get_cache_key() / "train.csv"
+        test_path = self.data_path.parent / self.splitter.get_cache_key() / "test.csv"
 
-        self.train_path.parent.mkdir(parents=True, exist_ok=True)
-        self.test_path.parent.mkdir(parents=True, exist_ok=True)
+        train_path.parent.mkdir(parents=True, exist_ok=True)
+        test_path.parent.mkdir(parents=True, exist_ok=True)
 
         df_train = pd.DataFrame({"smiles": X_train, "y": y_train})
         df_test = pd.DataFrame({"smiles": X_test, "y": y_test})
 
-        df_train.to_csv(self.train_path, index=False)
-        df_test.to_csv(self.test_path, index=False)
+        df_train.to_csv(train_path, index=False)
+        df_test.to_csv(test_path, index=False)
 
-        logging.info(f"Train data saved to {self.train_path}")
-        logging.info(f"Test data saved to {self.test_path}")
+        logging.info(f"Train data saved to {train_path}")
+        logging.info(f"Test data saved to {test_path}")
+
+        # Update the train and test paths in the pipeline
+        self.train_paths = [train_path]
+        self.test_paths = [test_path]
 
     def train(self):
         """
         Trains the model and saves the parameters.
         """
 
-        if self.train_path is None:
+        if self.train_paths is None:
             raise ValueError(
                 "The dataset has not been split yet. Use prepare_data method first"
             )
 
         # Load the data and parse X, y columns
-        X_train, y_train = self._parse_multiple_datasets(self.train_path)
+        X_train, y_train = self._parse_multiple_datasets(self.train_paths)
 
         # Log train data size
         logging.info(f"Training data size: {len(X_train)}")
@@ -138,12 +138,12 @@ class TrainingPipeline:
         Evaluates model performance on a holdout test set and saves the metrics to a file.
         """
 
-        if not self.test_path:
+        if not self.test_paths:
             raise ValueError(
                 "The dataset has not been split yet. Use prepare_data method first"
             )
 
-        X_test, y_test = self._parse_multiple_datasets(self.test_path)
+        X_test, y_test = self._parse_multiple_datasets(self.test_paths)
 
         # Log test data size
         logging.info(f"Test data size: {len(X_test)}")
@@ -170,7 +170,7 @@ class TrainingPipeline:
         Refits the model on the entire dataset (train + test) and saves the parameters.
         """
 
-        if not self.train_path or not self.test_path:
+        if not self.train_paths or not self.test_paths:
             raise ValueError(
                 "The dataset has not been split yet. Use prepare_data method first"
             )
@@ -206,6 +206,7 @@ class TrainingPipeline:
             smiles, y = self._parse_data(path)
             all_smiles.append(smiles)
             all_y.append(y)
+
         return pd.concat(all_smiles, ignore_index=True), pd.concat(
             all_y, ignore_index=True
         )

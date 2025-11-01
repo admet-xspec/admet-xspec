@@ -24,7 +24,7 @@ if __name__ == "__main__":
         "-c",
         type=str,
         help="Path to the config file",
-        default="configs/RFF_AChE_ECFP_human.gin",
+        default="configs/train.gin",
     )
     parser.add_argument(
         "--log-level",
@@ -59,17 +59,17 @@ if __name__ == "__main__":
     pipeline.out_dir.mkdir(parents=True, exist_ok=True)
 
     # Split the data if train and test paths are not provided explicitly (default behavior)
-    if not (pipeline.train_path and pipeline.test_path):
+    if not (pipeline.train_paths and pipeline.test_paths):
         pipeline.prepare_data()
     else:
         logging.info(f"Using explicit train and test datasets:")
 
         logging.info("Train data paths:")
-        for p in pipeline.train_path:
+        for p in pipeline.train_paths:
             logging.info(f" - {p}")
 
         logging.info("Test data paths:")
-        for p in pipeline.test_path:
+        for p in pipeline.test_paths:
             logging.info(f" - {p}")
 
     # Train the model
