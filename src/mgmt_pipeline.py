@@ -174,6 +174,7 @@ class ManagementPipeline:
 
     def make_datasets_into_classification(self):
         for dataset in self.classify_datasets_list:
+            print(dataset)
             dataset_path = self.normalized_input_dir / dataset
 
             dataset_df = pd.read_csv(
@@ -195,7 +196,7 @@ class ManagementPipeline:
 
     def get_dataset_as_classification(self, dataset_df: pd.DataFrame) -> pd.DataFrame:
         normalized_value_colname = f"normalized_value_{self.classify_target_unit}"
-        classification_colname = "class"
+        classification_colname = "y"
 
         def normalize_row_value(pd_row):
             val = float(pd_row["Standard Value"])
@@ -215,18 +216,22 @@ class ManagementPipeline:
             if "'" in relation:
                 relation = relation.split("'")[1]
 
-            min_class_val = self.classify_thresholds[0]
-            max_class_val = self.classify_thresholds[-1]
+            inactive_active_threshold = self.classify_thresholds[0]
 
-            if relation == "<" and normalized_val < min_class_val:
+            if relation == "=" and normalized_val < inactive_active_threshold:
                 return 0
-            elif relation == "<=" and normalized_val <= min_class_val:
+            elif relation == "=" and normalized_val >= inactive_active_threshold:
+                return 1
+            # note: using both <, <= (and >, >=) will lead to "collisions", but the chance of
+            # the value lying exactly on the threshold is very low and we don't lost data this way
+            elif relation == "<" and normalized_val < inactive_active_threshold:
                 return 0
-            # recall that 1 threshold => 2 classes, hence not "len - 1"
-            elif relation == ">" and normalized_val > max_class_val:
-                return len(self.classify_thresholds)
-            elif relation == ">=" and normalized_val >= min_class_val:
-                return len(self.classify_thresholds)
+            elif relation == "<=" and normalized_val <= inactive_active_threshold:
+                return 0
+            elif relation == ">" and normalized_val > inactive_active_threshold:
+                return 1
+            elif relation == ">=" and normalized_val >= inactive_active_threshold:
+                return 1
 
             return np.nan
 

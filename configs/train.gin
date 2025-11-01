@@ -18,7 +18,7 @@
 
 #   Provide path to the dataset
 #   (The dataset should be in .csv format and contain 'smiles' and 'y' columns)
-    TrainingPipeline.data_path = 'path/to/dataset.csv'
+    TrainingPipeline.data_path = 'data/mgmt_output/classification/brain_rat_uptake.csv'
 
 
 #   Whether to refit the model on the whole dataset (train + test) after evaluation

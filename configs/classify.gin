@@ -2,11 +2,11 @@ include 'configs/_global.gin'
 
 ManagementPipeline.mode = 'classify'
 ManagementPipeline.root_categories = %root_categories
-ManagementPipeline.classify_thresholds = [4.5, 5.5]
+ManagementPipeline.classify_thresholds = [2]
 ManagementPipeline.classify_target_unit = 'uM'
 ManagementPipeline.classify_datasets_list = [
     'brain_mouse_uptake.csv',
-    'liver_human_liver_property_cl.csv'
+    'brain_rat_uptake.csv'
 ]
 
 # Provide path to the datasets
