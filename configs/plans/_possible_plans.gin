@@ -1,0 +1,5 @@
+# load_datasets: bool
+# visualize_datasets: bool
+# load_train_test: bool
+# visualize_train_test: bool
+# train_model: bool

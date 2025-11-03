@@ -1,0 +1,18 @@
+include 'configs/plans/train.gin'
+
+include 'configs/featurizers/ecfp.gin'
+include 'configs/reducers/pca3.gin'
+include 'configs/data_splitters/scaffold.gin'
+include 'configs/predictors/classifiers/nn.gin'
+
+ProcessingPipeline.featurizer = @featurizer/gin.singleton()
+ProcessingPipeline.reducer = @reducer/gin.singleton()
+ProcessingPipeline.splitter = @splitter/gin.singleton()
+ProcessingPipeline.predictor = @predictor/gin.singleton() # in the case of a nn, architecture ig
+
+ProcessingPipeline.model_name = 'my_model'
+ProcessingPipeline.datasets = [
+    "liver_human_cl",
+    "liver_mouse_cl",
+    "liver_rat_cl"
+]
