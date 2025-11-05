@@ -215,4 +215,6 @@ class DataInterface:
         self, friendly_name: str, metrics: pd.DataFrame | dict
     ) -> None: ...
 
-    def save_visualization(self, friendly_name: str, visualization: Image) -> None: ...
+    def save_visualization(self, friendly_name: str, visualization: Image) -> None:
+        output_path = self.visualizations_dir / f"vis_{friendly_name}.png"
+        visualization.save(output_path)

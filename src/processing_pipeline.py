@@ -1,9 +1,11 @@
 import gin
+from datetime import datetime
 
 from src import PredictorBase
 from src.data.data_interface import DataInterface
 from src.data.featurizer import FeaturizerBase
 from src.data.reducer import ReducerBase
+from src.data.visualizer import VisualizerBase
 from src.data.split import DataSplitterBase
 
 
@@ -95,7 +97,19 @@ class ProcessingPipeline:
 
         return featurized_dataset_dfs
 
-    def visualize_datasets(self, featurized_dataset_dfs): ...
+    def visualize_datasets(self, featurized_dataset_dfs) -> None:
+        visualizer: VisualizerBase = self.reducer.get_associated_visualizer()
+        df_dict = {
+            ds_name: df for ds_name, df in zip(self.datasets, featurized_dataset_dfs)
+        }
+        visualization_img = visualizer.get_visualization(df_dict)
+
+        visualization_img.save(
+            self.data_interface.save_visualization(
+                datetime.now().strftime("%d_%H_%M_%S"),
+                visualization_img,
+            )
+        )
 
     def get_train_test(self, featurized_dataset_dfs): ...
 
