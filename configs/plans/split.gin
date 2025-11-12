@@ -1,6 +1,6 @@
 load_datasets = True
 visualize_datasets = True
 load_train_test = True
-dump_train_test = False
+dump_train_test = True
 visualize_train_test = True
 train_model = True
