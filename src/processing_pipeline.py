@@ -29,6 +29,8 @@ class ProcessingPipeline:
         datasets: list[str],  # friendly_name
         train_sets: list[str],  # friendly_name
         test_sets: list[str],  # friendly_name
+        # TODO: possibly bad source of truth, placed it here for sanity!
+        target_col: str = "y",
     ):
         assert (datasets and not train_sets and not test_sets) or (
             not datasets and train_sets and test_sets
@@ -57,6 +59,9 @@ class ProcessingPipeline:
         self.predictor = predictor
 
         self.datasets = datasets
+        self.train_sets = train_sets
+        self.test_sets = test_sets
+        self.target_col = target_col
 
     def run(self):
         if self.do_load_datasets:
@@ -139,9 +144,36 @@ class ProcessingPipeline:
         Else, when 'train_sets' and 'test_sets' in source_dict.keys, then featurization is applied (no splitting).
         """
         if "featurized_dataset_dfs" in source_dict.keys():
-            ...
+            concatenated_df = pd.concat(source_dict["featurized_dataset_dfs"])
+
+            features: pd.Series
+            labels: pd.Series
+
+            features, labels = (
+                concatenated_df[self.featurizer.name],
+                concatenated_df[self.target_col],
+            )
+
+            X_train, X_test, y_train, y_test = self.splitter.split(features, labels)
+
+            return pd.merge(X_train, y_train), pd.merge(X_test, y_test)
         elif "train_sets" in source_dict.keys() and "test_sets" in source_dict.keys():
-            ...
+            train_dfs = self.load_datasets(source_dict["train_sets"])
+            test_dfs = self.load_datasets(source_dict["test_sets"])
+
+            assert all(self.target_col in df.columns for df in train_dfs) and all(
+                self.target_col in df.columns for df in test_dfs
+            ), "Loaded manual train and test splits but target (label) column does not match expected"
+
+            featurized_train_dfs = self.featurize_datasets(train_dfs)
+            featurized_test_dfs = self.featurize_datasets(test_dfs)
+
+            return pd.concat(featurized_train_dfs), pd.concat(featurized_test_dfs)
+        else:
+            raise ValueError(
+                "In passing 'source_dict' object to 'get_train_test', either 'featurized_datasets_dfs' key"
+                "must be present or both 'train_sets' and 'test_sets' keys must be present"
+            )
 
     def visualize_train_test(self, train_df, test_df): ...
 
