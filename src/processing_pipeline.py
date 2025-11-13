@@ -1,6 +1,9 @@
 import gin
+import json
 import pandas as pd
+import pickle
 from datetime import datetime
+from pathlib import Path
 
 from src import PredictorBase
 from src.data.data_interface import DataInterface
@@ -31,6 +34,7 @@ class ProcessingPipeline:
         test_sets: list[str],  # friendly_name
         # TODO: possibly bad source of truth, placed it here for sanity!
         target_col: str = "y",
+        models_output_dir: str = "models/",
     ):
         assert (datasets and not train_sets and not test_sets) or (
             not datasets and train_sets and test_sets
@@ -61,7 +65,12 @@ class ProcessingPipeline:
         self.datasets = datasets
         self.train_sets = train_sets
         self.test_sets = test_sets
+
         self.target_col = target_col
+        self.model_output_dir = (
+            Path(models_output_dir)
+            / f"{self.model_name}_{datetime.now().strftime('%d_%H_%M_%S')}"
+        )
 
     def run(self):
         if self.do_load_datasets:
@@ -87,9 +96,9 @@ class ProcessingPipeline:
             self.visualize_train_test(train_df, test_df)
 
         if self.do_train_model:
-            self.train_model(train_df, test_df)
+            metrics = self.train_model(train_df, test_df)
             self.save_model()
-            self.save_metrics()
+            self.save_metrics(metrics)
 
     def load_datasets(self, friendly_names: list[str]) -> list[pd.DataFrame]:
         dataset_dfs = [
@@ -177,8 +186,30 @@ class ProcessingPipeline:
 
     def visualize_train_test(self, train_df, test_df): ...
 
-    def train_model(self, train_df, test_df): ...
+    def train_model(self, train_df, test_df) -> dict:
+        X_train, y_train = (
+            train_df[self.featurizer.feature_name],
+            train_df[self.target_col],
+        )
+        X_test, y_test = test_df[self.featurizer.feature_name], test_df[self.target_col]
 
-    def save_model(self): ...
+        self.predictor.train(X_train, y_train)
+        metrics_dict = self.predictor.evaluate(X_test, y_test)
 
-    def save_metrics(self): ...
+        return metrics_dict
+
+    def save_model(self) -> None:
+        # NOTE: I don't like how this is coupled to the ProcessingPipeline but...
+        # practicality beats purity? something to help me sleep better at night
+        output_path = self.model_output_dir / f"{self.model_name}.pkl"
+
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+        with open(output_path, "wb") as f:
+            pickle.dump(self.predictor, f)
+
+    def save_metrics(self, metrics_dict) -> None:
+        output_path = self.model_output_dir / "metrics.json"
+
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+        with open(output_path, "w") as f:
+            json.dump(metrics_dict, f)
