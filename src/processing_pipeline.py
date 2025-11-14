@@ -1,11 +1,9 @@
 import gin
-import json
 import pandas as pd
-import pickle
 from datetime import datetime
 from pathlib import Path
+import logging
 
-from src import PredictorBase
 from src.data.data_interface import DataInterface
 from src.data.featurizer import FeaturizerBase
 from src.data.reducer import ReducerBase
@@ -18,87 +16,57 @@ class ProcessingPipeline:
 
     def __init__(
         self,
-        model_name: str,
         do_load_datasets: bool,
         do_visualize_datasets: bool,
-        do_load_train_test: bool,
+        do_train_test_split: bool,
         do_visualize_train_test: bool,
-        do_train_model: bool,
+
         data_interface: DataInterface,
-        featurizer: FeaturizerBase,
-        reducer: ReducerBase,
-        splitter: DataSplitterBase,
-        predictor: PredictorBase,
-        datasets: list[str],  # friendly_name
-        train_sets: list[str],  # friendly_name
-        test_sets: list[str],  # friendly_name
+        featurizer: FeaturizerBase | None = None,
+        reducer: ReducerBase | None = None,
+        splitter: DataSplitterBase | None = None,
+        datasets: list[str] | None = None,  # friendly_name
         # TODO: possibly bad source of truth, placed it here for sanity!
-        target_col: str = "y",
-        models_output_dir: str = "models/",
+        smiles_col: str = "smiles",
+        target_col: str = "y"
     ):
-        assert (datasets and not train_sets and not test_sets) or (
-            not datasets and train_sets and test_sets
-        ), (
-            "Invariant violation. Either the friendly names of datasets to be cleaned, featurized and loaded "
-            "can be provided, or the friendly names of datasets to be featurized and loaded can be provided. "
-        )
-        if not datasets:
-            assert train_sets and test_sets, (
-                "Invariant violation. When providing already-split .csvs manually, both"
-                "train and test must be specified for 'self.train_sets', 'self.test_sets'."
-            )
-
-        self.model_name = model_name
-
         self.do_load_datasets = do_load_datasets
         self.do_visualize_datasets = do_visualize_datasets
-        self.do_load_train_test = do_load_train_test
+        self.do_train_test_split = do_train_test_split
         self.do_visualize_train_test = do_visualize_train_test
-        self.do_train_model = do_train_model
 
         self.data_interface = data_interface
         self.featurizer = featurizer
         self.reducer = reducer
         self.splitter = splitter
-        self.predictor = predictor
+        self.split_name = self.splitter.get_cache_key()
 
         self.datasets = datasets
-        self.train_sets = train_sets
-        self.test_sets = test_sets
+        # Quick fix for single dataset case
+        if len(datasets) == 1:
+            self.dataset_name = datasets[0]
+        else:
+            logging.warning("Multiple datasets provided; the currebt implementation does not handle this case well.")
 
         self.target_col = target_col
-        self.model_output_dir = (
-            Path(models_output_dir)
-            / f"{self.model_name}_{datetime.now().strftime('%d_%H_%M_%S')}"
-        )
+        self.smiles_col = smiles_col
 
     def run(self):
         if self.do_load_datasets:
             dataset_dfs = self.load_datasets(self.datasets)
-            featurized_dataset_dfs = self.featurize_datasets(dataset_dfs)
 
         if self.do_visualize_datasets:
+            featurized_dataset_dfs = self.featurize_datasets(dataset_dfs)
             self.visualize_datasets(featurized_dataset_dfs)
 
-        # TODO: sort out unecessary "if manual split then we have conditional behaviour in get_train_test
-        # TODO: which also duplicates the process of loading and featurizing datasets" complexity present here
-        # idea: make 'run' call a different function corresponding 1:1 with each 'plan' present in 'configs/plans' (?)
-        if self.do_load_train_test and self.do_load_datasets:
-            train_df, test_df = self.get_train_test(
-                {"featurized_dataset_dfs": featurized_dataset_dfs}
-            )
-        elif self.do_load_train_test and (self.train_sets and self.test_sets):
-            train_df, test_df = self.get_train_test(
-                {"train_sets": self.train_sets, "test_sets": self.test_sets}
-            )
+        if self.do_train_test_split and self.do_load_datasets:
+            # Perform train-test split
+            train_df, test_df = self.get_train_test(dataset_dfs)
+            # Save the train-test split
+            self.save_split(train_df, test_df)
 
         if self.do_visualize_train_test:
             self.visualize_train_test(train_df, test_df)
-
-        if self.do_train_model:
-            metrics = self.train_model(train_df, test_df)
-            self.save_model()
-            self.save_metrics(metrics)
 
     def load_datasets(self, friendly_names: list[str]) -> list[pd.DataFrame]:
         dataset_dfs = [
@@ -115,10 +83,8 @@ class ProcessingPipeline:
 
             feature_col_name = self.featurizer.feature_name
             df[feature_col_name] = df["smiles"].apply(
-                lambda smiles: self.featurizer.feature_to_str(
-                    self.featurizer.featurize([smiles])
+                lambda smiles: self.featurizer.featurize([smiles])
                 )
-            )
 
             len_after_feat = len(df)
             assert len_before_feat == len_after_feat, (
@@ -145,71 +111,46 @@ class ProcessingPipeline:
         )
 
     def get_train_test(
-        self, source_dict: dict[str, list]
+        self, dataset_dfs: list[pd.DataFrame]
     ) -> tuple[pd.DataFrame, pd.DataFrame]:
-        """
-        Returns a tuple of final (clean, featurized) train and test set.
-        If 'featurized_dataset_dfs' in source_dict.keys, then splitting is applied (no featurization).
-        Else, when 'train_sets' and 'test_sets' in source_dict.keys, then featurization is applied (no splitting).
-        """
-        if "featurized_dataset_dfs" in source_dict.keys():
-            concatenated_df = pd.concat(source_dict["featurized_dataset_dfs"])
 
-            features: pd.Series
-            labels: pd.Series
+        concatenated_df = pd.concat(dataset_dfs, ignore_index=True)
 
-            features, labels = (
-                concatenated_df[self.featurizer.name],
-                concatenated_df[self.target_col],
-            )
+        features, labels = (
+            concatenated_df[self.smiles_col],
+            concatenated_df[self.target_col],
+        )
 
-            X_train, X_test, y_train, y_test = self.splitter.split(features, labels)
+        X_train, X_test, y_train, y_test = self.splitter.split(features, labels)
+        logging.info(
+            f"Train-test split completed. Train size: {len(X_train)}, Test size: {len(X_test)}"
+        )
 
-            return pd.merge(X_train, y_train), pd.merge(X_test, y_test)
-        elif "train_sets" in source_dict.keys() and "test_sets" in source_dict.keys():
-            train_dfs = self.load_datasets(source_dict["train_sets"])
-            test_dfs = self.load_datasets(source_dict["test_sets"])
-
-            assert all(self.target_col in df.columns for df in train_dfs) and all(
-                self.target_col in df.columns for df in test_dfs
-            ), "Loaded manual train and test splits but target (label) column does not match expected"
-
-            featurized_train_dfs = self.featurize_datasets(train_dfs)
-            featurized_test_dfs = self.featurize_datasets(test_dfs)
-
-            return pd.concat(featurized_train_dfs), pd.concat(featurized_test_dfs)
-        else:
-            raise ValueError(
-                "In passing 'source_dict' object to 'get_train_test', either 'featurized_datasets_dfs' key"
-                "must be present or both 'train_sets' and 'test_sets' keys must be present"
-            )
+        return pd.concat([X_train, y_train], axis=1), pd.concat([X_test, y_test], axis=1)
 
     def visualize_train_test(self, train_df, test_df): ...
 
-    def train_model(self, train_df, test_df) -> dict:
-        X_train, y_train = (
-            train_df[self.featurizer.feature_name],
-            train_df[self.target_col],
-        )
-        X_test, y_test = test_df[self.featurizer.feature_name], test_df[self.target_col]
+    def save_split(self, train_df, test_df) -> None:
+        # Use splitter's cache key as subdirectory name
+        self.data_interface.save_train_test_split(
+            train_df, test_df, subdir_name=self.split_name, dataset_name=self.dataset_name)
 
-        self.predictor.train(X_train, y_train)
-        metrics_dict = self.predictor.evaluate(X_test, y_test)
+        # After saving new datasets, update the registry of dataset friendly names
+        self.data_interface.update_dataset_names_registry()
 
-        return metrics_dict
+    def dump_logs_to_data_dir(self, contents: str, filename: str, dump_to_split_subdir: bool = False) -> None:
+        """Dumps logs or config contents to the data  under spdirectoryecified subdirectory."""
+        if self.datasets is None or len(self.datasets) != 1:
+            logging.warning("dump_logs_to_data_dir currently only supports single dataset inputs.")
+            logging.warning("Logs will be dumped to general processing_logs subdirectory.")
+            self.data_interface.dump_logs_to_general_dir(contents, filename)
+            return
 
-    def save_model(self) -> None:
-        # NOTE: I don't like how this is coupled to the ProcessingPipeline but...
-        # practicality beats purity? something to help me sleep better at night
-        output_path = self.model_output_dir / f"{self.model_name}.pkl"
-
-        output_path.parent.mkdir(parents=True, exist_ok=True)
-        with open(output_path, "wb") as f:
-            pickle.dump(self.predictor, f)
-
-    def save_metrics(self, metrics_dict) -> None:
-        output_path = self.model_output_dir / "metrics.json"
-
-        output_path.parent.mkdir(parents=True, exist_ok=True)
-        with open(output_path, "w") as f:
-            json.dump(metrics_dict, f)
+        if dump_to_split_subdir:
+            # We dump to the split-specific subdirectory
+            subdir_name = self.split_name
+        else:
+            # We dump to a general processing logs subdirectory
+            subdir_name = 'processing_logs'
+        self.data_interface.dump_logs_to_data_dir(contents, filename, dataset_name=self.dataset_name,
+                                                  subdir_name=subdir_name)

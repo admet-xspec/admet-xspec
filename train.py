@@ -13,6 +13,7 @@ import logging
 import time
 import tempfile
 from src.training_pipeline import TrainingPipeline
+from datetime import datetime
 import argparse
 import gin
 import pathlib
@@ -55,53 +56,33 @@ if __name__ == "__main__":
     # Initialize the training pipeline
     pipeline = TrainingPipeline()
 
-    # Create the output directory for the model
-    pipeline.out_dir.mkdir(parents=True, exist_ok=True)
-
-    # Split the data if train and test paths are not provided explicitly (default behavior)
-    if not (pipeline.train_paths and pipeline.test_paths):
-        pipeline.prepare_data()
-    else:
-        logging.info(f"Using explicit train and test datasets:")
-
-        logging.info("Train data paths:")
-        for p in pipeline.train_paths:
-            logging.info(f" - {p}")
-
-        logging.info("Test data paths:")
-        for p in pipeline.test_paths:
-            logging.info(f" - {p}")
-
-    # Train the model
-    pipeline.train()
-
-    # Evaluate the model
-    pipeline.evaluate()
-
-    # Refit on the entire dataset (train + test) if specified in the gin config
-    if pipeline.refit_on_full_data:
-        logging.info("Refitting the model on the entire dataset (train + test).")
-        pipeline.refit()
+    # Run the training pipeline
+    pipeline.run()
 
     # Log time
     time_elapsed = time.time() - time_start
     logging.info(
-        f"Training completed in {round(time_elapsed, 2)} seconds."
+        f"TrainingPipeline finished in {round(time_elapsed, 2)} seconds."
         if time_elapsed < 60
-        else f"Training completed in {round(time_elapsed / 60, 2)} minutes."
+        else f"TrainingPipeline finished in {round(time_elapsed / 60, 2)} minutes."
     )
 
-    # Dump operative config
-    gin_path = pipeline.out_dir / "operative_config.gin"
-    with open(gin_path, "w") as f:
-        f.write(gin.operative_config_str())
-    logging.info(f"Config saved to {gin_path}")
+    config_str = gin.operative_config_str()
+    timestamp = datetime.now().strftime("%d_%H_%M_%S")
+    logging.info(f"Dumping config and logs with timestamp {timestamp}.")
 
-    # Move the temporary log file to the output directory
+    # Dump operative config
+    pipeline.dump_logs(config_str, f'training_config_{timestamp}.gin')
+
     temp_log_file.close()
     root_logger = logging.getLogger()
     handlers = root_logger.handlers[:]
     for handler in handlers:
         handler.close()
         root_logger.removeHandler(handler)
-    pathlib.Path(temp_log_file.name).rename(pipeline.out_dir / "training.log")
+    with open(temp_log_file.name, "r") as f:
+        log_contents = f.read()
+
+    # Dump logs
+    pipeline.dump_logs(log_contents, f'training_log_{timestamp}.txt')
+

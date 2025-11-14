@@ -78,14 +78,14 @@ class TanimotoCalculator:
             "closest_smile": [],
         }
 
+        if not self.return_closest_smiles:
+            results.pop("closest_smile")
+            results.pop("query_smile")
+
         for query in queries:
             stats = self.run_single(query)
             for key in results.keys():
                 results[key].append(stats[key])
-
-        if not self.return_closest_smiles:
-            results.pop("closest_smile")
-            results.pop("query_smile")
 
         return results
 

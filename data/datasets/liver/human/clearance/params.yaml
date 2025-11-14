@@ -1,8 +1,0 @@
-friendly_name: "liver_human_clearance"
-category: "liver_clearance"
-dataset_params:
-  main_units:
-    - "mL.min-1.g-1"
-    - "mL.min-1.kg-1"
-  conversion_info:
-    density: "1"

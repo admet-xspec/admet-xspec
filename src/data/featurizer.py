@@ -31,14 +31,6 @@ class FeaturizerBase(abc.ABC):
     def name(self) -> str:
         pass
 
-    # TODO: make abstract, dunno what the rest should implement yet
-    def feature_to_str(self, feature) -> str:
-        pass
-
-    def str_to_feature(self, string: str):
-        pass
-
-
 @gin.configurable
 class EcfpFeaturizer(FeaturizerBase):
     def __init__(self, radius: int = 2, n_bits: int = 2048, count: bool = False):
@@ -78,13 +70,6 @@ class EcfpFeaturizer(FeaturizerBase):
     @property
     def name(self) -> str:
         return "ecfp_featurizer"
-
-    def feature_to_str(self, feature) -> str:
-        inner = feature[0]
-        return "".join([str(num) for num in inner])
-
-    def str_to_feature(self, string: str):
-        return np.array([[int(bit) for bit in string]])
 
     def __getstate__(self):
         state = self.__dict__.copy()

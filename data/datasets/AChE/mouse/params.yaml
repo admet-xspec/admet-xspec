@@ -1,0 +1,13 @@
+friendly_name: "AChE_mouse_IC50"
+category: "AChE_IC50"
+task: "regression"
+filter_criteria:
+    Standard Units:
+      - "nM"
+    Standard Relation:
+      - "'='"
+    Standard Type:
+      - "IC50"
+label_transformations:
+  - "log10"
+  - "negate"

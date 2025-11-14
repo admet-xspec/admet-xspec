@@ -5,8 +5,6 @@ predictor = @predictor/gin.singleton()
 #   If the parameter below is set to false, the script will not execute hyperparameter optimization step.
 #   Instead, the model will be trained using fixed hyperparameters provided in params dict.
 
-    XGBoostRegressor.optimize_hyperparameters = True
-
     XGBoostRegressor.params = {
         'does_not_work': 'yet'
         }

@@ -5,8 +5,6 @@ predictor = @predictor/gin.singleton()
 #   If the parameter below is set to false, the script will not execute hyperparameter optimization step.
 #   Instead, the model will be trained using fixed hyperparameters provided in params dict.
 
-    RfClassifier.optimize_hyperparameters = False
-
     RfClassifier.params = {
         'n_estimators': 500,
         'criterion': 'gini',

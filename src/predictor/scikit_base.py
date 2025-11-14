@@ -61,32 +61,36 @@ class ScikitPredictor(PredictorBase):
         logging.info(f"Using {get_nice_class_name(featurizer)} for featurization")
         self.featurizer = featurizer
 
-    def train(self, smiles_list: List[str], target_list: List[float]):
-
-        # Featurize the smiles
+    def _feraturize(self, smiles_list: List[str]) -> np.ndarray:
         if self.featurizer is None:
             raise ValueError("Featurizer is not set. Please inject a featurizer first.")
         X = self.featurizer.featurize(smiles_list)
-        y = target_list
+        return np.array(X, dtype=np.float32)
+
+    def train(self, smiles_list: List[str], target_list: List[float]):
+
+        # Featurize the smiles
+        X = self._feraturize(smiles_list)
+        y = np.array(target_list, dtype=np.float32)
 
         # Train the model
-        if self.optimize:
-            # Use random search to optimize hyperparameters
-            logging.info(
-                f"Starting {get_nice_class_name(self.model)} hyperparameter optimization"
-            )
-            self.train_optimize(X, y)
-        else:
-            # Use a set of fixed hyperparameters
-            logging.info(
-                f"Training {get_nice_class_name(self.model)} with fixed hyperparameters"
-            )
-            self.model.fit(X, y)
+        logging.info(
+            f"Training {get_nice_class_name(self.model)} with fixed hyperparameters"
+        )
+        self.model.fit(X, y)
 
         logging.info(f"Fitting of {get_nice_class_name(self.model)} has converged")
 
     def train_optimize(self, smiles_list: List[str], target_list: List[float]):
 
+        # Featurize the smiles
+        X = self._feraturize(smiles_list)
+        y = np.array(target_list, dtype=np.float32)
+
+        logging.info(
+            f"Starting {get_nice_class_name(self.model)} hyperparameter optimization."
+        )
+        logging.info(f"Using {self.hyper_opt['n_iter']} iterations of RandomizedSearchCV strategy with {self.hyper_opt['n_folds']}-fold cross-validation.")
         # Use random search to optimize hyperparameters
         random_search = sklearn.model_selection.RandomizedSearchCV(
             estimator=self.model,
@@ -100,7 +104,7 @@ class ScikitPredictor(PredictorBase):
         )
 
         # Fit the model
-        random_search.fit(smiles_list, target_list)
+        random_search.fit(X, y)
 
         # Save only the best model after refitting to the whole training data
         self.model = random_search.best_estimator_

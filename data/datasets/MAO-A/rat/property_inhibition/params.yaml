@@ -1,0 +1,5 @@
+friendly_name: "MAO-A_rat_inhibition"
+category: "MAO-A_inhibition"
+dataset_params:
+  main_units:
+    - "%"

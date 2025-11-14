@@ -1,0 +1,13 @@
+friendly_name: "MAO-A_human_IC50"
+category: "MAO-A_IC50"
+task: "regression"
+filter_criteria:
+    Standard Units:
+      - "nM"
+    Standard Relation:
+      - "'='"
+    Standard Type:
+      - "IC50"
+label_transformations:
+  - "log10"
+  - "negate"

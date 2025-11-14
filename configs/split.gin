@@ -1,0 +1,10 @@
+include 'configs/processing_plans/split.gin'
+include 'configs/splitters/scaffold.gin'
+
+ProcessingPipeline.datasets = [
+    "liver_human_T12"
+]
+
+include 'configs/data_interface/data_interface.gin'
+ProcessingPipeline.data_interface = @data_interface/gin.singleton()
+ProcessingPipeline.splitter = @splitter/gin.singleton()

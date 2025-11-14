@@ -1,0 +1,3 @@
+friendly_name: "AChE_rat_unique_IC50"
+category: "AChE_IC50"
+task: "regression"

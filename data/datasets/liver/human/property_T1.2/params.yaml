@@ -1,0 +1,13 @@
+friendly_name: "liver_human_T12"
+category: "liver_T12"
+task: "regression"
+filter_criteria:
+    Standard Units:
+      - "hr"
+    Standard Relation:
+      - "'='"
+    Standard Type:
+      - "T1/2"
+label_transformations:
+  - "log10"
+  - "negate"

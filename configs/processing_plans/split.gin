@@ -1,0 +1,4 @@
+ProcessingPipeline.do_load_datasets = True
+ProcessingPipeline.do_visualize_datasets = False
+ProcessingPipeline.do_train_test_split = True
+ProcessingPipeline.do_visualize_train_test = False
