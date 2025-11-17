@@ -1,4 +1,6 @@
+chemprop==2.2.1
 gin_config==0.5.0
+ipython==8.12.3
 lightning==2.5.5
 matplotlib==3.10.7
 numpy==2.3.3
