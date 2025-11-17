@@ -9,6 +9,7 @@ import numpy as np
 from src.utils import detect_csv_delimiter, get_clean_smiles
 from src.data.utils import load_multiple_datasets
 
+
 @gin.configurable
 class DataInterface:
 
@@ -18,6 +19,7 @@ class DataInterface:
     def __init__(
         self,
         dataset_dir: str,
+        splits_dir: str,
         visualizations_dir: str,
         data_config_filename: str,
         prepared_filename: str,
@@ -27,7 +29,10 @@ class DataInterface:
     ):
         self.normalization_logger = logging.getLogger("normalization_logger")
         self.dataset_dir: Path = Path(dataset_dir)
-        self.metrics_dir: Path = Path(metrics_dir) if metrics_dir else Path('data/metrics')
+        self.splits_dir: Path = Path(splits_dir)
+        self.metrics_dir: Path = (
+            Path(metrics_dir) if metrics_dir else Path("data/metrics")
+        )
         self.visualizations_dir: Path = Path(visualizations_dir)
         self.data_config_filename: str = data_config_filename
         self.prepared_filename: str = prepared_filename
@@ -82,7 +87,8 @@ class DataInterface:
         return None
 
     def _apply_filter_criteria(
-        self, df: pd.DataFrame, dataset_dir_path: Path) -> pd.DataFrame:
+        self, df: pd.DataFrame, dataset_dir_path: Path
+    ) -> pd.DataFrame:
         filter_criteria = self._parse_filter_criteria(dataset_dir_path)
         logging.debug(f"Filter criteria: {filter_criteria}")
         if filter_criteria is not None:
@@ -103,7 +109,8 @@ class DataInterface:
         return df
 
     def _apply_label_transformations(
-        self, df: pd.DataFrame, dataset_dir_path: Path) -> pd.DataFrame:
+        self, df: pd.DataFrame, dataset_dir_path: Path
+    ) -> pd.DataFrame:
         label_transformations = self._parse_label_transformations(dataset_dir_path)
         logging.debug(f"Label transformations: {label_transformations}")
 
@@ -202,7 +209,9 @@ class DataInterface:
             prepared_df = self._apply_filter_criteria(prepared_df, dataset_dir_path)
 
             # Apply any label transformations from data_config.yaml
-            prepared_df = self._apply_label_transformations(prepared_df, dataset_dir_path)
+            prepared_df = self._apply_label_transformations(
+                prepared_df, dataset_dir_path
+            )
 
         if prepared_df is not None:
             self._save_df(prepared_df, dataset_dir_path)
@@ -267,8 +276,7 @@ class DataInterface:
         current_label_col = self.get_label_col_in_raw(df_to_prepare)
         if current_smiles_col != "smiles":
             df_to_prepare.rename(
-                columns={current_smiles_col: "smiles",
-                            current_label_col: "y"},
+                columns={current_smiles_col: "smiles", current_label_col: "y"},
                 inplace=True,
             )
         else:
@@ -308,7 +316,9 @@ class DataInterface:
         output_path = self.visualizations_dir / f"vis_{friendly_name}.png"
         visualization.save(output_path)
 
-    def dump_logs_to_data_dir(self, contents: str, filename: str, dataset_name: str, subdir_name: str | None) -> None:
+    def dump_logs_to_data_dir(
+        self, contents: str, filename: str, dataset_name: str, subdir_name: str | None
+    ) -> None:
         dataset_parent = self._find_dataset_dir(dataset_name)
         config_dump_path = dataset_parent / subdir_name / filename
         config_dump_path.parent.mkdir(parents=True, exist_ok=True)
@@ -326,40 +336,42 @@ class DataInterface:
         train_df: pd.DataFrame,
         test_df: pd.DataFrame,
         subdir_name: str,
-        dataset_name: str,) -> None:
+        split_friendly_name: str,
+        classification_or_regression: str,
+    ) -> None:
         """
         Save the given train and test DataFrames to the appropriate locations and generate params.yaml files.
         The function searches for the dataset directory using the friendly name provided. It then saves the
         train and test DataFrames to .csvs in the specified subdirectory..
         """
 
-        dataset_parent = self._find_dataset_dir(dataset_name)
+        split_dir = self.splits_dir / subdir_name
 
-        # We assume that the train/test datasets are prepared already
-        train_path = dataset_parent / subdir_name / 'train' / self.prepared_filename
-        test_path = dataset_parent / subdir_name / 'test' / self.prepared_filename
+        def save_split_component(df: pd.DataFrame, train_or_test: str):
+            component_path = split_dir / train_or_test / "data.csv"
+            component_path.parent.mkdir(parents=True, exist_ok=True)
+            df.to_csv(component_path, index=False)
+            params_path = split_dir / "params.yaml"
+            component_friendly_name = f"{train_or_test}_{split_friendly_name}"
+            with open(params_path, "w") as f:
+                yaml.dump(
+                    {
+                        "friendly_name": component_friendly_name,
+                        "raw_or_derived": "derived",
+                        "task": classification_or_regression,
+                    },
+                    f,
+                )
 
-        # Create directories if they don't exist
-        train_path.parent.mkdir(parents=True, exist_ok=True)
-        test_path.parent.mkdir(parents=True, exist_ok=True)
+        save_split_component(train_df, "train")
+        save_split_component(test_df, "test")
 
-        # Save train and test DataFrames
-        train_df.to_csv(train_path, index=False)
-        test_df.to_csv(test_path, index=False)
+        logging.info(f"Train-test split was saved to {split_dir}.")
+        logging.info("Generated friendly names: {train,test}_" + split_friendly_name)
 
-        # Save params.yaml with friendly_name for this split
-        train_params_path = train_path.parent / 'params.yaml'
-        test_params_path = test_path.parent / 'params.yaml'
-
-        train_friendly_name = f"{dataset_name}_{subdir_name}_train"
-        test_friendly_name = f"{dataset_name}_{subdir_name}_test"
-
-        for path, name in [(train_params_path, train_friendly_name), (test_params_path, test_friendly_name)]:
-            with open(path, 'w') as f:
-                yaml.dump({'friendly_name': name}, f)
-
-        logging.info(f"Train-test split of {dataset_name} saved was to {train_path.parent} and {test_path.parent}")
-        logging.info(f"Generated friendly names: {train_friendly_name}, {test_friendly_name}")
+    def update_registries(self):
+        self.update_datasets_registry()
+        self.update_splits_registry()
 
     def update_dataset_names_registry(self) -> None:
         """

@@ -18,6 +18,7 @@ class ScikitPredictor(PredictorBase):
 
     def __init__(
         self,
+        task: str,
         params: dict | None = None,
         optimize_hyperparameters: bool = False,
         target_metric: str | None = None,
@@ -27,7 +28,7 @@ class ScikitPredictor(PredictorBase):
         n_jobs: int | None = None,
         **kwargs,
     ):
-        super().__init__()
+        super().__init__(task=task)
 
         # Initialize the featurizer
         self.featurizer = None
@@ -90,7 +91,9 @@ class ScikitPredictor(PredictorBase):
         logging.info(
             f"Starting {get_nice_class_name(self.model)} hyperparameter optimization."
         )
-        logging.info(f"Using {self.hyper_opt['n_iter']} iterations of RandomizedSearchCV strategy with {self.hyper_opt['n_folds']}-fold cross-validation.")
+        logging.info(
+            f"Using {self.hyper_opt['n_iter']} iterations of RandomizedSearchCV strategy with {self.hyper_opt['n_folds']}-fold cross-validation."
+        )
         # Use random search to optimize hyperparameters
         random_search = sklearn.model_selection.RandomizedSearchCV(
             estimator=self.model,
@@ -154,7 +157,7 @@ class ScikitRegressor(ScikitPredictor):
     """
 
     def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+        super().__init__(task="regression", *args, **kwargs)
         # evaluation metrics for regressor models
         self.evaluation_metrics = ["mse", "rmse", "mae", "r2"]
 
@@ -172,7 +175,7 @@ class ScikitBinaryClassifier(ScikitPredictor):
     """
 
     def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+        super().__init__(task="classification", *args, **kwargs)
         self.class_threshold = 0.5
         # evaluation metrics for classifier models
         self.evaluation_metrics = ["accuracy", "roc_auc", "f1", "precision", "recall"]

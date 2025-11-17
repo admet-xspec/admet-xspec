@@ -2,3 +2,4 @@
 # ProcessingPipeline.do_visualize_datasets: bool
 # ProcessingPipeline.do_train_test_split: bool
 # ProcessingPipeline.do_visualize_train_test: bool
+# ProcessingPipeline.do_train_model: bool

@@ -39,6 +39,18 @@ class DataSplitterBase(abc.ABC):
             labels = pd.Series(labels)
         return len(labels.unique())
 
+    def get_friendly_name(
+        self,
+        multiple_friendly_names: list[str],
+    ) -> str:
+
+        generated_name_chunks: list[str] = [
+            name[:3] for name in multiple_friendly_names
+        ]
+        generated_name_chunks.append(self.get_cache_key())
+
+        return "_".join(generated_name_chunks)
+
     def get_cache_key(self):
         """
         Generate a 5-character cache key based on the splitter's parameters.

@@ -21,8 +21,8 @@ pre-commit install
 
 - Make sure there is a `params.yaml` file under `data/datasets/brain/human/uptake`. Look to the existing files for
 inspiration.
-- Make sure the `params.yaml` file has the `raw_or_derived` field set to `raw`. When using filters (eg. Tanimoto, only uM units)
-and label transformations (eg. take log10, negate) `derived` datasets will be produced in nested directories withn the
+- Make sure the `params.yaml` file has the `raw_or_derived` field set to `raw`. When using filters (eg. Tanimoto similarity)
+`derived` datasets will be produced in nested directories within the
 same directory as the raw dataset resides (here: `data/datasets/brain/human/uptake`).
 - Look at how the `configs/examples/train_rf.gin` file is set up.
 - Look at the `configs/processing_plans/train.gin` processing plan. This example uses it.

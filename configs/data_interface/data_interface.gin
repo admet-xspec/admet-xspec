@@ -1,7 +1,8 @@
 DataInterface.dataset_dir = 'data/datasets'
+DataInterface.splits_dir = 'data/splits'
 DataInterface.visualizations_dir = 'data/visualizations'
 DataInterface.data_config_filename = 'params.yaml'
-DataInterface.prepared_filename = 'data.csv'
+DataInterface.prepared_filename = 'prepared_data.csv'
 
 data_interface/gin.singleton.constructor = @DataInterface
 data_interface = @data_interface/gin.singleton()

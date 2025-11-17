@@ -5,9 +5,14 @@ import pickle
 
 
 class PredictorBase(abc.ABC):
-    def __init__(self):
+    def __init__(self, task: str):
         self.model = self._init_model()
+        self.task = task
         self.evaluation_metrics = []  # will be set by the child
+
+    @property
+    def get_ml_task(self):
+        return self.task
 
     @abc.abstractmethod
     def _init_model(self):
