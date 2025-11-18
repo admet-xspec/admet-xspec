@@ -18,7 +18,6 @@ class ScikitPredictor(PredictorBase):
 
     def __init__(
         self,
-        task: str,
         params: dict | None = None,
         optimize_hyperparameters: bool = False,
         target_metric: str | None = None,
@@ -28,7 +27,7 @@ class ScikitPredictor(PredictorBase):
         n_jobs: int | None = None,
         **kwargs,
     ):
-        super().__init__(task=task)
+        super().__init__()
 
         # Initialize the featurizer
         self.featurizer = None
@@ -157,7 +156,7 @@ class ScikitRegressor(ScikitPredictor):
     """
 
     def __init__(self, *args, **kwargs):
-        super().__init__(task="regression", *args, **kwargs)
+        super().__init__(*args, **kwargs)
         # evaluation metrics for regressor models
         self.evaluation_metrics = ["mse", "rmse", "mae", "r2"]
 

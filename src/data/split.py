@@ -7,15 +7,32 @@ import abc
 import gin
 import logging
 
+from src.data.filter import FilterBase
+
 
 class DataSplitterBase(abc.ABC):
     """
     Abstract base class for data splitters.
     """
 
-    def __init__(self, test_size=0.2, random_state=42):
+    def __init__(self, test_size=0.2, random_state=42, train_filter: FilterBase = None):
         self.test_size = test_size
         self.random_state = random_state
+        self.train_filter = train_filter
+
+    def get_filter(self):
+        return self.train_filter
+
+    def filter(
+        self, to_filter_df: pd.DataFrame, filter_against_df: pd.DataFrame
+    ) -> pd.DataFrame:
+        """
+        Filter one dataset using another dataset, both passed to the filter object
+        """
+        if self.train_filter:
+            return self.train_filter.get_filtered_df(to_filter_df, filter_against_df)
+        else:
+            return to_filter_df
 
     @abc.abstractmethod
     def split(self, X: pd.Series, y: pd.Series):
@@ -65,8 +82,16 @@ class RandomSplitter(DataSplitterBase):
     The split can be stratified based on the target variable if specified.
     """
 
-    def __init__(self, test_size=0.2, random_state=42, stratify=None):
-        super().__init__(test_size=test_size, random_state=random_state)
+    def __init__(
+        self,
+        test_size=0.2,
+        random_state=42,
+        train_filter: FilterBase = None,
+        stratify=None,
+    ):
+        super().__init__(
+            test_size=test_size, random_state=random_state, train_filter=train_filter
+        )
         self.stratify = stratify
 
     @property
@@ -108,8 +133,10 @@ class ScaffoldSplitter(DataSplitterBase):
     providing a more challenging and realistic task for model evaluation.
     """
 
-    def __init__(self, test_size=0.2, random_state=42):
-        super().__init__(test_size=test_size, random_state=random_state)
+    def __init__(self, test_size=0.2, random_state=42, train_filter: FilterBase = None):
+        super().__init__(
+            test_size=test_size, random_state=random_state, train_filter=train_filter
+        )
 
     @property
     def name(self):

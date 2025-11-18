@@ -25,7 +25,7 @@ class DataInterface:
         prepared_filename: str,
         metrics_dir: str | None = None,
         handle_multiple_datasets_method: str = None,
-        dataset_registry_filename: str = "dataset_names_registry.txt",
+        dataset_registry_filename: str = "dataset_registry.txt",
     ):
         self.normalization_logger = logging.getLogger("normalization_logger")
         self.dataset_dir: Path = Path(dataset_dir)
@@ -39,7 +39,7 @@ class DataInterface:
         self.handle_multiple_datasets_method: str = handle_multiple_datasets_method
         self.dataset_registry_filename: str = dataset_registry_filename
 
-        # Update dataset names registry on initialization in case new datasets were added by user
+        # Update dataset names registry on initialization in case new raw datasets were added by user
         self.update_dataset_names_registry()
 
         self._init_create_dirs()
@@ -54,7 +54,10 @@ class DataInterface:
         for yaml_path in Path(self.dataset_dir).rglob("*.yaml"):
             with open(yaml_path, "r") as f:
                 data = yaml.safe_load(f)
-                if data and data.get("friendly_name") == friendly_name:
+                if data and (
+                    data.get("friendly_name") == friendly_name
+                    and data.get("task_setting") == self.task_setting
+                ):
                     dataset_dir = yaml_path.parent
                     break
 
@@ -222,6 +225,9 @@ class DataInterface:
 
     def _load_prepared_dataset(self, dataset_dir_path: Path) -> pd.DataFrame:
         return pd.read_csv(dataset_dir_path / self.prepared_filename)
+
+    def set_task_setting(self, task_setting: str) -> None:
+        self.task_setting = task_setting
 
     @staticmethod
     def get_clean_smiles_df(df: pd.DataFrame, smiles_col: str) -> pd.DataFrame:

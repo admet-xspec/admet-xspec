@@ -1,5 +1,6 @@
 from typing import List
 import numpy as np
+import logging
 from rdkit import DataStructs
 from rdkit.DataStructs import ExplicitBitVect
 from src.data.featurizer import FeaturizerBase, EcfpFeaturizer
@@ -83,9 +84,22 @@ class TanimotoCalculator:
             results.pop("query_smile")
 
         for query in queries:
-            stats = self.run_single(query)
+            stats = None
+            try:
+                stats = self.run_single(query)
+            except Exception as e:
+                logging.info(
+                    (
+                        f"Failed to query Tanimoto for {query}, "
+                        "Adding None for each key in 'results' and expecting caller to handle it"
+                    )
+                )
+
             for key in results.keys():
-                results[key].append(stats[key])
+                if stats is not None:
+                    results[key].append(stats[key])
+                else:
+                    results[key].append(None)
 
         return results
 

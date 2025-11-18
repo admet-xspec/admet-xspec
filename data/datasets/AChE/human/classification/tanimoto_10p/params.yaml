@@ -1,7 +1,7 @@
 friendly_name: "AChE_human_IC50_tanimoto_10p"
 raw_or_derived: "derived"
 category: "AChE_IC50"
-task: "classification"
+task_setting: "classification"
 filter_criteria:
     Standard Units:
       - "nM"

@@ -1,7 +1,7 @@
 friendly_name: "AChE_human_IC50"
 raw_or_derived: "raw"
 category: "AChE_IC50"
-task: "regression"
+task_setting: "regression"
 filter_criteria:
     Standard Units:
       - "nM"

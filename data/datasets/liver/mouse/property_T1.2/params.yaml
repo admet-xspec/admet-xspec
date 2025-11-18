@@ -1,7 +1,7 @@
 friendly_name: "liver_mouse_T12"
 raw_or_derived: "raw"
 category: "liver_T12"
-task: "regression"
+task_setting: "regression"
 filter_criteria:
     Standard Units:
       - "hr"

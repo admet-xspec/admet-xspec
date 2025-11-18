@@ -1,25 +1,25 @@
 include 'configs/processing_plans/train.gin'
 
 include 'configs/data_interface/data_interface.gin'
-include 'configs/data_splitters/none.gin'
+include 'configs/splitters/none.gin'
 include 'configs/featurizers/ecfp.gin'
 include 'configs/predictors/regressors/xgboost.gin'
 
-ProcessingPipeline.data_interface = @data_interface/gin.singleton()
-ProcessingPipeline.splitter = @splitter/gin.singleton()
-ProcessingPipeline.featurizer = @featurizer/gin.singleton()
-ProcessingPipeline.predictor = @predictor/gin.singleton()
+TrainingPipeline.data_interface = @data_interface/gin.singleton()
+TrainingPipeline.splitter = @splitter/gin.singleton()
+TrainingPipeline.featurizer = @featurizer/gin.singleton()
+TrainingPipeline.task_setting = "classification"
 
-ProcessingPipeline.model_name = 'ache_human_ic50_random_ecfp_rf'
-ProcessingPipeline.models_output_dir = 'models'
+TrainingPipeline.model_name = 'ache_human_ic50_random_ecfp_rf'
+TrainingPipeline.models_output_dir = 'models'
 
-ProcessingPipeline.manual_train_splits = [
+TrainingPipeline.manual_train_splits = [
      'liver_human_T12_random_68104_train',
      'liver_mouse_unique_T12',
 ]
 
-ProcessingPipeline.datasets = [
+TrainingPipeline.manual_test_splits = [
     'liver_human_T12_random_68104_test'
 ]
 
-ProcessingPipeline.optimize_hyperparameters = False
+TrainingPipeline.optimize_hyperparameters = False

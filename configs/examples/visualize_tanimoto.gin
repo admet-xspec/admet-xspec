@@ -1,20 +1,23 @@
-include 'configs/processing_plans/train.gin'
+include 'configs/processing_plans/split.gin'
 
 include 'configs/data_interface/data_interface.gin'
-include 'configs/data_splitters/scaffold_tanimoto_10p.gin'
+include 'configs/splitters/scaffold_tanimoto_10p.gin'
 include 'configs/featurizers/ecfp.gin'
-include 'configs/predictors/regressors/rf.gin'
 
 ProcessingPipeline.data_interface = @data_interface/gin.singleton()
 ProcessingPipeline.splitter = @splitter/gin.singleton()
 ProcessingPipeline.featurizer = @featurizer/gin.singleton()
 ProcessingPipeline.predictor = @predictor/gin.singleton()
+ProcessingPipeline.task_setting = "regression"
 
-ProcessingPipeline.model_name = 'ache_human_ic50_random_ecfp_rf'
-ProcessingPipeline.models_output_dir = 'models'
-
-ProcessingPipeline.datasets = [
-    'AChE_human_IC50'
+ProcessingPipeline.manual_train_splits = [
+    ...
 ]
+
+ProcessingPipeline.manual_test_splits = [
+    ...
+]
+
+ProcessingPipeline.test_filtering_origin_dataset = 'AChE_human_IC50'
 
 ProcessingPipeline.optimize_hyperparameters = False
