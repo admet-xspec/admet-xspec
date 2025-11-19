@@ -5,6 +5,8 @@ import yaml
 from PIL.Image import Image
 from pathlib import Path
 import numpy as np
+from datetime import datetime
+from collections import namedtuple
 
 from src.utils import detect_csv_delimiter, get_clean_smiles
 from src.data.utils import load_multiple_datasets
@@ -25,7 +27,7 @@ class DataInterface:
         prepared_filename: str,
         metrics_dir: str | None = None,
         handle_multiple_datasets_method: str = None,
-        dataset_registry_filename: str = "dataset_registry.txt",
+        registry_filename: str = "registry.txt",
     ):
         self.normalization_logger = logging.getLogger("normalization_logger")
         self.dataset_dir: Path = Path(dataset_dir)
@@ -37,10 +39,10 @@ class DataInterface:
         self.data_config_filename: str = data_config_filename
         self.prepared_filename: str = prepared_filename
         self.handle_multiple_datasets_method: str = handle_multiple_datasets_method
-        self.dataset_registry_filename: str = dataset_registry_filename
+        self.registry_filename: str = registry_filename
 
         # Update dataset names registry on initialization in case new raw datasets were added by user
-        self.update_dataset_names_registry()
+        self.update_datasets_registry()
 
         self._init_create_dirs()
 
@@ -357,7 +359,7 @@ class DataInterface:
             component_path = split_dir / train_or_test / "data.csv"
             component_path.parent.mkdir(parents=True, exist_ok=True)
             df.to_csv(component_path, index=False)
-            params_path = split_dir / "params.yaml"
+            params_path = split_dir / train_or_test / "params.yaml"
             component_friendly_name = f"{train_or_test}_{split_friendly_name}"
             with open(params_path, "w") as f:
                 yaml.dump(
@@ -372,14 +374,21 @@ class DataInterface:
         save_split_component(train_df, "train")
         save_split_component(test_df, "test")
 
+        operative_config_path = split_dir / "operative_config.txt"
+        with open(operative_config_path, "w") as f:
+            f.write(gin.operative_config_str())
+
+        timestamp_path = split_dir / "timestamp.txt"
+        with open(timestamp_path, "w") as f:
+            f.write(datetime.now().strftime("%Y-%m-%d_%H-%M-%S"))
+
         logging.info(f"Train-test split was saved to {split_dir}.")
         logging.info("Generated friendly names: {train,test}_" + split_friendly_name)
 
     def update_registries(self):
-        self.update_datasets_registry()
         self.update_splits_registry()
 
-    def update_dataset_names_registry(self) -> None:
+    def update_datasets_registry(self) -> None:
         """
         This method looks for .yaml files in the dataset directory and creates/updates a list
         of all friendly names, which is stores in a text file for convenient presentation to the user.
@@ -391,7 +400,35 @@ class DataInterface:
                 if data and data.get("friendly_name"):
                     friendly_names.append(data["friendly_name"])
 
-        friendly_names_path = self.dataset_dir / self.dataset_registry_filename
-        with open(friendly_names_path, "w") as f:
+        registry_path = self.dataset_dir / self.registry_filename
+        with open(registry_path, "w") as f:
             for name in friendly_names:
                 f.write(f"{name}\n")
+
+    def update_splits_registry(self) -> None:
+        """
+        This method looks for .yaml files in the dataset directory and creates/updates a list
+        of all friendly names, which is stores in a text file for convenient presentation to the user.
+        """
+
+        Split = namedtuple("Split", ["friendly_name", "timestamp"])
+
+        splits = []
+        for yaml_path in Path(self.splits_dir).rglob("*.yaml"):
+            with open(yaml_path, "r") as f:
+                data = yaml.safe_load(f)
+                if data and data.get("friendly_name"):
+                    friendly_name = data["friendly_name"]
+
+            timestamp_path = yaml_path.parent.parent / "timestamp.txt"
+            with open(timestamp_path, "r") as f:
+                timestamp = f.read().strip()
+
+            splits.append(Split(friendly_name, timestamp))
+
+        splits.sort(key=lambda x: x.timestamp)
+
+        registry_path = self.splits_dir / self.registry_filename
+        with open(registry_path, "w") as f:
+            for split in splits:
+                f.write(f"{split.timestamp} {split.friendly_name}\n")

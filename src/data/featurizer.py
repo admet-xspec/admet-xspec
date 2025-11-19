@@ -31,6 +31,7 @@ class FeaturizerBase(abc.ABC):
     def name(self) -> str:
         pass
 
+
 @gin.configurable
 class EcfpFeaturizer(FeaturizerBase):
     def __init__(self, radius: int = 2, n_bits: int = 2048, count: bool = False):
@@ -50,7 +51,7 @@ class EcfpFeaturizer(FeaturizerBase):
         mols = [Chem.MolFromSmiles(smi) for smi in smiles_list]
         for i, mol in enumerate(mols):
             if not mol:
-                logging.info(f"Failed to featurize {i}: {smiles_list[i]}")
+                logging.debug(f"Failed to featurize {i}: {smiles_list[i]}")
 
         # if any(mol is None for mol in mols):
         #     raise ValueError(

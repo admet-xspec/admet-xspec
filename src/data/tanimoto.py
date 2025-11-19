@@ -88,7 +88,7 @@ class TanimotoCalculator:
             try:
                 stats = self.run_single(query)
             except Exception as e:
-                logging.info(
+                logging.debug(
                     (
                         f"Failed to query Tanimoto for {query}, "
                         "Adding None for each key in 'results' and expecting caller to handle it"

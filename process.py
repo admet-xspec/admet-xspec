@@ -20,7 +20,7 @@ if __name__ == "__main__":
         "--log-level",
         type=str,
         help="Can be one of: DEBUG, INFO, WARNING, ERROR, CRITICAL",
-        default="DEBUG",
+        default="INFO",
     )
     args = parser.parse_args()
 

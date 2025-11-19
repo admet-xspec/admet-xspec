@@ -106,7 +106,7 @@ class ProcessingPipeline:
                 self.visualize_train_test(train_df, test_df)
 
         # TODO: implement
-        # self.data_interface.update_registries()
+        self.data_interface.update_registries()
 
     def load_datasets(self, friendly_names: list[str]) -> list[pd.DataFrame]:
         dataset_dfs = [

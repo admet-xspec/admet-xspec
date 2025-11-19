@@ -62,7 +62,8 @@ class DataSplitterBase(abc.ABC):
     ) -> str:
 
         generated_name_chunks: list[str] = [
-            name[:3] for name in multiple_friendly_names
+            "_".join([part[:3] for part in name.split("_")[:3]])
+            for name in multiple_friendly_names
         ]
         generated_name_chunks.append(self.get_cache_key())
 
