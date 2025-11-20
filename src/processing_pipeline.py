@@ -66,21 +66,20 @@ class ProcessingPipeline:
 
     def run(self):
         assert self.datasets, "No datasets were provided to be processed."
+        logging.info("#---------------------------------------------------------------------------------------#")
+        logging.info(f"Starting processing pipeline with datasets: {self.datasets}")
 
         nosplit_datasets = self.datasets.copy()
         nosplit_datasets.remove(self.test_filtering_origin_dataset)
 
         if self.do_load_datasets:
             nosplit_dataset_dfs = self.load_datasets(nosplit_datasets)
-            split_dataset_df = self.load_datasets([self.test_filtering_origin_dataset])[
-                0
-            ]
-            nosplit_featurized_dataset_dfs = self.featurize_datasets(
-                nosplit_dataset_dfs
-            )
-            split_featurized_dataset_df = self.featurize_datasets([split_dataset_df])[0]
+            split_dataset_df = self.load_datasets([self.test_filtering_origin_dataset])[0]
 
             if self.do_visualize_datasets:
+                nosplit_featurized_dataset_dfs = self.featurize_datasets(nosplit_dataset_dfs)
+                split_featurized_dataset_df = self.featurize_datasets([split_dataset_df])[0]
+
                 self.visualize_datasets(
                     nosplit_featurized_dataset_dfs + split_featurized_dataset_df
                 )
@@ -88,34 +87,43 @@ class ProcessingPipeline:
         if self.do_load_datasets and self.do_load_train_test:
             if self.datasets:
 
-                # Aggregate non-split datasets
-                aggregate_nosplit_df = self.get_aggregate_trainable_form(
-                    nosplit_dataset_dfs
-                )
+                # Concat non-split datasets
+                aggregate_nosplit_df = pd.concat(nosplit_dataset_dfs, ignore_index=True)
 
-                # Split the dataset
+                # Split the (human) dataset
                 split_train_df, split_test_df = self.get_train_test([split_dataset_df])
 
                 if self.filter_against_whole_dataset:
-                    filtered_train_df = self.splitter.filter(
-                        aggregate_nosplit_df,
-                        split_dataset_df,
-                        source_col=self.source_col,
-                    )
+                    # Filter the non-split datasets against the whole dataset (human)
+                    if len(aggregate_nosplit_df) > 0:
+                        logging.info(
+                            f"Filtering train data against the whole {self.test_filtering_origin_dataset} dataset using {self.splitter.get_filter_name()} filter"
+                        )
+                        filtered_train_df = self.splitter.filter(
+                            aggregate_nosplit_df,
+                            split_dataset_df,
+                            source_col=self.source_col,
+                        )
+                    else:
+                        filtered_train_df = aggregate_nosplit_df
+
                     # Combine the train sets
                     final_train_df = pd.concat(
                         [filtered_train_df, split_train_df], ignore_index=True
                     )
                 else:
-                    aggregated_train = pd.concat(
-                        aggregate_nosplit_df, split_train_df, ignore_index=True
+                    # Filter the non-split datasets against only the test set (human)
+                    logging.info(
+                        f"Filtering train data against test set derived from {self.test_filtering_origin_dataset} using {self.splitter.get_filter_name()} filter"
                     )
+                    aggregated_train = pd.concat(
+                        [aggregate_nosplit_df, split_train_df], ignore_index=True)
                     final_train_df = self.splitter.filter(
                         aggregated_train, split_test_df, source_col=self.source_col
                     )
 
                 logging.info(f"Final train set size: {len(final_train_df)}")
-                logging.info(f"Final test set size: {len(final_train_df)}")
+                logging.info(f"Final test set size: {len(split_test_df)}")
                 self.save_split(final_train_df, split_test_df)
             else:
                 train_df, test_df = self.get_train_test(
@@ -132,13 +140,21 @@ class ProcessingPipeline:
         self.data_interface.update_registries()
 
     def load_datasets(self, friendly_names: list[str]) -> list[pd.DataFrame]:
+        if not friendly_names:
+            return [pd.DataFrame(columns=[self.smiles_col, self.target_col, self.source_col])]
+
+        # load prepared datasets
         dataset_dfs = [
             self.data_interface.get_by_friendly_name(friendly_name)
             for friendly_name in friendly_names
         ]
 
-        # add souce column
-        for friendly_name, df in zip(friendly_names, dataset_dfs):
+        # leave only required columns
+        dataset_dfs = [
+            df[[self.smiles_col, self.target_col]] for df in dataset_dfs]
+
+        # add source column
+        for df, friendly_name in zip(dataset_dfs, friendly_names):
             df[self.source_col] = friendly_name
 
         return dataset_dfs
@@ -177,16 +193,6 @@ class ProcessingPipeline:
             )
         )
 
-    def get_aggregate_trainable_form(self, dfs: list[pd.DataFrame]) -> pd.DataFrame:
-        """Aggregate a list of final (clean, featurized) dfs vertically, leaving only cols needed for training"""
-
-        if not dfs:
-            return pd.DataFrame([])
-        # Concatenate all dataframes
-        concatenated_df = pd.concat(dfs, ignore_index=True)
-
-        return concatenated_df[[self.smiles_col, self.target_col, self.source_col]]
-
     def get_train_test(
         self, featurized_dataset_dfs
     ) -> tuple[pd.DataFrame, pd.DataFrame]:
@@ -196,7 +202,7 @@ class ProcessingPipeline:
         Else, when 'train_sets' and 'test_sets' in source_dict.keys, then featurization is applied (no splitting).
         """
 
-        concatenated_df = self.get_aggregate_trainable_form(featurized_dataset_dfs)
+        concatenated_df = pd.concat(featurized_dataset_dfs, ignore_index=True)
 
         X_train, X_test, y_train, y_test = self.splitter.split(
             concatenated_df[self.smiles_col], concatenated_df[self.target_col]

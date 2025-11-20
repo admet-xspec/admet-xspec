@@ -49,6 +49,8 @@ class DataInterface:
         self.metrics_dir.mkdir(parents=True, exist_ok=True)
         self.visualizations_dir.mkdir(parents=True, exist_ok=True)
         self.splits_dir.mkdir(parents=True, exist_ok=True)
+        (self.splits_dir / "regression").mkdir(parents=True, exist_ok=True)
+        (self.splits_dir / "classification").mkdir(parents=True, exist_ok=True)
 
     def _find_dataset_dir(self, friendly_name: str) -> Path:
         dataset_dir = None
@@ -141,7 +143,6 @@ class DataInterface:
                         logging.warning(
                             f"Label transformation type '{transformation}' is not recognized. Skipping."
                         )
-
         return df
 
     def _load_df(self, dataset_path: Path, permit_chembl: bool = True) -> pd.DataFrame:
@@ -191,6 +192,9 @@ class DataInterface:
         datasets_in_dir: list[Path] = [
             Path(globbed_ds) for globbed_ds in dataset_dir_path.rglob("*.csv")
         ]
+        # check if self.prepared_filename is among them, and remove it
+        datasets_in_dir = [ds for ds in datasets_in_dir if ds.name != self.prepared_filename]
+
         if len(datasets_in_dir) > 1:
             multiple_raw_datasets = True
 
@@ -223,6 +227,13 @@ class DataInterface:
             prepared_df = self._apply_label_transformations(
                 prepared_df, dataset_dir_path
             )
+
+            # If classification task, assign classes based on continuous labels
+            if self.task_setting == "classification":
+                logging.debug(f"Assigning classes based on continuous labels for classification task")
+                prepared_df = self._assign_classes_based_on_continous_labels(
+                    prepared_df, dataset_dir_path, is_chembl=True
+                )
 
         if prepared_df is not None:
             self._save_df(prepared_df, dataset_dir_path)
@@ -305,7 +316,7 @@ class DataInterface:
         pre_label_nan_len = len(df_to_prepare)
         df_to_prepare = df_to_prepare.dropna(subset=["y"]).reset_index(drop=True)
         if pre_label_nan_len != len(df_to_prepare):
-            logging.info(
+            logging.debug(
                 f"Dropping 'nan' labels resulted in {pre_label_nan_len - len(df_to_prepare)} "
                 f"rows being dropped."
             )
@@ -318,11 +329,11 @@ class DataInterface:
         if not self._check_prepared_dataset_exists(dataset_dir_path):
             self._generate_prepared_dataset(dataset_dir_path)
 
-        logging.debug(
+        logging.info(
             f"Loading dataset {friendly_name} from {dataset_dir_path / self.prepared_filename}"
         )
         dataset_df = self._load_prepared_dataset(dataset_dir_path)
-        logging.debug(f"Dataset size: {len(dataset_df)}")
+        logging.info(f"Dataset size: {len(dataset_df)}")
 
         return dataset_df
 
@@ -333,21 +344,6 @@ class DataInterface:
     def save_visualization(self, friendly_name: str, visualization: Image) -> None:
         output_path = self.visualizations_dir / f"vis_{friendly_name}.png"
         visualization.save(output_path)
-
-    def dump_logs_to_data_dir(
-        self, contents: str, filename: str, dataset_name: str, subdir_name: str | None
-    ) -> None:
-        dataset_parent = self._find_dataset_dir(dataset_name)
-        config_dump_path = dataset_parent / subdir_name / filename
-        config_dump_path.parent.mkdir(parents=True, exist_ok=True)
-        with open(config_dump_path, "w") as f:
-            f.write(contents)
-
-    def dump_logs_to_general_dir(self, contents: str, filename: str) -> None:
-        general_dump_path = self.dataset_dir / "processing_logs" / filename
-        general_dump_path.parent.mkdir(parents=True, exist_ok=True)
-        with open(general_dump_path, "w") as f:
-            f.write(contents)
 
     def save_train_test_split(
         self,
@@ -361,17 +357,17 @@ class DataInterface:
         """
         Save the given train and test DataFrames to the appropriate locations and generate params.yaml files.
         The function searches for the dataset directory using the friendly name provided. It then saves the
-        train and test DataFrames to .csvs in the specified subdirectory..
+        train and test DataFrames to .csvs in the specified subdirectory.
         """
 
-        split_dir = self.splits_dir / subdir_name
+        split_dir = self.splits_dir / classification_or_regression / subdir_name
 
         def save_split_component(df: pd.DataFrame, train_or_test: str):
             component_path = split_dir / train_or_test / "data.csv"
             component_path.parent.mkdir(parents=True, exist_ok=True)
             df.to_csv(component_path, index=False)
             params_path = split_dir / train_or_test / "params.yaml"
-            component_friendly_name = f"{train_or_test}_{split_friendly_name}"
+            component_friendly_name = f"{classification_or_regression[:3]}_{train_or_test}_{split_friendly_name}"
             with open(params_path, "w") as f:
                 yaml.dump(
                     {
@@ -398,7 +394,9 @@ class DataInterface:
                 f.write(console_log)
 
         logging.info(f"Train-test split was saved to {split_dir}.")
-        logging.info("Generated friendly names: {train,test}_" + split_friendly_name)
+        logging.info(f"Generated friendly names:")
+        logging.info(f"- Train: {classification_or_regression[:3]}_train_{split_friendly_name}")
+        logging.info(f"- Test: {classification_or_regression[:3]}_test_{split_friendly_name}")
 
     def update_registries(self):
         self.update_splits_registry()
@@ -451,3 +449,72 @@ class DataInterface:
                 f.write(f"{split.timestamp} {split.friendly_name}\n")
 
         logging.debug(f"Updated splits registry at {registry_path}")
+
+    def _parse_classification_threshold(self, dataset_dir_path: Path):
+        """Parse threshold for classification tasks from yaml config."""
+        config_path = dataset_dir_path / self.data_config_filename
+        if config_path.exists():
+            with open(config_path, "r") as f:
+                data = yaml.safe_load(f)
+
+            if data and data.get("threshold_source"):
+                logging.info(f"Using {data.get('threshold_source')} metadata to establish classification threshold.")
+                dataset = self.get_by_friendly_name(data.get("threshold_source"))
+                threshold_value = dataset['y_cont'].median()
+
+            elif data and data.get("threshold"):
+                threshold_value = data.get("threshold")
+
+            else:
+                raise RuntimeError("No threshold or threshold_source found in data config yaml.")
+
+            return threshold_value
+        raise RuntimeError("No data config yaml found to parse threshold for classification task.")
+
+
+    def _assign_classes_based_on_continous_labels(self, df: pd.DataFrame,
+                                            dataset_dir_path: Path, is_chembl=True) -> pd.DataFrame:
+        """Assign classes based on threshold for classification tasks."""
+
+        # Read yaml config to get threshold if not provided
+        threshold_value = self._parse_classification_threshold(dataset_dir_path)
+
+        if threshold_value == 'median':
+            threshold_value = df['y'].median()
+            logging.info(f"Using median value {threshold_value} as threshold for class assignment.")
+        elif isinstance(threshold_value, (int, float)):
+            logging.info(f"Using provided threshold value {threshold_value} for class assignment.")
+        else:
+            raise ValueError(f"Threshold value '{threshold_value}' is not valid.")
+
+        initial_len = len(df)
+        if is_chembl:
+            conditions = [
+                (df['Standard Relation'] == "'='") & (df['y'] >= threshold_value),
+                (df['Standard Relation'] == "'='") & (df['y'] < threshold_value),
+                (df['Standard Relation'] == "'>'") & (df['y'] >= threshold_value),
+                (df['Standard Relation'] == "'<'") & (df['y'] < threshold_value),
+                (df['Standard Relation'] == "'>='") & (df['y'] >= threshold_value),
+                (df['Standard Relation'] == "'<='") & (df['y'] < threshold_value),
+            ]
+
+            # Corresponding class labels for the conditions
+            choices = [1, 0, 1, 0, 1, 0]
+
+            df['class'] = np.select(conditions, choices, default=np.nan)
+            df.dropna(subset=['class'], inplace=True)
+            df['class'] = df['class'].astype(int)
+
+            rows_dropped = initial_len - len(df)
+            if rows_dropped > 0:
+                logging.info(f"Dropped {rows_dropped} rows with ambiguous relations for classification.")
+
+        else:
+            # For other datasets, we assume a simple thresholding
+            df['class'] = (df['y'] >= threshold_value).astype(int)
+
+        # The original 'y' column is no longer needed for classification
+        df.rename(columns={'y': 'y_cont'}, inplace=True)
+        df.rename(columns={'class': 'y'}, inplace=True)
+
+        return df

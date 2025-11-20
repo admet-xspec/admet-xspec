@@ -37,9 +37,6 @@ class DataSplitterBase(abc.ABC):
         Filter one dataset using another dataset, both passed to the filter object
         """
         if self.train_filter:
-            logging.info(
-                f"Filtering train set against test set using {self.get_filter_name()} filter"
-            )
             pre_filter_source_count = get_label_count(
                 df=to_filter_df, column_name=source_col
             )
