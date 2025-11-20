@@ -1,5 +1,5 @@
-include 'configs/splitters/filters/none.gin'
-ScaffoldSplitter.train_filter = %filter
+include 'configs/splitters/filters/tanimoto_5p.gin'
+RandomSplitter.train_filter = %filter
 
 RandomSplitter.test_size = 0.2
 RandomSplitter.random_state = 42

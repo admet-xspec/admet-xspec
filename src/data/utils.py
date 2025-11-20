@@ -13,5 +13,11 @@ def check_dataset_is_raw_chembl(dataset_path: Path) -> bool:
         first_two_lines_str = "".join(f.readlines()[:2])
         if ";" in first_two_lines_str:
             return True
-
     return False
+
+
+def get_label_count(df: pd.DataFrame, column_name="source") -> dict:
+    source_count = {}
+    for name in df[column_name].unique():
+        source_count[name] = len(df[df[column_name] == name])
+    return source_count

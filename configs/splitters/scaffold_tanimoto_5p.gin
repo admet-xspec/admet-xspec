@@ -1,4 +1,4 @@
-include 'configs/splitters/filters/tanimoto_10p.gin'
+include 'configs/splitters/filters/tanimoto_5p.gin'
 ScaffoldSplitter.train_filter = %filter
 
 ScaffoldSplitter.test_size = 0.2

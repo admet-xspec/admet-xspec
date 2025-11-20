@@ -30,8 +30,10 @@ class ProcessingPipeline:
         manual_train_splits: list[str] | None = None,  # [friendly_name]
         manual_test_splits: list[str] | None = None,  # [friendly_name]
         test_filtering_origin_dataset: str | None = None,
+        filter_against_whole_dataset: bool = False,
         task_setting: str = "regression",
         smiles_col: str = "smiles",
+        source_col: str = "source",
         target_col: str = "y",
         logfile: str | None = None,
     ):
@@ -48,17 +50,19 @@ class ProcessingPipeline:
         self.featurizer = featurizer
         self.reducer = reducer
         self.splitter = splitter
-        self.split_name = self.splitter.get_cache_key()
 
         self.datasets = datasets
         self.manual_train_splits = manual_train_splits
         self.manual_test_splits = manual_test_splits
         self.test_filtering_origin_dataset = test_filtering_origin_dataset
+        self.filter_against_whole_dataset = filter_against_whole_dataset
         self.logfile = logfile
 
         self.target_col = target_col
         self.smiles_col = smiles_col
-        self.source_col = "source"
+        self.source_col = source_col
+
+        self.split_name = self.get_split_key()
 
     def run(self):
         assert self.datasets, "No datasets were provided to be processed."
@@ -71,7 +75,6 @@ class ProcessingPipeline:
             split_dataset_df = self.load_datasets([self.test_filtering_origin_dataset])[
                 0
             ]
-
             nosplit_featurized_dataset_dfs = self.featurize_datasets(
                 nosplit_dataset_dfs
             )
@@ -84,38 +87,36 @@ class ProcessingPipeline:
 
         if self.do_load_datasets and self.do_load_train_test:
             if self.datasets:
-                aggregate_train_df = self.get_aggregate_trainable_form(
+
+                # Aggregate non-split datasets
+                aggregate_nosplit_df = self.get_aggregate_trainable_form(
                     nosplit_dataset_dfs
                 )
 
                 # Split the dataset
                 split_train_df, split_test_df = self.get_train_test([split_dataset_df])
 
-                # Filter the train set to ensure no data leakage
-                logging.info(
-                    f"Filtering train set against test set using {self.splitter.get_filter().name} filter"
-                )
-                pre_filter_source_count = self.get_label_count(
-                    aggregate_train_df, column_name=self.source_col
-                )
-                aggregate_train_df = self.splitter.filter(
-                    pd.concat([aggregate_train_df, split_train_df]), split_test_df
-                )
-                logging.info(
-                    f"Post-filtering train set size: {len(aggregate_train_df)}"
-                )
-                post_filter_source_count = self.get_label_count(
-                    aggregate_train_df, column_name=self.source_col
-                )
-
-                for source in pre_filter_source_count.keys():
-                    pre_count = pre_filter_source_count.get(source, 0)
-                    post_count = post_filter_source_count.get(source, 0)
-                    logging.info(
-                        f"- {source}: dropped {pre_count - post_count} samples. Remaining: {post_count}"
+                if self.filter_against_whole_dataset:
+                    filtered_train_df = self.splitter.filter(
+                        aggregate_nosplit_df,
+                        split_dataset_df,
+                        source_col=self.source_col,
+                    )
+                    # Combine the train sets
+                    final_train_df = pd.concat(
+                        [filtered_train_df, split_train_df], ignore_index=True
+                    )
+                else:
+                    aggregated_train = pd.concat(
+                        aggregate_nosplit_df, split_train_df, ignore_index=True
+                    )
+                    final_train_df = self.splitter.filter(
+                        aggregated_train, split_test_df, source_col=self.source_col
                     )
 
-                self.save_split(aggregate_train_df, split_test_df)
+                logging.info(f"Final train set size: {len(final_train_df)}")
+                logging.info(f"Final test set size: {len(final_train_df)}")
+                self.save_split(final_train_df, split_test_df)
             else:
                 train_df, test_df = self.get_train_test(
                     {
@@ -229,7 +230,7 @@ class ProcessingPipeline:
         self.data_interface.save_train_test_split(
             train_df,
             test_df,
-            subdir_name=self.get_split_hash(),
+            subdir_name=self.split_name,
             split_friendly_name=self.splitter.get_friendly_name(self.datasets),
             classification_or_regression=self.task_setting,
             console_log=self.read_logfile(),
@@ -241,7 +242,7 @@ class ProcessingPipeline:
                 return f.read()
         return None
 
-    def get_split_hash(self):
+    def get_split_key(self):
         """
         Generate a unique hash for the current split configuration to use in saving train-test splits.
         Format: {splitter_name}_{hash} (10-digit)
@@ -249,6 +250,8 @@ class ProcessingPipeline:
         splitter_hashable = self.splitter.get_hashable_params_values()
         pipeline_hashable = [
             self.task_setting,
+            self.filter_against_whole_dataset,
+            self.test_filtering_origin_dataset,
         ]
         datasets_hashable = self.datasets if self.datasets else []
         train_splits_hashable = (
@@ -266,9 +269,3 @@ class ProcessingPipeline:
         )
         hash_key = abs(hash(tuple(total_hashable))) % (10**10)
         return f"{self.splitter.name}_{hash_key}"
-
-    def get_label_count(self, df: pd.DataFrame, column_name="source") -> dict:
-        source_count = {}
-        for name in df[column_name].unique():
-            source_count[name] = len(df[df[column_name] == name])
-        return source_count

@@ -40,15 +40,15 @@ class DataInterface:
         self.handle_multiple_datasets_method: str = handle_multiple_datasets_method
         self.registry_filename: str = registry_filename
 
+        self._init_create_dirs()
         # Update splits and datasets registries
         self.update_registries()
-
-        self._init_create_dirs()
 
     def _init_create_dirs(self):
         self.dataset_dir.mkdir(parents=True, exist_ok=True)
         self.metrics_dir.mkdir(parents=True, exist_ok=True)
         self.visualizations_dir.mkdir(parents=True, exist_ok=True)
+        self.splits_dir.mkdir(parents=True, exist_ok=True)
 
     def _find_dataset_dir(self, friendly_name: str) -> Path:
         dataset_dir = None

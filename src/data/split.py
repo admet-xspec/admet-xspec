@@ -2,6 +2,7 @@ import pandas as pd
 from sklearn.model_selection import train_test_split
 from rdkit import Chem
 from rdkit.Chem.Scaffolds import MurckoScaffold
+from src.data.utils import get_label_count
 import numpy as np
 import abc
 import gin
@@ -23,14 +24,39 @@ class DataSplitterBase(abc.ABC):
     def get_filter(self):
         return self.train_filter
 
+    def get_filter_name(self):
+        return self.train_filter.name if self.train_filter else "no_filter"
+
     def filter(
-        self, to_filter_df: pd.DataFrame, filter_against_df: pd.DataFrame
+        self,
+        to_filter_df: pd.DataFrame,
+        filter_against_df: pd.DataFrame,
+        source_col: str = "source",
     ) -> pd.DataFrame:
         """
         Filter one dataset using another dataset, both passed to the filter object
         """
         if self.train_filter:
-            return self.train_filter.get_filtered_df(to_filter_df, filter_against_df)
+            logging.info(
+                f"Filtering train set against test set using {self.get_filter_name()} filter"
+            )
+            pre_filter_source_count = get_label_count(
+                df=to_filter_df, column_name=source_col
+            )
+            logging.info(f"Training set size before filtering: {len(to_filter_df)}")
+            filtered = self.train_filter.get_filtered_df(
+                to_filter_df, filter_against_df
+            )
+            logging.info(f"Training set size after filtering: {len(filtered)}")
+            post_filter_source_count = get_label_count(
+                df=filtered, column_name=source_col
+            )
+
+            for source in pre_filter_source_count.keys():
+                pre_count = pre_filter_source_count.get(source, 0)
+                post_count = post_filter_source_count.get(source, 0)
+                logging.info(f"- {source}: dropped {pre_count - post_count} samples.")
+            return filtered
         else:
             return to_filter_df
 
