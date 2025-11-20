@@ -1,7 +1,7 @@
 include 'configs/processing_plans/split.gin'
 
 include 'configs/data_interface/data_interface.gin'
-include 'configs/splitters/scaffold_tanimoto_10p.gin'
+include 'configs/splitters/scaffold.gin'
 include 'configs/featurizers/ecfp.gin'
 
 ProcessingPipeline.data_interface = @data_interface/gin.singleton()
@@ -12,5 +12,3 @@ ProcessingPipeline.task_setting = "regression"
 ProcessingPipeline.datasets = [
     'AChE_human_IC50'
 ]
-
-ProcessingPipeline.test_filtering_origin_dataset = 'AChE_human_IC50'
