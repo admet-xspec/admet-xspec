@@ -29,7 +29,6 @@ class DataInterface:
         handle_multiple_datasets_method: str = None,
         registry_filename: str = "registry.txt",
     ):
-        self.normalization_logger = logging.getLogger("normalization_logger")
         self.dataset_dir: Path = Path(dataset_dir)
         self.splits_dir: Path = Path(splits_dir)
         self.metrics_dir: Path = (
@@ -79,7 +78,9 @@ class DataInterface:
             with open(config_path, "r") as f:
                 data = yaml.safe_load(f)
                 if data and data.get("filter_criteria"):
+                    logging.debug(f"Filter criteria: {data['filter_criteria']}")
                     return data["filter_criteria"]
+        logging.debug("No filter criteria found in data config.")
         return None
 
     def _parse_label_transformations(self, dataset_dir_path: Path) -> list | None:
@@ -88,14 +89,17 @@ class DataInterface:
             with open(config_path, "r") as f:
                 data = yaml.safe_load(f)
                 if data and data.get("label_transformations"):
+                    logging.debug(
+                        f"Label transformations: {data['label_transformations']}"
+                    )
                     return data["label_transformations"]
+        logging.debug("No label transformations found in data config.")
         return None
 
     def _apply_filter_criteria(
         self, df: pd.DataFrame, dataset_dir_path: Path
     ) -> pd.DataFrame:
         filter_criteria = self._parse_filter_criteria(dataset_dir_path)
-        logging.debug(f"Filter criteria: {filter_criteria}")
         if filter_criteria is not None:
             for column, criteria in filter_criteria.items():
                 if column in df.columns:
@@ -208,12 +212,15 @@ class DataInterface:
                     )
         else:
             # Normalize SMILES and drop NaNs
+            logging.debug(f"Normalizing smiles")
             prepared_df = self.get_normalized_df(raw_dfs[0])
 
             # Apply any filter criteria from data_config.yaml
+            logging.debug(f"Applying filters on data columns")
             prepared_df = self._apply_filter_criteria(prepared_df, dataset_dir_path)
 
             # Apply any label transformations from data_config.yaml
+            logging.debug(f"Applying label transformations on labels column")
             prepared_df = self._apply_label_transformations(
                 prepared_df, dataset_dir_path
             )
@@ -312,6 +319,9 @@ class DataInterface:
         if not self._check_prepared_dataset_exists(dataset_dir_path):
             self._generate_prepared_dataset(dataset_dir_path)
 
+        logging.debug(
+            f"Loading dataset {friendly_name} from {dataset_dir_path / self.prepared_filename}"
+        )
         dataset_df = self._load_prepared_dataset(dataset_dir_path)
 
         return dataset_df
