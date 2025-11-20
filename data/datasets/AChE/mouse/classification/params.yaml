@@ -1,14 +1,12 @@
 friendly_name: "AChE_mouse_IC50"
 raw_or_derived: "raw"
 category: "AChE_IC50"
-task_setting: "regression"
+is_chembl: true
+task_setting: "classification"
 filter_criteria:
     Standard Units:
       - "nM"
-    Standard Relation:
-      - "'='"
     Standard Type:
       - "IC50"
-label_transformations:
-  - "log10"
-  - "negate"
+threshold: null
+threshold_source: "AChE_human_IC50"

@@ -1,7 +1,8 @@
 friendly_name: "MAOA_human_IC50"
 raw_or_derived: "raw"
 category: "MAOA_IC50"
-task: "regression"
+is_chembl: true
+task_setting: "regression"
 filter_criteria:
     Standard Units:
       - "nM"

@@ -1,4 +1,4 @@
-friendly_name: "liver_mouse_T12"
+friendly_name: "liver_rat_T12"
 raw_or_derived: "raw"
 category: "liver_T12"
 is_chembl: true
@@ -8,4 +8,5 @@ filter_criteria:
       - "hr"
     Standard Type:
       - "T1/2"
-threshold: "median"
+threshold: null
+threshold_source: "liver_human_T12"

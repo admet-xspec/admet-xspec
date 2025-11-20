@@ -1,6 +1,7 @@
 friendly_name: "liver_mouse_T12"
 raw_or_derived: "raw"
 category: "liver_T12"
+is_chembl: true
 task_setting: "regression"
 filter_criteria:
     Standard Units:

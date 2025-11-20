@@ -1,14 +1,11 @@
 friendly_name: "MAOA_human_IC50"
 raw_or_derived: "raw"
 category: "MAOA_IC50"
-task: "regression"
+is_chembl: true
+task_setting: "classification"
 filter_criteria:
     Standard Units:
       - "nM"
-    Standard Relation:
-      - "'='"
     Standard Type:
       - "IC50"
-label_transformations:
-  - "log10"
-  - "negate"
+threshold: "median"

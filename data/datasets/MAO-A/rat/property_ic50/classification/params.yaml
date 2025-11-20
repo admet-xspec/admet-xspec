@@ -5,7 +5,8 @@ is_chembl: true
 task_setting: "classification"
 filter_criteria:
     Standard Units:
-      - "nM"
+      - "hr"
     Standard Type:
-      - "IC50"
-threshold: "median"
+      - "T1/2"
+threshold: null
+threshold_source: "AChE_human_IC50"

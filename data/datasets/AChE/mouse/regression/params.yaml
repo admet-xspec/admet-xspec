@@ -1,6 +1,7 @@
 friendly_name: "AChE_mouse_IC50"
 raw_or_derived: "raw"
 category: "AChE_IC50"
+is_chembl: true
 task_setting: "regression"
 filter_criteria:
     Standard Units:
