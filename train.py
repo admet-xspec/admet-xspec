@@ -13,7 +13,6 @@ import logging
 import time
 import tempfile
 from src.training_pipeline import TrainingPipeline
-from datetime import datetime
 import argparse
 import gin
 import pathlib
@@ -54,7 +53,7 @@ if __name__ == "__main__":
     gin.parse_config_file(args.cfg)
 
     # Initialize the training pipeline
-    pipeline = TrainingPipeline()
+    pipeline = TrainingPipeline(logfile=temp_log_file.name)
 
     # Run the training pipeline
     pipeline.run()
@@ -66,23 +65,3 @@ if __name__ == "__main__":
         if time_elapsed < 60
         else f"TrainingPipeline finished in {round(time_elapsed / 60, 2)} minutes."
     )
-
-    config_str = gin.operative_config_str()
-    timestamp = datetime.now().strftime("%d_%H_%M_%S")
-    logging.info(f"Dumping config and logs with timestamp {timestamp}.")
-
-    # Dump operative config
-    pipeline.dump_logs(config_str, f'training_config_{timestamp}.gin')
-
-    temp_log_file.close()
-    root_logger = logging.getLogger()
-    handlers = root_logger.handlers[:]
-    for handler in handlers:
-        handler.close()
-        root_logger.removeHandler(handler)
-    with open(temp_log_file.name, "r") as f:
-        log_contents = f.read()
-
-    # Dump logs
-    pipeline.dump_logs(log_contents, f'training_log_{timestamp}.txt')
-
