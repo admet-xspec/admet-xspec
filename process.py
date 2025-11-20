@@ -1,6 +1,5 @@
 from src.processing_pipeline import ProcessingPipeline
 import logging
-from datetime import datetime
 import time
 import tempfile
 import argparse
@@ -53,30 +52,11 @@ if __name__ == "__main__":
         else f"ProcessingPipeline finished in {round(time_elapsed / 60, 2)} minutes."
     )
 
-    config_str = gin.operative_config_str()
+    # Save log file with timestamp
+    log_directory = pathlib.Path("./logs")
+    log_directory.mkdir(parents=True, exist_ok=True)
+    timestamp = time.strftime("%Y%m%d-%H%M%S")
+    log_filename = pathlib.Path(f"processing_{timestamp}.log")
+    pathlib.Path(temp_log_file.name).rename(log_directory / log_filename)
 
-    temp_log_file.close()
-    root_logger = logging.getLogger()
-    handlers = root_logger.handlers[:]
-    for handler in handlers:
-        handler.close()
-        root_logger.removeHandler(handler)
-    with open(temp_log_file.name, "r") as f:
-        log_contents = f.read()
 
-    # Dump logs and operative config
-    timestamp = datetime.now().strftime("%d_%H_%M_%S")
-
-    # Dump operative config
-    if pipeline.do_dump_train_test:
-        # If doing train-test split, dump to a split-specific subdirectory
-        pipeline.dump_logs_to_data_dir(
-            config_str, f"operative_config_{timestamp}.gin", dump_to_split_subdir=True
-        )
-        pipeline.dump_logs_to_data_dir(
-            log_contents, f"processing_{timestamp}.log", dump_to_split_subdir=True
-        )
-    else:
-        # Otherwise, dump to the dataset directory / logs
-        pipeline.dump_logs_to_data_dir(config_str, f"operative_config_{timestamp}.gin")
-        pipeline.dump_logs_to_data_dir(log_contents, f"processing_{timestamp}.log")
