@@ -58,5 +58,3 @@ if __name__ == "__main__":
     timestamp = time.strftime("%Y%m%d-%H%M%S")
     log_filename = pathlib.Path(f"processing_{timestamp}.log")
     pathlib.Path(temp_log_file.name).rename(log_directory / log_filename)
-
-

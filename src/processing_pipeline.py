@@ -56,11 +56,12 @@ class ProcessingPipeline:
 
         self.target_col = target_col
         self.smiles_col = smiles_col
+        self.source_col = "source"
 
     def run(self):
         assert self.datasets, "No datasets were provided to be processed."
 
-        nosplit_datasets = self.datasets
+        nosplit_datasets = self.datasets.copy()
         nosplit_datasets.remove(self.test_filtering_origin_dataset)
 
         if self.do_load_datasets:
@@ -82,15 +83,14 @@ class ProcessingPipeline:
         if self.do_load_datasets and self.do_load_train_test:
             if self.datasets:
                 aggregate_train_df = self.get_aggregate_trainable_form(
-                    nosplit_featurized_dataset_dfs
+                    nosplit_dataset_dfs
                 )
 
-                split_train_df, split_test_df = self.get_train_test(
-                    [split_featurized_dataset_df]
-                )
+                # Split the dataset
+                split_train_df, split_test_df = self.get_train_test([split_dataset_df])
 
                 aggregate_train_df = self.splitter.filter(
-                    aggregate_train_df + split_train_df, split_test_df
+                    pd.concat([aggregate_train_df, split_train_df]), split_test_df
                 )
 
                 self.save_split(aggregate_train_df, split_test_df)
@@ -113,6 +113,10 @@ class ProcessingPipeline:
             self.data_interface.get_by_friendly_name(friendly_name)
             for friendly_name in friendly_names
         ]
+
+        # add souce column
+        for friendly_name, df in zip(friendly_names, dataset_dfs):
+            df[self.source_col] = friendly_name
 
         return dataset_dfs
 
@@ -152,15 +156,13 @@ class ProcessingPipeline:
 
     def get_aggregate_trainable_form(self, dfs: list[pd.DataFrame]) -> pd.DataFrame:
         """Aggregate a list of final (clean, featurized) dfs vertically, leaving only cols needed for training"""
+
+        if not dfs:
+            return pd.DataFrame([])
+        # Concatenate all dataframes
         concatenated_df = pd.concat(dfs, ignore_index=True)
 
-        # leaving this form of "split -> rejoin" for readability/understanding during PR
-        features, labels = (
-            concatenated_df[self.smiles_col],
-            concatenated_df[self.target_col],
-        )
-
-        return pd.concat([features, labels], axis=1)
+        return concatenated_df[[self.smiles_col, self.target_col, self.source_col]]
 
     def get_train_test(
         self, featurized_dataset_dfs
@@ -180,9 +182,23 @@ class ProcessingPipeline:
             f"Train-test split completed. Train size: {len(X_train)}, Test size: {len(X_test)}"
         )
 
-        return pd.concat([X_train, y_train], axis=1), pd.concat(
-            [X_test, y_test], axis=1
+        # Combine X and y back into DataFrames
+        train_df = pd.DataFrame(
+            {
+                self.smiles_col: X_train,
+                self.target_col: y_train,
+                self.source_col: concatenated_df.loc[X_train.index, self.source_col],
+            }
         )
+        test_df = pd.DataFrame(
+            {
+                self.smiles_col: X_test,
+                self.target_col: y_test,
+                self.source_col: concatenated_df.loc[X_test.index, self.source_col],
+            }
+        )
+
+        return train_df, test_df
 
     def visualize_train_test(self, train_df, test_df): ...
 
@@ -191,31 +207,33 @@ class ProcessingPipeline:
         self.data_interface.save_train_test_split(
             train_df,
             test_df,
-            subdir_name=self.splitter.get_cache_key(),
+            subdir_name=self.get_split_hash(),
             split_friendly_name=self.splitter.get_friendly_name(self.datasets),
             classification_or_regression=self.task_setting,
         )
 
-    def dump_logs_to_data_dir(
-        self, contents: str, filename: str, dump_to_split_subdir: bool = False
-    ) -> None:
-        """Dumps logs or config contents to the data under specified subdirectory."""
-        if self.datasets is None or len(self.datasets) != 1:
-            logging.warning(
-                "dump_logs_to_data_dir currently only supports single dataset inputs."
-            )
-            logging.warning(
-                "Logs will be dumped to general processing_logs subdirectory."
-            )
-            self.data_interface.dump_logs_to_general_dir(contents, filename)
-            return
-
-        if dump_to_split_subdir:
-            # We dump to the split-specific subdirectory
-            subdir_name = self.split_name
-        else:
-            # We dump to a general processing logs subdirectory
-            subdir_name = "processing_logs"
-        self.data_interface.dump_logs_to_data_dir(
-            contents, filename, dataset_name=self.dataset_name, subdir_name=subdir_name
+    def get_split_hash(self):
+        """
+        Generate a unique hash for the current split configuration to use in saving train-test splits.
+        Format: {splitter_name}_{hash} (10-digit)
+        """
+        splitter_hashable = self.splitter.get_hashable_params_values()
+        pipeline_hashable = [
+            self.task_setting,
+        ]
+        datasets_hashable = self.datasets if self.datasets else []
+        train_splits_hashable = (
+            self.manual_train_splits if self.manual_train_splits else []
         )
+        test_splits_hashable = (
+            self.manual_test_splits if self.manual_test_splits else []
+        )
+        total_hashable = (
+            splitter_hashable
+            + pipeline_hashable
+            + datasets_hashable
+            + train_splits_hashable
+            + test_splits_hashable
+        )
+        hash_key = abs(hash(tuple(total_hashable))) % (10**10)
+        return f"{self.splitter.name}_{hash_key}"
