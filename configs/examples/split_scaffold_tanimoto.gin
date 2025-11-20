@@ -7,12 +7,10 @@ include 'configs/featurizers/ecfp.gin'
 ProcessingPipeline.data_interface = %data_interface
 ProcessingPipeline.splitter = %splitter
 ProcessingPipeline.featurizer = %featurizer
-ProcessingPipeline.task_setting = "regression"
+ProcessingPipeline.task_setting = "classification"
 
 ProcessingPipeline.datasets = [
-    'AChE_human_IC50',
-    'AChE_rat_IC50',
-    'AChE_mouse_IC50'
+    'AChE_human_IC50'
 ]
 
 ProcessingPipeline.test_filtering_origin_dataset = 'AChE_human_IC50'

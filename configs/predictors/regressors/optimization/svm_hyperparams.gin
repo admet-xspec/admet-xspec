@@ -1,0 +1,47 @@
+#==========================================================================================================#
+#   Define the target metric, one to be optimized during hyperparameter search.
+#   Supported metrics are: 'neg_mean_absolute_error', 'neg_mean_squared_error', 'neg_root_mean_squared_error'
+
+    SvmRegressor.target_metric = 'neg_mean_squared_error'
+
+#==========================================================================================================#
+#   If optimize_hyperparameters is set to True, the training script will first optimize the values of
+#   hyperparameters using random search - CV strategy
+
+    SvmRegressor.optimization_iterations = 50    # maximum times the script is allowed to draw and
+                                                        # evaluate a new set of hyperparameter values
+
+    SvmRegressor.n_jobs = 20                      # number of CPUs to use
+    SvmRegressor.n_folds = 5                     # number of cross-validation folds
+
+#   Dictionary of distributions to sample hyperparameter values from. To each of the models' hyperparameters
+#   either a discrete list or a continuous distribution may be assigned. Below is a brief demonstration on
+#   how to configure probability distributions for the hyperparameters.
+
+#   There are four distributions you can use, all parametrized by min and max:
+#       * Uniform       (continuous)
+#       * LogUniform    (continuous)
+#       * QUniform      (discrete)
+#       * QLogUniform   (discrete)
+
+#   If you wanted to provide a LogUniform distribution for the parameter C, remember to put it in
+#   some scope (ex. @C/LogUniform, where C/ is the scope). That way, when setting C/LogUniform.min
+#   and C/LogUniform.max distribution parameters later on, those will only change for our C hyperparam
+#   distribution, and not for any other LogUniforms used in this config. The @ is essential when passing
+#   the distribution itself (which is a class) to the dictionary, but not needed while setting attributes.
+
+    SvmRegressor.params_distribution = {
+        'C': @C/LogUniform(),
+        'gamma': @gamma/LogUniform(),
+        'kernel': ['rbf']
+        }
+
+#   Parametrizing the distribution functions:
+
+        C/LogUniform.min = 0.1
+        C/LogUniform.max = 1000
+
+        gamma/LogUniform.min = 0.001
+        gamma/LogUniform.max = 1
+
+#==========================================================================================================#

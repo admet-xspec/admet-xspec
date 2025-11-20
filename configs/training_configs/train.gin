@@ -9,7 +9,7 @@
 
 #   Provide paths to the .gin config files of a data splitter, a featurizer and a predictor
     include 'configs/featurizers/ecfp.gin'
-    include 'configs/predictors/regressors/rf.gin'
+    include 'configs/predictors/co/rf.gin'
 
 #   Provide names of the datasets to be used for training and evaluation
 
