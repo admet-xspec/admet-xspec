@@ -10,6 +10,7 @@ from src.data.reducer import ReducerBase
 from src.data.visualizer import VisualizerBase
 from src.data.split import DataSplitterBase
 from src.data.filter import FilterBase
+from src.utils import read_logfile
 
 
 @gin.configurable
@@ -66,7 +67,9 @@ class ProcessingPipeline:
 
     def run(self):
         assert self.datasets, "No datasets were provided to be processed."
-        logging.info("#---------------------------------------------------------------------------------------#")
+        logging.info(
+            "#---------------------------------------------------------------------------------------#"
+        )
         logging.info(f"Starting processing pipeline with datasets: {self.datasets}")
 
         nosplit_datasets = self.datasets.copy()
@@ -74,11 +77,17 @@ class ProcessingPipeline:
 
         if self.do_load_datasets:
             nosplit_dataset_dfs = self.load_datasets(nosplit_datasets)
-            split_dataset_df = self.load_datasets([self.test_filtering_origin_dataset])[0]
+            split_dataset_df = self.load_datasets([self.test_filtering_origin_dataset])[
+                0
+            ]
 
             if self.do_visualize_datasets:
-                nosplit_featurized_dataset_dfs = self.featurize_datasets(nosplit_dataset_dfs)
-                split_featurized_dataset_df = self.featurize_datasets([split_dataset_df])[0]
+                nosplit_featurized_dataset_dfs = self.featurize_datasets(
+                    nosplit_dataset_dfs
+                )
+                split_featurized_dataset_df = self.featurize_datasets(
+                    [split_dataset_df]
+                )[0]
 
                 self.visualize_datasets(
                     nosplit_featurized_dataset_dfs + split_featurized_dataset_df
@@ -117,7 +126,8 @@ class ProcessingPipeline:
                         f"Filtering train data against test set derived from {self.test_filtering_origin_dataset} using {self.splitter.get_filter_name()} filter"
                     )
                     aggregated_train = pd.concat(
-                        [aggregate_nosplit_df, split_train_df], ignore_index=True)
+                        [aggregate_nosplit_df, split_train_df], ignore_index=True
+                    )
                     final_train_df = self.splitter.filter(
                         aggregated_train, split_test_df, source_col=self.source_col
                     )
@@ -141,7 +151,11 @@ class ProcessingPipeline:
 
     def load_datasets(self, friendly_names: list[str]) -> list[pd.DataFrame]:
         if not friendly_names:
-            return [pd.DataFrame(columns=[self.smiles_col, self.target_col, self.source_col])]
+            return [
+                pd.DataFrame(
+                    columns=[self.smiles_col, self.target_col, self.source_col]
+                )
+            ]
 
         # load prepared datasets
         dataset_dfs = [
@@ -150,8 +164,7 @@ class ProcessingPipeline:
         ]
 
         # leave only required columns
-        dataset_dfs = [
-            df[[self.smiles_col, self.target_col]] for df in dataset_dfs]
+        dataset_dfs = [df[[self.smiles_col, self.target_col]] for df in dataset_dfs]
 
         # add source column
         for df, friendly_name in zip(dataset_dfs, friendly_names):
@@ -239,14 +252,8 @@ class ProcessingPipeline:
             subdir_name=self.split_name,
             split_friendly_name=self.splitter.get_friendly_name(self.datasets),
             classification_or_regression=self.task_setting,
-            console_log=self.read_logfile(),
+            console_log=read_logfile(self.logfile),
         )
-
-    def read_logfile(self) -> str | None:
-        if self.logfile and Path(self.logfile).exists():
-            with open(self.logfile, "r") as f:
-                return f.read()
-        return None
 
     def get_split_key(self):
         """

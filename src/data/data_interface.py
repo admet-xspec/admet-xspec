@@ -39,6 +39,7 @@ class DataInterface:
         self.prepared_filename: str = prepared_filename
         self.handle_multiple_datasets_method: str = handle_multiple_datasets_method
         self.registry_filename: str = registry_filename
+        self.split_datafile_name = "data.csv"
 
         self._init_create_dirs()
         # Update splits and datasets registries
@@ -68,6 +69,21 @@ class DataInterface:
             return dataset_dir
         raise FileNotFoundError(
             f"No dataset directory with yaml containing friendly_name: '{friendly_name}' found"
+        )
+
+    def _find_split_dir(self, friendly_name: str) -> Path:
+        split_dir = None
+        for yaml_path in Path(self.splits_dir).rglob("*.yaml"):
+            with open(yaml_path, "r") as f:
+                data = yaml.safe_load(f)
+                if data and data.get("friendly_name") == friendly_name:
+                    split_dir = yaml_path.parent
+                    break
+
+        if split_dir:
+            return split_dir
+        raise FileNotFoundError(
+            f"No split directory with yaml containing friendly_name: '{friendly_name}' found"
         )
 
     def _check_prepared_dataset_exists(self, dataset_dir_path: Path) -> bool:
@@ -193,7 +209,9 @@ class DataInterface:
             Path(globbed_ds) for globbed_ds in dataset_dir_path.rglob("*.csv")
         ]
         # check if self.prepared_filename is among them, and remove it
-        datasets_in_dir = [ds for ds in datasets_in_dir if ds.name != self.prepared_filename]
+        datasets_in_dir = [
+            ds for ds in datasets_in_dir if ds.name != self.prepared_filename
+        ]
 
         if len(datasets_in_dir) > 1:
             multiple_raw_datasets = True
@@ -230,7 +248,9 @@ class DataInterface:
 
             # If classification task, assign classes based on continuous labels
             if self.task_setting == "classification":
-                logging.debug(f"Assigning classes based on continuous labels for classification task")
+                logging.debug(
+                    f"Assigning classes based on continuous labels for classification task"
+                )
                 prepared_df = self._assign_classes_based_on_continous_labels(
                     prepared_df, dataset_dir_path, is_chembl=True
                 )
@@ -337,6 +357,11 @@ class DataInterface:
 
         return dataset_df
 
+    def get_split_by_friendly_name(self, friendly_name: str) -> pd.DataFrame:
+        split_dir_path: Path = self._find_split_dir(friendly_name)
+        split_df = pd.read_csv(split_dir_path / self.split_datafile_name)
+        return split_df
+
     def save_metrics(
         self, friendly_name: str, metrics: pd.DataFrame | dict
     ) -> None: ...
@@ -363,7 +388,7 @@ class DataInterface:
         split_dir = self.splits_dir / classification_or_regression / subdir_name
 
         def save_split_component(df: pd.DataFrame, train_or_test: str):
-            component_path = split_dir / train_or_test / "data.csv"
+            component_path = split_dir / train_or_test / self.split_datafile_name
             component_path.parent.mkdir(parents=True, exist_ok=True)
             df.to_csv(component_path, index=False)
             params_path = split_dir / train_or_test / "params.yaml"
@@ -395,8 +420,12 @@ class DataInterface:
 
         logging.info(f"Train-test split was saved to {split_dir}.")
         logging.info(f"Generated friendly names:")
-        logging.info(f"- Train: {classification_or_regression[:3]}_train_{split_friendly_name}")
-        logging.info(f"- Test: {classification_or_regression[:3]}_test_{split_friendly_name}")
+        logging.info(
+            f"- Train: {classification_or_regression[:3]}_train_{split_friendly_name}"
+        )
+        logging.info(
+            f"- Test: {classification_or_regression[:3]}_test_{split_friendly_name}"
+        )
 
     def update_registries(self):
         self.update_splits_registry()
@@ -458,63 +487,75 @@ class DataInterface:
                 data = yaml.safe_load(f)
 
             if data and data.get("threshold_source"):
-                logging.info(f"Using {data.get('threshold_source')} metadata to establish classification threshold.")
+                logging.info(
+                    f"Using {data.get('threshold_source')} metadata to establish classification threshold."
+                )
                 dataset = self.get_by_friendly_name(data.get("threshold_source"))
-                threshold_value = dataset['y_cont'].median()
+                threshold_value = dataset["y_cont"].median()
 
             elif data and data.get("threshold"):
                 threshold_value = data.get("threshold")
 
             else:
-                raise RuntimeError("No threshold or threshold_source found in data config yaml.")
+                raise RuntimeError(
+                    "No threshold or threshold_source found in data config yaml."
+                )
 
             return threshold_value
-        raise RuntimeError("No data config yaml found to parse threshold for classification task.")
+        raise RuntimeError(
+            "No data config yaml found to parse threshold for classification task."
+        )
 
-
-    def _assign_classes_based_on_continous_labels(self, df: pd.DataFrame,
-                                            dataset_dir_path: Path, is_chembl=True) -> pd.DataFrame:
+    def _assign_classes_based_on_continous_labels(
+        self, df: pd.DataFrame, dataset_dir_path: Path, is_chembl=True
+    ) -> pd.DataFrame:
         """Assign classes based on threshold for classification tasks."""
 
         # Read yaml config to get threshold if not provided
         threshold_value = self._parse_classification_threshold(dataset_dir_path)
 
-        if threshold_value == 'median':
-            threshold_value = df['y'].median()
-            logging.info(f"Using median value {threshold_value} as threshold for class assignment.")
+        if threshold_value == "median":
+            threshold_value = df["y"].median()
+            logging.info(
+                f"Using median value {threshold_value} as threshold for class assignment."
+            )
         elif isinstance(threshold_value, (int, float)):
-            logging.info(f"Using provided threshold value {threshold_value} for class assignment.")
+            logging.info(
+                f"Using provided threshold value {threshold_value} for class assignment."
+            )
         else:
             raise ValueError(f"Threshold value '{threshold_value}' is not valid.")
 
         initial_len = len(df)
         if is_chembl:
             conditions = [
-                (df['Standard Relation'] == "'='") & (df['y'] >= threshold_value),
-                (df['Standard Relation'] == "'='") & (df['y'] < threshold_value),
-                (df['Standard Relation'] == "'>'") & (df['y'] >= threshold_value),
-                (df['Standard Relation'] == "'<'") & (df['y'] < threshold_value),
-                (df['Standard Relation'] == "'>='") & (df['y'] >= threshold_value),
-                (df['Standard Relation'] == "'<='") & (df['y'] < threshold_value),
+                (df["Standard Relation"] == "'='") & (df["y"] >= threshold_value),
+                (df["Standard Relation"] == "'='") & (df["y"] < threshold_value),
+                (df["Standard Relation"] == "'>'") & (df["y"] >= threshold_value),
+                (df["Standard Relation"] == "'<'") & (df["y"] < threshold_value),
+                (df["Standard Relation"] == "'>='") & (df["y"] >= threshold_value),
+                (df["Standard Relation"] == "'<='") & (df["y"] < threshold_value),
             ]
 
             # Corresponding class labels for the conditions
             choices = [1, 0, 1, 0, 1, 0]
 
-            df['class'] = np.select(conditions, choices, default=np.nan)
-            df.dropna(subset=['class'], inplace=True)
-            df['class'] = df['class'].astype(int)
+            df["class"] = np.select(conditions, choices, default=np.nan)
+            df.dropna(subset=["class"], inplace=True)
+            df["class"] = df["class"].astype(int)
 
             rows_dropped = initial_len - len(df)
             if rows_dropped > 0:
-                logging.info(f"Dropped {rows_dropped} rows with ambiguous relations for classification.")
+                logging.info(
+                    f"Dropped {rows_dropped} rows with ambiguous relations for classification."
+                )
 
         else:
             # For other datasets, we assume a simple thresholding
-            df['class'] = (df['y'] >= threshold_value).astype(int)
+            df["class"] = (df["y"] >= threshold_value).astype(int)
 
         # The original 'y' column is no longer needed for classification
-        df.rename(columns={'y': 'y_cont'}, inplace=True)
-        df.rename(columns={'class': 'y'}, inplace=True)
+        df.rename(columns={"y": "y_cont"}, inplace=True)
+        df.rename(columns={"class": "y"}, inplace=True)
 
         return df

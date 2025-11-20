@@ -1,8 +1,6 @@
 import pandas as pd
-from src.utils import (
-    get_nice_class_name,
-    log_markdown_table
-)
+
+from src.utils import get_nice_class_name, log_markdown_table, read_logfile
 import logging
 from src.predictor.predictor_base import PredictorBase
 from src.data.featurizer import (
@@ -25,24 +23,26 @@ class TrainingPipeline:
         predictor: PredictorBase | None = None,
         featurizer: FeaturizerBase | None = None,
         models_output_dir: Path | str = "models",
-        train_sets: list[str] | None = None,  # friendly_name
-        test_sets: list[str] | None = None,  # friendly_name
+        train_set: str | None = None,  # friendly_name
+        test_set: str | None = None,  # friendly_name
         refit_on_full_data: bool = False,
         optimize_hyperparameters: bool = False,
+        logfile: str | None = None,
     ):
 
         self.model_name = model_name
         self.data_interface = data_interface
         self.predictor = predictor
 
-        self.train_sets = train_sets
-        self.test_sets = test_sets
+        self.train_set = train_set
+        self.test_set = test_set
         self.optimize_hyperparameters = optimize_hyperparameters
 
         self.model_output_dir = (
-                Path(models_output_dir)
-                / f"{self.model_name}_{datetime.now().strftime('%d_%H_%M_%S')}"
+            Path(models_output_dir)
+            / f"{self.model_name}_{datetime.now().strftime('%d_%H_%M_%S')}"
         )
+        self.logfile = logfile
 
         # whether to refit the model on the full dataset after evaluation (train + test)
         self.refit_on_full_data = refit_on_full_data
@@ -52,8 +52,8 @@ class TrainingPipeline:
 
     def run(self):
         # load data
-        train_df = pd.concat(self.load_datasets(self.train_sets))
-        test_df = pd.concat(self.load_datasets(self.test_sets))
+        train_df = self.load_dataset(self.train_set)
+        test_df = self.load_dataset(self.test_set)
 
         logging.info(f"Training dataset size: {len(train_df)}")
         logging.info(f"Test dataset size: {len(test_df)}")
@@ -84,20 +84,16 @@ class TrainingPipeline:
         # Refit on the entire dataset (train + test) if specified in the gin config
         if self.refit_on_full_data:
             logging.info("Refitting the model on the entire dataset (train + test).")
-            self.train(
-                pd.concat([X_train, X_test]), pd.concat([y_train, y_test])
-            )
+            self.train(pd.concat([X_train, X_test]), pd.concat([y_train, y_test]))
             self.save_model(name="model_refit")
 
-    def load_datasets(self, friendly_names: list[str]) -> list[pd.DataFrame]:
+        self.dump_console_logs()
+
+    def load_dataset(self, friendly_name: str) -> pd.DataFrame:
         """
         Loads datasets by their friendly names using the data interface.
         """
-        dataset_dfs = [
-            self.data_interface.get_by_friendly_name(friendly_name)
-            for friendly_name in friendly_names
-        ]
-        return dataset_dfs
+        return self.data_interface.get_split_by_friendly_name(friendly_name)
 
     def evaluate(self, X_test: pd.Series, y_test: pd.Series) -> dict:
         """
@@ -131,13 +127,15 @@ class TrainingPipeline:
         self.predictor.save(self.model_output_dir, name="model")
         logging.info(f"Model saved to {self.model_output_dir}")
 
-    def dump_logs(self, config_str: str, filename: str):
+    def dump_console_logs(self):
         """
-        Dumps the logs or operative config to the output directory.
+        Dumps console logs to a file in the model output directory.
         """
-        path = self.model_output_dir / filename
-        with open(path, "w") as f:
-            f.write(config_str)
+        logs = read_logfile(self.logfile)
+        log_path = self.model_output_dir / "console_logs.txt"
+        with open(log_path, "w") as f:
+            f.write(logs)
+        logging.info(f"Console logs saved to {log_path}")
 
     def try_inject_featurizer(self, featurizer: FeaturizerBase | None):
         """
