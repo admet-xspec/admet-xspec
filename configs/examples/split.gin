@@ -4,9 +4,9 @@ include 'configs/data_interface/data_interface.gin'
 include 'configs/splitters/scaffold.gin'
 include 'configs/featurizers/ecfp.gin'
 
-ProcessingPipeline.data_interface = @data_interface/gin.singleton()
-ProcessingPipeline.splitter = @splitter/gin.singleton()
-ProcessingPipeline.featurizer = @featurizer/gin.singleton()
+ProcessingPipeline.data_interface = %data_interface
+ProcessingPipeline.splitter = %splitter
+ProcessingPipeline.featurizer = %featurizer
 ProcessingPipeline.task_setting = "regression"
 
 ProcessingPipeline.datasets = [
