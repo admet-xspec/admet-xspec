@@ -40,8 +40,8 @@ class DataInterface:
         self.handle_multiple_datasets_method: str = handle_multiple_datasets_method
         self.registry_filename: str = registry_filename
 
-        # Update dataset names registry on initialization in case new raw datasets were added by user
-        self.update_datasets_registry()
+        # Update splits and datasets registries
+        self.update_registries()
 
         self._init_create_dirs()
 
@@ -167,7 +167,6 @@ class DataInterface:
                     f"Loading dataset {dataset_path} resulted in {pre_dropna_len - len(df)} "
                     f"'nan' SMILES, all were dropped."
                 )
-            df
 
             return loaded_df
         elif loaded_df is not None:
@@ -323,6 +322,7 @@ class DataInterface:
             f"Loading dataset {friendly_name} from {dataset_dir_path / self.prepared_filename}"
         )
         dataset_df = self._load_prepared_dataset(dataset_dir_path)
+        logging.debug(f"Dataset size: {len(dataset_df)}")
 
         return dataset_df
 
@@ -356,6 +356,7 @@ class DataInterface:
         subdir_name: str,
         split_friendly_name: str,
         classification_or_regression: str,
+        console_log: str | None = None,
     ) -> None:
         """
         Save the given train and test DataFrames to the appropriate locations and generate params.yaml files.
@@ -388,9 +389,13 @@ class DataInterface:
         with open(operative_config_path, "w") as f:
             f.write(gin.operative_config_str())
 
-        timestamp_path = split_dir / "timestamp.txt"
-        with open(timestamp_path, "w") as f:
-            f.write(datetime.now().strftime("%Y-%m-%d_%H-%M-%S"))
+        timestamp = datetime.now().strftime("%Y-%m-%d-%H-%M-%S")
+
+        if console_log:
+            logs_path = split_dir / f"console.log"
+            with open(logs_path, "w") as f:
+                f.write(timestamp + "\n")
+                f.write(console_log)
 
         logging.info(f"Train-test split was saved to {split_dir}.")
         logging.info("Generated friendly names: {train,test}_" + split_friendly_name)
@@ -415,6 +420,8 @@ class DataInterface:
             for name in friendly_names:
                 f.write(f"{name}\n")
 
+        logging.debug(f"Updated datasets registry at {registry_path}")
+
     def update_splits_registry(self) -> None:
         """
         This method looks for .yaml files in the dataset directory and creates/updates a list
@@ -430,9 +437,9 @@ class DataInterface:
                 if data and data.get("friendly_name"):
                     friendly_name = data["friendly_name"]
 
-            timestamp_path = yaml_path.parent.parent / "timestamp.txt"
+            timestamp_path = yaml_path.parent.parent / "console.log"
             with open(timestamp_path, "r") as f:
-                timestamp = f.read().strip()
+                timestamp = f.readline().strip()
 
             splits.append(Split(friendly_name, timestamp))
 
@@ -442,3 +449,5 @@ class DataInterface:
         with open(registry_path, "w") as f:
             for split in splits:
                 f.write(f"{split.timestamp} {split.friendly_name}\n")
+
+        logging.debug(f"Updated splits registry at {registry_path}")

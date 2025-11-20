@@ -49,17 +49,15 @@ class TanimotoFilter(FilterBase):
     def get_filtered_df(
         self, to_filter_df: pd.DataFrame, filter_against_df: pd.DataFrame
     ) -> pd.DataFrame:
-        test_smiles = filter_against_df["smiles"].tolist()
-        tc = TanimotoCalculator(smiles_list=test_smiles, featurizer=self.featurizer)
-        results = tc.run_batch(queries=to_filter_df["smiles"].tolist())
-        to_filter_df["min_tanimoto"] = results["min_tanimoto"]
-        to_filter_df = to_filter_df[
-            to_filter_df["min_tanimoto"] > self.min_distance_to_test_post_filtering
-        ]
-        logging.info(
-            f"Dropped {len(results) - len(to_filter_df)} molecules after filtering by minimal \
-                            Tanimoto distance of {self.min_distance_to_test_post_filtering} to a test set."
-        )
 
-        to_filter_df.drop(columns=["min_tanimoto"], inplace=True)
-        return to_filter_df
+        df = to_filter_df.copy()
+
+        tc = TanimotoCalculator(
+            smiles_list=filter_against_df["smiles"].tolist(), featurizer=self.featurizer
+        )
+        results = tc.run_batch(queries=df["smiles"].tolist())
+        df["min_distance"] = results["min_distance"]
+        df = df[df["min_distance"] > self.min_distance_to_test_post_filtering]
+        df.drop(columns=["min_distance"], inplace=True)
+
+        return df

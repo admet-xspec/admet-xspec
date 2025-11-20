@@ -24,12 +24,12 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     # Configure logger
-    temp_log_file = tempfile.NamedTemporaryFile(delete=False)
+    temp_log = tempfile.NamedTemporaryFile(delete=False)
     logging.basicConfig(
         level=args.log_level,
         format="%(message)s",
         handlers=[
-            logging.FileHandler(temp_log_file.name),
+            logging.FileHandler(temp_log.name),
             logging.StreamHandler(),
         ],
     )
@@ -41,7 +41,7 @@ if __name__ == "__main__":
         raise FileNotFoundError(f"Config file {args.cfg} not found.")
     gin.parse_config_file(args.cfg)
 
-    pipeline = ProcessingPipeline()
+    pipeline = ProcessingPipeline(logfile=temp_log.name)
     pipeline.run()
 
     # Log time
@@ -51,10 +51,3 @@ if __name__ == "__main__":
         if time_elapsed < 60
         else f"ProcessingPipeline finished in {round(time_elapsed / 60, 2)} minutes."
     )
-
-    # Save log file with timestamp
-    log_directory = pathlib.Path("./logs")
-    log_directory.mkdir(parents=True, exist_ok=True)
-    timestamp = time.strftime("%Y%m%d-%H%M%S")
-    log_filename = pathlib.Path(f"processing_{timestamp}.log")
-    pathlib.Path(temp_log_file.name).rename(log_directory / log_filename)
