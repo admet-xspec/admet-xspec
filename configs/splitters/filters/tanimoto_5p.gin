@@ -1,11 +1,7 @@
-featurizer/gin.singleton.constructor = @EcfpFeaturizer
-featurizer = @featurizer/gin.singleton()
-EcfpFeaturizer.radius = 2
-EcfpFeaturizer.n_bits = 2048
-EcfpFeaturizer.count = False
+#include "configs/featurizers/proprietary/tanimoto_ecfp.gin"
+TanimotoFilter.featurizer = %featurizer
 
 filter/gin.singleton.constructor = @TanimotoFilter
 filter = @filter/gin.singleton()
 
-TanimotoFilter.featurizer = %featurizer
 TanimotoFilter.min_distance_to_test_post_filtering = 0.05
