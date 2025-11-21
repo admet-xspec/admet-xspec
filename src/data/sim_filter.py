@@ -1,13 +1,12 @@
 import abc
 import gin
 import pandas as pd
-import logging
 
-from src.data.tanimoto import TanimotoCalculator
+from src.data.utils import TanimotoCalculator
 from src.data.featurizer import FeaturizerBase
 
 
-class FilterBase(abc.ABC):
+class SimilarityFilterBase(abc.ABC):
     """Filtering class."""
 
     def __init__(self):
@@ -51,7 +50,6 @@ class TanimotoFilter(FilterBase):
     ) -> pd.DataFrame:
 
         df = to_filter_df.copy()
-
         tc = TanimotoCalculator(
             smiles_list=filter_against_df["smiles"].tolist(), featurizer=self.featurizer
         )

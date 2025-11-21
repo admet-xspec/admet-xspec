@@ -1,8 +1,8 @@
-friendly_name: "AChE_rat_IC50"
+friendly_name: "AChE_mouse_IC50"
 raw_or_derived: "raw"
 category: "AChE_IC50"
 is_chembl: true
-task_setting: "classification"
+task_setting: "binary_classification"
 filter_criteria:
     Standard Units:
       - "nM"

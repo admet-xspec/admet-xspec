@@ -1,8 +1,8 @@
-friendly_name: "MAOA_human_IC50"
+friendly_name: "AChE_human_IC50"
 raw_or_derived: "raw"
-category: "MAOA_IC50"
+category: "AChE_IC50"
 is_chembl: true
-task_setting: "classification"
+task_setting: "binary_classification"
 filter_criteria:
     Standard Units:
       - "nM"

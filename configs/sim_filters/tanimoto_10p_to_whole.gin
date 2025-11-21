@@ -1,0 +1,8 @@
+#include "configs/featurizers/proprietary/tanimoto_ecfp.gin"
+TanimotoFilter.featurizer = %featurizer
+
+filter/gin.singleton.constructor = @TanimotoFilter
+filter = @filter/gin.singleton()
+
+TanimotoFilter.min_distance_to_test_post_filtering = 0.1
+TanimotoFilter.against = 'whole'

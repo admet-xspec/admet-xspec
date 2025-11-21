@@ -1,8 +1,8 @@
-friendly_name: "liver_mouse_T12"
+friendly_name: "liver_rat_T12"
 raw_or_derived: "raw"
 category: "liver_T12"
 is_chembl: true
-task_setting: "classification"
+task_setting: "binary_classification"
 filter_criteria:
     Standard Units:
       - "hr"
