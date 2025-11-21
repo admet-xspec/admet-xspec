@@ -1,284 +1,417 @@
 import gin
 import pandas as pd
 from datetime import datetime
-from pathlib import Path
 import logging
+from typing import List, Optional, Tuple, Hashable
 
 from src.data.data_interface import DataInterface
 from src.data.featurizer import FeaturizerBase
 from src.data.reducer import ReducerBase
 from src.data.visualizer import VisualizerBase
 from src.data.split import DataSplitterBase
-from src.data.filter import FilterBase
+from src.data.sim_filter import SimilarityFilterBase
 from src.utils import read_logfile
+from src.data.utils import get_label_counts
 
 
 @gin.configurable
 class ProcessingPipeline:
+    """
+    Orchestrates the molecular data processing workflow.
+
+    Handles:
+    - Loading and aggregating datasets
+    - Train/test splitting (automatic or manual)
+    - Similarity filtering of augmentation data
+    - Visualization of datasets and splits
+    - Persistence of splits
+    """
 
     def __init__(
-        self,
-        do_load_datasets: bool,
-        do_visualize_datasets: bool,
-        do_load_train_test: bool,
-        do_dump_train_test: bool,
-        do_visualize_train_test: bool,
-        data_interface: DataInterface,
-        featurizer: FeaturizerBase | None = None,
-        reducer: ReducerBase | None = None,
-        splitter: DataSplitterBase | None = None,
-        datasets: list[str] | None = None,  # friendly_name
-        manual_train_splits: list[str] | None = None,  # [friendly_name]
-        manual_test_splits: list[str] | None = None,  # [friendly_name]
-        test_filtering_origin_dataset: str | None = None,
-        filter_against_whole_dataset: bool = False,
-        task_setting: str = "regression",
-        smiles_col: str = "smiles",
-        source_col: str = "source",
-        target_col: str = "y",
-        logfile: str | None = None,
+            self,
+            # Execution flags
+            do_load_datasets: bool,
+            do_visualize_datasets: bool,
+            do_load_train_test: bool,
+            do_dump_train_test: bool,
+            do_visualize_train_test: bool,
+            # Core components
+            data_interface: DataInterface,
+            featurizer: Optional[FeaturizerBase] = None,
+            reducer: Optional[ReducerBase] = None,
+            splitter: Optional[DataSplitterBase] = None,
+            sim_filter: Optional[SimilarityFilterBase] = None,
+            # Dataset configuration
+            datasets: Optional[List[str]] = None,
+            manual_train_splits: Optional[List[str]] = None,
+            manual_test_splits: Optional[List[str]] = None,
+            test_origin_dataset: Optional[str] = None,
+            # Task configuration
+            task_setting: str = "regression",
+            smiles_col: str = "smiles",
+            source_col: str = "source",
+            target_col: str = "y",
+            logfile: Optional[str] = None,
     ):
+        # Execution flags
         self.do_load_datasets = do_load_datasets
         self.do_visualize_datasets = do_visualize_datasets
         self.do_load_train_test = do_load_train_test
         self.do_dump_train_test = do_dump_train_test
         self.do_visualize_train_test = do_visualize_train_test
 
-        self.task_setting = task_setting
+        # Core components
         self.data_interface = data_interface
-        self.data_interface.set_task_setting(self.task_setting)
-
+        self.data_interface.set_task_setting(task_setting)
+        self.data_interface.set_logfile(logfile)
+        self.task_setting = task_setting
         self.featurizer = featurizer
         self.reducer = reducer
         self.splitter = splitter
+        self.sim_filter = sim_filter
 
-        self.datasets = datasets
-        self.manual_train_splits = manual_train_splits
-        self.manual_test_splits = manual_test_splits
-        self.test_filtering_origin_dataset = test_filtering_origin_dataset
-        self.filter_against_whole_dataset = filter_against_whole_dataset
+        # Dataset configuration
+        self.datasets = datasets or []
+        self.manual_train_splits = manual_train_splits or []
+        self.manual_test_splits = manual_test_splits or []
+        self.test_origin_dataset = test_origin_dataset
         self.logfile = logfile
 
-        self.target_col = target_col
+        # Column names
         self.smiles_col = smiles_col
         self.source_col = source_col
+        self.target_col = target_col
 
-        self.split_name = self.get_split_key()
+        # Computed properties
+        self.split_cache_key = self._generate_split_key()
 
-    def run(self):
-        assert self.datasets, "No datasets were provided to be processed."
-        logging.info(
-            "#---------------------------------------------------------------------------------------#"
-        )
-        logging.info(f"Starting processing pipeline with datasets: {self.datasets}")
+    def run(self) -> None:
+        """Execute the full processing pipeline."""
+        self._log_pipeline_start()
 
-        nosplit_datasets = self.datasets.copy()
-        nosplit_datasets.remove(self.test_filtering_origin_dataset)
+        # Load datasets
+        augmentation_dfs, origin_df = self._load_all_datasets()
 
-        if self.do_load_datasets:
-            nosplit_dataset_dfs = self.load_datasets(nosplit_datasets)
-            split_dataset_df = self.load_datasets([self.test_filtering_origin_dataset])[
-                0
-            ]
+        # Visualize raw datasets
+        if self.do_visualize_datasets:
+            self._visualize_raw_datasets(augmentation_dfs, origin_df)
 
-            if self.do_visualize_datasets:
-                nosplit_featurized_dataset_dfs = self.featurize_datasets(
-                    nosplit_dataset_dfs
-                )
-                split_featurized_dataset_df = self.featurize_datasets(
-                    [split_dataset_df]
-                )[0]
+        # Create train/test splits
+        if self.do_load_train_test:
+            train_df, test_df = self._create_train_test_splits(augmentation_dfs, origin_df)
 
-                self.visualize_datasets(
-                    nosplit_featurized_dataset_dfs + split_featurized_dataset_df
-                )
+            # Save splits
+            if self.do_dump_train_test:
+                self._save_splits(train_df, test_df)
 
-        if self.do_load_datasets and self.do_load_train_test:
-            if self.datasets:
-
-                # Concat non-split datasets
-                aggregate_nosplit_df = pd.concat(nosplit_dataset_dfs, ignore_index=True)
-
-                # Split the (human) dataset
-                split_train_df, split_test_df = self.get_train_test([split_dataset_df])
-
-                if self.filter_against_whole_dataset:
-                    # Filter the non-split datasets against the whole dataset (human)
-                    if len(aggregate_nosplit_df) > 0:
-                        logging.info(
-                            f"Filtering train data against the whole {self.test_filtering_origin_dataset} dataset using {self.splitter.get_filter_name()} filter"
-                        )
-                        filtered_train_df = self.splitter.filter(
-                            aggregate_nosplit_df,
-                            split_dataset_df,
-                            source_col=self.source_col,
-                        )
-                    else:
-                        filtered_train_df = aggregate_nosplit_df
-
-                    # Combine the train sets
-                    final_train_df = pd.concat(
-                        [filtered_train_df, split_train_df], ignore_index=True
-                    )
-                else:
-                    # Filter the non-split datasets against only the test set (human)
-                    logging.info(
-                        f"Filtering train data against test set derived from {self.test_filtering_origin_dataset} using {self.splitter.get_filter_name()} filter"
-                    )
-                    aggregated_train = pd.concat(
-                        [aggregate_nosplit_df, split_train_df], ignore_index=True
-                    )
-                    final_train_df = self.splitter.filter(
-                        aggregated_train, split_test_df, source_col=self.source_col
-                    )
-
-                logging.info(f"Final train set size: {len(final_train_df)}")
-                logging.info(f"Final test set size: {len(split_test_df)}")
-                self.save_split(final_train_df, split_test_df)
-            else:
-                train_df, test_df = self.get_train_test(
-                    {
-                        "train_sets": self.manual_train_splits,
-                        "test_sets": self.manual_test_splits,
-                    }
-                )
-
+            # Visualize splits
             if self.do_visualize_train_test:
-                self.visualize_train_test(train_df, test_df)
+                self._visualize_splits(train_df, test_df)
 
-        # TODO: implement
-        self.data_interface.update_registries()
+        # Update data registries
+        self._update_registries()
 
-    def load_datasets(self, friendly_names: list[str]) -> list[pd.DataFrame]:
-        if not friendly_names:
-            return [
-                pd.DataFrame(
-                    columns=[self.smiles_col, self.target_col, self.source_col]
-                )
-            ]
+    # ==================== Main Pipeline Steps ==================== #
 
-        # load prepared datasets
-        dataset_dfs = [
-            self.data_interface.get_by_friendly_name(friendly_name)
-            for friendly_name in friendly_names
+    def _load_all_datasets(self) -> Tuple[List[pd.DataFrame], Optional[pd.DataFrame]]:
+        """
+        Load all configured datasets.
+
+        Returns:
+            Tuple of (augmentation_dfs, origin_df) where:
+            - augmentation_dfs: List of DataFrames to augment training data
+            - origin_df: DataFrame used for splitting (if applicable)
+        """
+        if not self.do_load_datasets:
+            return [], None
+
+        if not self.datasets:
+            raise ValueError("do_load_datasets=True but `datasets` is empty")
+
+        # Separate augmentation datasets from split-origin dataset
+        augmentation_names = [
+            name for name in self.datasets
+            if name != self.test_origin_dataset
         ]
 
-        # leave only required columns
-        dataset_dfs = [df[[self.smiles_col, self.target_col]] for df in dataset_dfs]
+        augmentation_dfs = self._load_datasets(augmentation_names)
+        logging.info(f"Loaded {len(augmentation_dfs)} augmentation datasets: {augmentation_names}")
 
-        # add source column
-        for df, friendly_name in zip(dataset_dfs, friendly_names):
-            df[self.source_col] = friendly_name
+        # Load split-origin dataset separately if specified
+        origin_df = None
+        if self.test_origin_dataset:
+            origin_dfs = self._load_datasets([self.test_origin_dataset])
+            origin_df = origin_dfs[0] if origin_dfs else self._empty_dataframe()
+            logging.info(f"Loaded split-origin dataset: {self.test_origin_dataset}")
 
-        return dataset_dfs
+        return augmentation_dfs, origin_df
 
-    def featurize_datasets(self, dataset_dfs):
-        featurized_dataset_dfs = []
-        for df in dataset_dfs:
-            len_before_feat = len(df)
+    def _visualize_raw_datasets(
+            self,
+            augmentation_dfs: List[pd.DataFrame],
+            origin_df: Optional[pd.DataFrame]
+    ) -> None:
+        """Visualize loaded datasets before splitting."""
+        if not self.reducer:
+            return
 
-            feature_col_name = self.featurizer.feature_name
-            df[feature_col_name] = df["smiles"].apply(
-                lambda smiles: self.featurizer.featurize([smiles])
-            )
+        logging.info(f"Visualizing datasets: {self.datasets}")
 
-            len_after_feat = len(df)
-            assert len_before_feat == len_after_feat, (
-                f"{len_before_feat - len_after_feat} SMILES failed to featurize with"
-                f"{self.featurizer.name}. 'get_featurized_dataset_df' expects featurizable SMILES."
-            )
+        # Featurize all datasets
+        dfs_to_visualize = []
+        dataset_names = []
 
-            featurized_dataset_dfs.append(df)
+        if augmentation_dfs:
+            dfs_to_visualize.extend(self._featurize_datasets(augmentation_dfs))
+            dataset_names.extend([
+                name for name in self.datasets
+                if name != self.test_origin_dataset
+            ])
 
-        return featurized_dataset_dfs
+        if origin_df is not None:
+            dfs_to_visualize.extend(self._featurize_datasets([origin_df]))
+            dataset_names.append(self.test_origin_dataset)
 
-    def visualize_datasets(self, featurized_dataset_dfs) -> None:
-        visualizer: VisualizerBase = self.reducer.get_associated_visualizer()
-        df_dict = {
-            ds_name: df for ds_name, df in zip(self.datasets, featurized_dataset_dfs)
-        }
-        visualization_img = visualizer.get_visualization(df_dict)
+        if dfs_to_visualize:
+            self._visualize_and_save(dfs_to_visualize, dataset_names, "datasets")
 
-        visualization_img.save(
-            self.data_interface.save_visualization(
-                datetime.now().strftime("%d_%H_%M_%S"),
-                visualization_img,
-            )
-        )
-
-    def get_train_test(
-        self, featurized_dataset_dfs
-    ) -> tuple[pd.DataFrame, pd.DataFrame]:
+    def _create_train_test_splits(
+            self,
+            augmentation_dfs: List[pd.DataFrame],
+            origin_df: Optional[pd.DataFrame]
+    ) -> Tuple[pd.DataFrame, pd.DataFrame]:
         """
-        Returns a tuple of final (clean, featurized) train and test set.
-        If 'featurized_dataset_dfs' in source_dict.keys, then splitting is applied (no featurization).
-        Else, when 'train_sets' and 'test_sets' in source_dict.keys, then featurization is applied (no splitting).
+        Create train/test splits using either automatic splitting or manual specification.
+
+        Returns:
+            Tuple of (train_df, test_df)
         """
+        if self.datasets:
+            # Get automatic split
+            return self._create_automatic_splits(augmentation_dfs, origin_df)
+        else:
+            # Get manual split
+            return self._create_manual_splits()
 
-        concatenated_df = pd.concat(featurized_dataset_dfs, ignore_index=True)
+    def _create_automatic_splits(
+            self,
+            augmentation_dfs: List[pd.DataFrame],
+            origin_df: Optional[pd.DataFrame]
+    ) -> Tuple[pd.DataFrame, pd.DataFrame]:
+        """
+        Create splits automatically by:
+        1. Splitting the origin dataset
+        2. Filtering augmentation data by similarity
+        3. Combining filtered augmentation with split train data
+        """
+        if not self.test_origin_dataset:
+            raise ValueError("test_origin_dataset must be set for automatic splitting")
 
-        X_train, X_test, y_train, y_test = self.splitter.split(
-            concatenated_df[self.smiles_col], concatenated_df[self.target_col]
-        )
-        logging.info(
-            f"Train-test split completed. Train size: {len(X_train)}, Test size: {len(X_test)}"
-        )
+        # Split the origin dataset
+        split_train_df, split_test_df = self._split_dataset(origin_df)
+        logging.info(f"Split origin dataset into train={len(split_train_df)}, test={len(split_test_df)}")
 
-        # Combine X and y back into DataFrames
-        train_df = pd.DataFrame(
-            {
-                self.smiles_col: X_train,
-                self.target_col: y_train,
-                self.source_col: concatenated_df.loc[X_train.index, self.source_col],
-            }
+        # Aggregate augmentation data
+        augmentation_df = self._aggregate_dataframes(
+            augmentation_dfs,
+            empty_if_none=True
         )
-        test_df = pd.DataFrame(
-            {
-                self.smiles_col: X_test,
-                self.target_col: y_test,
-                self.source_col: concatenated_df.loc[X_test.index, self.source_col],
-            }
-        )
+        logging.info(f"Aggregated {len(augmentation_df)} augmentation samples")
+
+        # Apply similarity filtering
+        if self.sim_filter:
+            pre_filter_label_counts = get_label_counts(pd.concat([augmentation_df, split_train_df]), self.source_col)
+            train_df, test_df = self.sim_filter.get_filtered_train_test(
+                split_train_df,
+                split_test_df,
+                augmentation_df
+            )
+            post_filter_label_counts = get_label_counts(augmentation_df, self.source_col)
+            for source_name, pre_count in pre_filter_label_counts.items():
+                post_count = post_filter_label_counts.get(source_name, 0)
+                logging.info(f"Source '{source_name}': {pre_count} -> {post_count} samples remaining after filtering")
+            logging.info(f"After filtering: train={len(train_df)}, test={len(test_df)}")
+        else:
+            # No filtering - just concatenate
+            train_df = pd.concat([split_train_df, augmentation_df], ignore_index=True)
+            test_df = split_test_df
+            logging.info(f"No filtering applied. Combined train={len(train_df)}")
 
         return train_df, test_df
 
-    def visualize_train_test(self, train_df, test_df): ...
+    def _create_manual_splits(self) -> Tuple[pd.DataFrame, pd.DataFrame]:
+        """Create splits from manually specified dataset lists."""
+        train_dfs = self._load_datasets(self.manual_train_splits) if self.manual_train_splits else []
+        test_dfs = self._load_datasets(self.manual_test_splits) if self.manual_test_splits else []
 
-    def save_split(self, train_df, test_df) -> None:
-        assert self.datasets is not None
+        train_df = self._aggregate_dataframes(train_dfs, empty_if_none=True)
+        test_df = self._aggregate_dataframes(test_dfs, empty_if_none=True)
+
+        logging.info(f"Manual splits created: train={len(train_df)}, test={len(test_df)}")
+        return train_df, test_df
+
+    def _visualize_splits(self, train_df: pd.DataFrame, test_df: pd.DataFrame) -> None:
+        """Visualize train/test splits."""
+        if not self.reducer:
+            return
+
+        # Featurize if needed
+        train_feat = self._featurize_datasets([train_df])[0] if self.featurizer else train_df
+        test_feat = self._featurize_datasets([test_df])[0] if self.featurizer else test_df
+
+        self._visualize_and_save([train_feat, test_feat], ["train", "test"], "split")
+
+    def _save_splits(self, train_df: pd.DataFrame, test_df: pd.DataFrame) -> None:
+        """Persist train/test splits to disk."""
+        split_friendly_name = (
+            self.splitter.get_friendly_name(self.datasets)
+            if self.splitter else "manual_split"
+        )
+
         self.data_interface.save_train_test_split(
             train_df,
             test_df,
             subdir_name=self.split_name,
-            split_friendly_name=self.splitter.get_friendly_name(self.datasets),
+            split_friendly_name=split_friendly_name,
             classification_or_regression=self.task_setting,
             console_log=read_logfile(self.logfile),
         )
+        logging.info(f"Saved split to: {self.split_name}")
 
-    def get_split_key(self):
-        """
-        Generate a unique hash for the current split configuration to use in saving train-test splits.
-        Format: {splitter_name}_{hash} (10-digit)
-        """
-        splitter_hashable = self.splitter.get_hashable_params_values()
-        pipeline_hashable = [
+    # ==================== Helper Methods ==================== #
+
+    def _load_datasets(self, friendly_names: List[str]) -> List[pd.DataFrame]:
+        """Load datasets by friendly name and add source column."""
+        if not friendly_names:
+            return []
+
+        dfs = []
+        for name in friendly_names:
+            df = self.data_interface.get_by_friendly_name(name)
+            # Keep only required columns
+            df = df[[self.smiles_col, self.target_col]].copy()
+            # Add source column (dataset identifier, friendly name)
+            df[self.source_col] = name
+            dfs.append(df)
+
+        return dfs
+
+    def _featurize_datasets(self, dataset_dfs: List[pd.DataFrame]) -> List[pd.DataFrame]:
+        """Apply featurization to datasets."""
+        if not self.featurizer:
+            return dataset_dfs
+
+        featurized = []
+        for df in dataset_dfs:
+            df_copy = df.copy()
+            feature_col = self.featurizer.feature_name
+
+            # Apply featurization
+            df_copy[feature_col] = df_copy[self.smiles_col].apply(
+                lambda s: self.featurizer.featurize([s])
+            )
+
+            # Validate no data loss
+            if len(df_copy) != len(df):
+                raise RuntimeError(
+                    f"Featurization failed: {len(df) - len(df_copy)} samples lost "
+                    f"using {self.featurizer.name}"
+                )
+
+            featurized.append(df_copy)
+
+        return featurized
+
+    def _split_dataset(self, df: Optional[pd.DataFrame]) -> Tuple[pd.DataFrame, pd.DataFrame]:
+        """Split a single dataset into train/test."""
+        if df is None or df.empty:
+            empty = self._empty_dataframe()
+            return empty, empty
+
+        if not self.splitter:
+            raise ValueError("No splitter configured for automatic splitting")
+
+        X_train, X_test, y_train, y_test = self.splitter.split(
+            df[self.smiles_col],
+            df[self.target_col]
+        )
+
+        train_df = pd.DataFrame({
+            self.smiles_col: X_train,
+            self.target_col: y_train,
+            self.source_col: df.loc[X_train.index, self.source_col],
+        })
+
+        test_df = pd.DataFrame({
+            self.smiles_col: X_test,
+            self.target_col: y_test,
+            self.source_col: df.loc[X_test.index, self.source_col],
+        })
+
+        return train_df, test_df
+
+    def _visualize_and_save(
+            self,
+            dfs: List[pd.DataFrame],
+            names: List[str],
+            suffix: str
+    ) -> None:
+        """Create and save visualization."""
+        if not self.reducer:
+            return
+
+        visualizer: VisualizerBase = self.reducer.get_associated_visualizer()
+        df_dict = {name: df for name, df in zip(names, dfs)}
+
+        img = visualizer.get_visualization(df_dict)
+        timestamp = datetime.now().strftime("%d_%H_%M_%S")
+        save_path = self.data_interface.save_visualization(f"{timestamp}_{suffix}", img)
+        img.save(save_path)
+        logging.info(f"Saved visualization to: {save_path}")
+
+    def _aggregate_dataframes(
+            self,
+            dfs: List[pd.DataFrame],
+            empty_if_none: bool = False
+    ) -> pd.DataFrame:
+        """Concatenate multiple DataFrames."""
+        if not dfs:
+            return self._empty_dataframe() if empty_if_none else pd.DataFrame()
+
+        return pd.concat(dfs, ignore_index=True)
+
+    def _empty_dataframe(self) -> pd.DataFrame:
+        """Create empty DataFrame with standard columns."""
+        return pd.DataFrame(columns=[self.smiles_col, self.target_col, self.source_col])
+
+    def _update_registries(self) -> None:
+        """Update data interface registries."""
+        try:
+            self.data_interface.update_registries()
+            logging.info("Successfully updated data registries")
+        except Exception as e:
+            logging.exception(f"Failed to update registries: {e}")
+
+    def _log_pipeline_start(self) -> None:
+        """Log pipeline initialization info."""
+        logging.info("# =================== Processing Pipeline ==================== #")
+        logging.info(f"Starting processing pipeline with datasets: {self.datasets}")
+        if self.splitter:
+            logging.info(f"Using splitter: {self.splitter.name}")
+        if self.sim_filter:
+            logging.info(f"Filtering augmented datasets with: {self.sim_filter.name} to {self.sim_filter.against}")
+
+
+    # ==================== Hashing and Identification ==================== #
+
+    def _generate_split_key(self) -> str:
+        """Generate unique identifier for this split configuration."""
+        splitter_key = self.splitter.get_cache_key() if self.splitter else "nosplit"
+        filter_key = self.sim_filter.get_cache_key() if self.sim_filter else "nofilter"
+        datasets_params = [
+            tuple(sorted(self.datasets)) if self.datasets else None,
+            self.test_origin_dataset,
             self.task_setting,
-            self.filter_against_whole_dataset,
-            self.test_filtering_origin_dataset,
         ]
-        datasets_hashable = self.datasets if self.datasets else []
-        train_splits_hashable = (
-            self.manual_train_splits if self.manual_train_splits else []
-        )
-        test_splits_hashable = (
-            self.manual_test_splits if self.manual_test_splits else []
-        )
-        total_hashable = (
-            splitter_hashable
-            + pipeline_hashable
-            + datasets_hashable
-            + train_splits_hashable
-            + test_splits_hashable
-        )
-        hash_key = abs(hash(tuple(total_hashable))) % (10**10)
-        return f"{self.splitter.name}_{hash_key}"
+        datasets_hash = abs(hash(frozenset(datasets_params))) % (10 ** 5)
+        return f"{splitter_key}_{filter_key}_{datasets_hash:05d}"

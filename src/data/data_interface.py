@@ -1,19 +1,25 @@
-import gin
-import logging
-import pandas as pd
-import yaml
-from PIL.Image import Image
+# python
+from typing import Optional, List, Dict, Tuple
 from pathlib import Path
-import numpy as np
 from datetime import datetime
 from collections import namedtuple
+import logging
+import yaml
+import gin
+import pandas as pd
+import numpy as np
+from PIL.Image import Image
 
 from src.utils import detect_csv_delimiter, get_clean_smiles
-from src.data.utils import load_multiple_datasets
 
 
 @gin.configurable
 class DataInterface:
+    """
+    Manage dataset loading, normalization and train/test split saving.
+    """
+    #TODO: add support for multi-class classification datasets
+    #TODO: handle model saving/loading here?
 
     possible_smiles_cols = ["SMILES", "Smiles", "smiles", "molecule"]
     possible_label_cols = ["LABEL", "Label", "label", "Y", "y", "Standard Value"]
@@ -21,541 +27,363 @@ class DataInterface:
     def __init__(
         self,
         dataset_dir: str,
+        cache_dir: str,
         splits_dir: str,
         visualizations_dir: str,
         data_config_filename: str,
         prepared_filename: str,
-        metrics_dir: str | None = None,
-        handle_multiple_datasets_method: str = None,
+        metrics_dir: Optional[str] = None,
         registry_filename: str = "registry.txt",
     ):
-        self.dataset_dir: Path = Path(dataset_dir)
-        self.splits_dir: Path = Path(splits_dir)
-        self.metrics_dir: Path = (
-            Path(metrics_dir) if metrics_dir else Path("data/metrics")
-        )
-        self.visualizations_dir: Path = Path(visualizations_dir)
-        self.data_config_filename: str = data_config_filename
-        self.prepared_filename: str = prepared_filename
-        self.handle_multiple_datasets_method: str = handle_multiple_datasets_method
-        self.registry_filename: str = registry_filename
+        self.dataset_dir = Path(dataset_dir)
+        self.cache_dir = Path(cache_dir)
+        self.splits_dir = cache_dir / splits_dir
+        self.visualizations_dir = Path(visualizations_dir)
+        self.data_config_filename = data_config_filename
+        self.prepared_filename = prepared_filename
+        self.registry_filename = registry_filename
+        self.metrics_dir = Path(metrics_dir) if metrics_dir else Path("data/metrics")
         self.split_datafile_name = "data.csv"
+        self.taks_setting: Optional[str] = None  # must be set externally before use
+        self.logfile: Optional[Path] = None  # must be set externally before use
 
         self._init_create_dirs()
-        # Update splits and datasets registries
         self.update_registries()
+        # task_setting must be set externally via set_task_setting before use where required
 
-    def _init_create_dirs(self):
+    def _init_create_dirs(self) -> None:
         self.dataset_dir.mkdir(parents=True, exist_ok=True)
         self.metrics_dir.mkdir(parents=True, exist_ok=True)
         self.visualizations_dir.mkdir(parents=True, exist_ok=True)
         self.splits_dir.mkdir(parents=True, exist_ok=True)
-        (self.splits_dir / "regression").mkdir(parents=True, exist_ok=True)
-        (self.splits_dir / "classification").mkdir(parents=True, exist_ok=True)
 
+    def set_logfile(self, logfile: str) -> None:
+        self.logfile = Path(logfile)
+
+    # --- discovery helpers -------------------------------------------------
     def _find_dataset_dir(self, friendly_name: str) -> Path:
-        dataset_dir = None
-        for yaml_path in Path(self.dataset_dir).rglob("*.yaml"):
+        for yaml_path in self.dataset_dir.rglob("*.yaml"):
             with open(yaml_path, "r") as f:
-                data = yaml.safe_load(f)
-                if data and (
-                    data.get("friendly_name") == friendly_name
-                    and data.get("task_setting") == self.task_setting
-                ):
-                    dataset_dir = yaml_path.parent
-                    break
-
-        if dataset_dir:
-            return dataset_dir
-        raise FileNotFoundError(
-            f"No dataset directory with yaml containing friendly_name: '{friendly_name}' found"
-        )
+                data = yaml.safe_load(f) or {}
+                if data.get("friendly_name") == friendly_name and data.get("task_setting") == self.task_setting:
+                    return yaml_path.parent
+        raise FileNotFoundError(f"No dataset directory with yaml containing friendly_name: `{friendly_name}` found")
 
     def _find_split_dir(self, friendly_name: str) -> Path:
-        split_dir = None
-        for yaml_path in Path(self.splits_dir).rglob("*.yaml"):
+        for yaml_path in self.splits_dir.rglob("*.yaml"):
             with open(yaml_path, "r") as f:
-                data = yaml.safe_load(f)
-                if data and data.get("friendly_name") == friendly_name:
-                    split_dir = yaml_path.parent
-                    break
-
-        if split_dir:
-            return split_dir
-        raise FileNotFoundError(
-            f"No split directory with yaml containing friendly_name: '{friendly_name}' found"
-        )
+                data = yaml.safe_load(f) or {}
+                if data.get("friendly_name") == friendly_name:
+                    return yaml_path.parent
+        raise FileNotFoundError(f"No split directory with yaml containing friendly_name: `{friendly_name}` found")
 
     def _check_prepared_dataset_exists(self, dataset_dir_path: Path) -> bool:
-        prepared_dataset_path = dataset_dir_path / self.prepared_filename
-        return prepared_dataset_path.exists()
+        return (dataset_dir_path / self.prepared_filename).exists()
 
-    def _parse_filter_criteria(self, dataset_dir_path: Path) -> dict | None:
+    # --- yaml parsing small helpers ---------------------------------------
+    def _read_data_config(self, dataset_dir_path: Path) -> Dict:
         config_path = dataset_dir_path / self.data_config_filename
-        if config_path.exists():
-            with open(config_path, "r") as f:
-                data = yaml.safe_load(f)
-                if data and data.get("filter_criteria"):
-                    logging.debug(f"Filter criteria: {data['filter_criteria']}")
-                    return data["filter_criteria"]
-        logging.debug("No filter criteria found in data config.")
-        return None
+        if not config_path.exists():
+            return {}
+        with open(config_path, "r") as f:
+            return yaml.safe_load(f) or {}
 
-    def _parse_label_transformations(self, dataset_dir_path: Path) -> list | None:
-        config_path = dataset_dir_path / self.data_config_filename
-        if config_path.exists():
-            with open(config_path, "r") as f:
-                data = yaml.safe_load(f)
-                if data and data.get("label_transformations"):
-                    logging.debug(
-                        f"Label transformations: {data['label_transformations']}"
-                    )
-                    return data["label_transformations"]
-        logging.debug("No label transformations found in data config.")
-        return None
+    def _parse_filter_criteria(self, dataset_dir_path: Path) -> Optional[Dict]:
+        return self._read_data_config(dataset_dir_path).get("filter_criteria")
 
-    def _apply_filter_criteria(
-        self, df: pd.DataFrame, dataset_dir_path: Path
-    ) -> pd.DataFrame:
-        filter_criteria = self._parse_filter_criteria(dataset_dir_path)
-        if filter_criteria is not None:
-            for column, criteria in filter_criteria.items():
-                if column in df.columns:
-                    pre_filter_len = len(df)
-                    df = df[df[column].isin(criteria)].reset_index(drop=True)
-                    if pre_filter_len != len(df):
-                        logging.debug(
-                            f"Applying filter criteria on column '{column}' resulted in "
-                            f"{pre_filter_len - len(df)} rows being dropped."
-                        )
-                else:
-                    logging.warning(
-                        f"Filter criteria specified for column '{column}', "
-                        "but column not found in dataframe. Skipping."
-                    )
+    def _parse_label_transformations(self, dataset_dir_path: Path) -> Optional[List]:
+        return self._read_data_config(dataset_dir_path).get("label_transformations")
+
+    def _parse_is_chembl(self, dataset_dir_path: Path) -> bool:
+        return self._read_data_config(dataset_dir_path).get("is_chembl", False)
+
+    # --- dataframe transformations ----------------------------------------
+    def _apply_filter_criteria(self, df: pd.DataFrame, dataset_dir_path: Path) -> pd.DataFrame:
+        criteria = self._parse_filter_criteria(dataset_dir_path)
+        if not criteria:
+            return df
+        for column, allowed in criteria.items():
+            if column in df.columns:
+                pre = len(df)
+                df = df[df[column].isin(allowed)].reset_index(drop=True)
+                if len(df) != pre:
+                    logging.info(f"Filter `{column}` dropped {pre - len(df)} rows.")
+            else:
+                logging.warning(f"Filter criteria field `{column}` not present on dataframe; skipping.")
         return df
 
-    def _apply_label_transformations(
-        self, df: pd.DataFrame, dataset_dir_path: Path
-    ) -> pd.DataFrame:
-        label_transformations = self._parse_label_transformations(dataset_dir_path)
-        logging.debug(f"Label transformations: {label_transformations}")
-
-        if label_transformations is not None:
-            for transformation in label_transformations:
-                match transformation:
-                    case "log10":
-                        pre_transform_len = len(df)
-                        df = df[df["y"] > 0].reset_index(drop=True)
-                        if pre_transform_len != len(df):
-                            logging.warning(
-                                f"Applying log_10 resulted in "
-                                f"{pre_transform_len - len(df)} rows being dropped due to non-positive labels."
-                            )
-                        df["y"] = df["y"].apply(np.log10)
-                    case "negate":
-                        df["y"] = df["y"] * -1
-                    case _:
-                        logging.warning(
-                            f"Label transformation type '{transformation}' is not recognized. Skipping."
-                        )
+    def _apply_label_transformations(self, df: pd.DataFrame, dataset_dir_path: Path) -> pd.DataFrame:
+        transformations = self._parse_label_transformations(dataset_dir_path) or []
+        for t in transformations:
+            if t == "log10":
+                pre = len(df)
+                df = df[df["y"] > 0].reset_index(drop=True)
+                if len(df) != pre:
+                    logging.warning(f"log10 dropped {pre - len(df)} rows (non-positive labels).")
+                df["y"] = np.log10(df["y"])
+            elif t == "negate":
+                df["y"] = -df["y"]
+            else:
+                logging.warning(f"Unknown label transformation `{t}`; skipping.")
         return df
 
-    def _load_df(self, dataset_path: Path, permit_chembl: bool = True) -> pd.DataFrame:
-        """permit_chembl: whether to handle semicolon-delimited csvs with quotation marks around data"""
-        raw_chembl_detected = (
-            True
-            if permit_chembl and detect_csv_delimiter(dataset_path) == ";"
-            else False
-        )
+    def _load_df(self, dataset_path: Path) -> pd.DataFrame:
+        # If raw dataset is from ChEMBL, use ';' as delimiter, else detect
+        delimiter = ";" if self._parse_is_chembl(dataset_path.parent) else detect_csv_delimiter(dataset_path)
+        loaded = pd.read_csv(dataset_path, delimiter=delimiter)
+        logging.info(f"Loaded raw dataset from `{dataset_path}`")
+        if loaded is None or len(loaded) <= 2:
+            raise RuntimeError(f"Loading dataset from `{dataset_path}` produced {0 if loaded is None else len(loaded)} rows.")
+        # detect SMILES and drop NaNs
+        smiles_col = self.get_smiles_col_in_raw(loaded)
+        pre = len(loaded)
+        df = loaded.dropna(subset=[smiles_col]).reset_index(drop=True)
+        if len(df) != pre:
+            logging.info(f"Dropped {pre - len(df)} rows with NaN SMILES when loading `{dataset_path}`.")
+        return df
 
-        if raw_chembl_detected:
-            loaded_df = pd.read_csv(dataset_path, delimiter=";")
-        else:
-            loaded_df = pd.read_csv(dataset_path, delimiter=",")
+    def _save_prepared_df(self, df: pd.DataFrame, dir_path: Path) -> None:
 
-        if loaded_df is not None and len(loaded_df) > 2:
-            pre_dropna_len = len(loaded_df)
-            smiles_col = self.get_smiles_col_in_raw(loaded_df)
-            df = loaded_df.dropna(subset=[smiles_col]).reset_index(drop=True)
+        (dir_path).mkdir(parents=True, exist_ok=True)
+        # Save prepared dataset
+        df.to_csv(dir_path / self.prepared_filename, index=False)
 
-            if pre_dropna_len != len(df):
-                logging.info(
-                    f"Loading dataset {dataset_path} resulted in {pre_dropna_len - len(df)} "
-                    f"'nan' SMILES, all were dropped."
-                )
-
-            return loaded_df
-        elif loaded_df is not None:
-            raise RuntimeError(
-                f"Loading dataset from {dataset_path} resulted in df with {loaded_df.count()} rows."
-            )
-        raise RuntimeError(
-            f"Failed to load dataset from {dataset_path} into dataframe."
-        )
-
-    def _save_df(self, df: pd.DataFrame, dir: Path) -> None:
-        df.to_csv(dir / self.prepared_filename, index=False)
+        # Save preparation logs
+        if self.logfile:
+            with open(self.logfile, "r") as fh:
+                contents = fh.read()
+            with open(dir_path / "preparation.log", "w") as fh:
+                fh.write(contents)
 
     def _generate_prepared_dataset(self, dataset_dir_path: Path) -> None:
-        """
-        Take whatever raw dataset in 'dataset_dir_path' and output
-        prepared dataset under 'self.prepared_filename' in that dir
-        """
-        multiple_raw_datasets = False
+        csvs = [p for p in dataset_dir_path.rglob("*.csv") if p.name != self.prepared_filename]
+        if not csvs:
+            raise RuntimeError(f"No raw dataset found in `{dataset_dir_path}`")
+        if len(csvs) > 1:
+            raise RuntimeError(f"Multiple raw datasets found in `{dataset_dir_path}`")
+        logging.info(f"Generating prepared dataset for raw {csvs[0]}")
+        raw_df = self._load_df(csvs[0])
+        logging.info(f"Raw dataset size: {len(raw_df)}")
 
-        # note that check against existence of prepared dataset should have occured before this
-        datasets_in_dir: list[Path] = [
-            Path(globbed_ds) for globbed_ds in dataset_dir_path.rglob("*.csv")
-        ]
-        # check if self.prepared_filename is among them, and remove it
-        datasets_in_dir = [
-            ds for ds in datasets_in_dir if ds.name != self.prepared_filename
-        ]
-
-        if len(datasets_in_dir) > 1:
-            multiple_raw_datasets = True
-
-        raw_dfs = [self._load_df(ds) for ds in datasets_in_dir]
-        if multiple_raw_datasets:
-            match self.handle_multiple_datasets_method:
-                case "naive_aggregate":
-                    aggregate_df = self._naive_aggregate_multiple_datasets(raw_dfs)
-                    prepared_df = self.get_prepared_df(aggregate_df)
-                case None:
-                    raise ValueError(
-                        f"Found multiple raw datasets to be processed in {dataset_dir_path}, "
-                        "however, parameter 'self.handle_multiple_datasets_method' is not specified"
-                    )
-                case _:
-                    raise NotImplementedError(
-                        "Aggregation method 'self.handle_multiple_datasets_method' is not implemented"
-                    )
-        else:
-            # Normalize SMILES and drop NaNs
-            logging.debug(f"Normalizing smiles")
-            prepared_df = self.get_normalized_df(raw_dfs[0])
-
-            # Apply any filter criteria from data_config.yaml
-            logging.debug(f"Applying filters on data columns")
-            prepared_df = self._apply_filter_criteria(prepared_df, dataset_dir_path)
-
-            # Apply any label transformations from data_config.yaml
-            logging.debug(f"Applying label transformations on labels column")
-            prepared_df = self._apply_label_transformations(
-                prepared_df, dataset_dir_path
-            )
-
-            # If classification task, assign classes based on continuous labels
-            if self.task_setting == "classification":
-                logging.debug(
-                    f"Assigning classes based on continuous labels for classification task"
-                )
-                prepared_df = self._assign_classes_based_on_continous_labels(
-                    prepared_df, dataset_dir_path, is_chembl=True
-                )
-
-        if prepared_df is not None:
-            self._save_df(prepared_df, dataset_dir_path)
-        else:
-            raise RuntimeError(
-                f"Failed to generate a prepared dataset within dataset directory '{dataset_dir_path}'"
-            )
+        # normalize smiles
+        prepared = self.get_normalized_df(raw_df)
+        # apply filtering by columns (mainly for ChEMBL datasets)
+        prepared = self._apply_filter_criteria(prepared, dataset_dir_path)
+        # apply pre-defined label transformations (e.g., log10, negate)
+        prepared = self._apply_label_transformations(prepared, dataset_dir_path)
+        # for classification tasks, assign binary classes based on continuous labels
+        if self.task_setting == "binary_classification":
+            prepared = self._assign_binary_classes_based_on_continuous_labels(prepared, dataset_dir_path, is_chembl=True)
+        elif self.task_setting == "multi_class_classification":
+            raise NotImplementedError("Multi-class classification datasets are not yet supported.")
+        if prepared is None:
+            raise RuntimeError(f"Failed to generate prepared dataset for `{dataset_dir_path}`")
+        self._save_prepared_df(prepared, dataset_dir_path)
 
     def _load_prepared_dataset(self, dataset_dir_path: Path) -> pd.DataFrame:
         return pd.read_csv(dataset_dir_path / self.prepared_filename)
 
     def set_task_setting(self, task_setting: str) -> None:
+        assert task_setting in ["regression", "binary_classification", "multi_class_classification"],\
+            f"Unknown task_setting parsed: {task_setting}"
         self.task_setting = task_setting
 
     @staticmethod
     def get_clean_smiles_df(df: pd.DataFrame, smiles_col: str) -> pd.DataFrame:
-        """Consolidate pandas, our-internal NaN-dropping into one function"""
-        pre_cleaning_len = len(df)
-        df[smiles_col].apply(get_clean_smiles)
-
+        # apply canonicalization and drop rows where canonicalization produced NaN
+        pre = len(df)
+        df[smiles_col] = df[smiles_col].apply(get_clean_smiles)
         df = df.dropna(subset=[smiles_col]).reset_index(drop=True)
-
-        if pre_cleaning_len != len(df):
-            logging.info(
-                f"Applying 'get_clean_smiles' resulted in {pre_cleaning_len - len(df)} "
-                f"'nan' SMILES, all were dropped."
-            )
-
+        if len(df) != pre:
+            logging.info(f"get_clean_smiles dropped {pre - len(df)} rows with invalid SMILES.")
         return df
 
     @classmethod
-    def get_smiles_col_in_raw(cls, raw_df) -> str:
-        for smiles_col_variant in cls.possible_smiles_cols:
-            if smiles_col_variant in raw_df.columns:
-                return smiles_col_variant
-
-        # Failed
-        raise ValueError(
-            "Failed to find one of SMILES column name variants:",
-            str(cls.possible_smiles_cols),
-            "in dataframe:",
-            str(raw_df.head()),
-        )
+    def get_smiles_col_in_raw(cls, raw_df: pd.DataFrame) -> str:
+        for c in cls.possible_smiles_cols:
+            if c in raw_df.columns:
+                return c
+        raise ValueError("No SMILES column found. Looked for: " + ", ".join(cls.possible_smiles_cols))
 
     @classmethod
-    def get_label_col_in_raw(cls, raw_df) -> str:
-        for label_col_variant in cls.possible_label_cols:
-            if label_col_variant in raw_df.columns:
-                return label_col_variant
-
-        # Failed
-        raise ValueError(
-            "Failed to find one of label column name variants:",
-            str(cls.possible_label_cols),
-            "in datafsrame:",
-            str(raw_df.head()),
-        )
+    def get_label_col_in_raw(cls, raw_df: pd.DataFrame) -> str:
+        for c in cls.possible_label_cols:
+            if c in raw_df.columns:
+                return c
+        raise ValueError("No label column found. Looked for: " + ", ".join(cls.possible_label_cols))
 
     def get_normalized_df(self, df_to_prepare: pd.DataFrame) -> pd.DataFrame:
-        """Get ready-to-save df without NaNs and with canonical SMILES"""
-        logging.debug(f"Raw dataset size: {len(df_to_prepare)}")
-        logging.debug(f"Raw dataset columns: {df_to_prepare.columns.tolist()}")
+        logging.debug(f"Normalizing dataset with {len(df_to_prepare)}")
+        smiles_col = self.get_smiles_col_in_raw(df_to_prepare)
+        label_col = self.get_label_col_in_raw(df_to_prepare)
 
-        current_smiles_col = self.get_smiles_col_in_raw(df_to_prepare)
-        current_label_col = self.get_label_col_in_raw(df_to_prepare)
-        if current_smiles_col != "smiles":
-            df_to_prepare.rename(
-                columns={current_smiles_col: "smiles", current_label_col: "y"},
-                inplace=True,
-            )
-        else:
-            logging.warning(
-                "While running 'get_prepared_df' on raw df, found column 'smiles'. "
-                "This is not expected from a raw ChEMBL dataset. Proceeding anyway."
-            )
+        # rename to canonical names
+        rename_map = {}
+        if smiles_col != "smiles":
+            rename_map[smiles_col] = "smiles"
+        if label_col != "y":
+            rename_map[label_col] = "y"
+        if rename_map:
+            df_to_prepare = df_to_prepare.rename(columns=rename_map)
 
-        df_to_prepare = self.get_clean_smiles_df(df_to_prepare, smiles_col="smiles")
+        if "smiles" not in df_to_prepare.columns or "y" not in df_to_prepare.columns:
+            raise RuntimeError("Expected `smiles` and `y` columns after normalization.")
 
-        # Remove NaNs in labels column
-        pre_label_nan_len = len(df_to_prepare)
+        df_to_prepare = self.get_clean_smiles_df(df_to_prepare, "smiles")
+        pre = len(df_to_prepare)
         df_to_prepare = df_to_prepare.dropna(subset=["y"]).reset_index(drop=True)
-        if pre_label_nan_len != len(df_to_prepare):
-            logging.debug(
-                f"Dropping 'nan' labels resulted in {pre_label_nan_len - len(df_to_prepare)} "
-                f"rows being dropped."
-            )
-
+        if len(df_to_prepare) != pre:
+            logging.debug(f"Dropped {pre - len(df_to_prepare)} rows with NaN labels.")
         return df_to_prepare
 
+    # --- public dataset getters ------------------------------------------
     def get_by_friendly_name(self, friendly_name: str) -> pd.DataFrame:
-        dataset_dir_path: Path = self._find_dataset_dir(friendly_name)
-
+        dataset_dir_path = self._find_dataset_dir(friendly_name)
         if not self._check_prepared_dataset_exists(dataset_dir_path):
             self._generate_prepared_dataset(dataset_dir_path)
-
-        logging.info(
-            f"Loading dataset {friendly_name} from {dataset_dir_path / self.prepared_filename}"
-        )
-        dataset_df = self._load_prepared_dataset(dataset_dir_path)
-        logging.info(f"Dataset size: {len(dataset_df)}")
-
-        return dataset_df
+        logging.debug(f"Loading prepared dataset `{friendly_name}`")
+        return self._load_prepared_dataset(dataset_dir_path)
 
     def get_split_by_friendly_name(self, friendly_name: str) -> pd.DataFrame:
-        split_dir_path: Path = self._find_split_dir(friendly_name)
-        split_df = pd.read_csv(split_dir_path / self.split_datafile_name)
-        return split_df
-
-    def save_metrics(
-        self, friendly_name: str, metrics: pd.DataFrame | dict
-    ) -> None: ...
+        split_dir_path = self._find_split_dir(friendly_name)
+        return pd.read_csv(split_dir_path / self.split_datafile_name)
 
     def save_visualization(self, friendly_name: str, visualization: Image) -> None:
-        output_path = self.visualizations_dir / f"vis_{friendly_name}.png"
-        visualization.save(output_path)
+        out = self.visualizations_dir / f"vis_{friendly_name}.png"
+        visualization.save(out)
 
     def save_train_test_split(
         self,
         train_df: pd.DataFrame,
         test_df: pd.DataFrame,
-        subdir_name: str,
+        cache_key: str,
         split_friendly_name: str,
         classification_or_regression: str,
-        console_log: str | None = None,
+        console_log: Optional[str] = None,
     ) -> None:
-        """
-        Save the given train and test DataFrames to the appropriate locations and generate params.yaml files.
-        The function searches for the dataset directory using the friendly name provided. It then saves the
-        train and test DataFrames to .csvs in the specified subdirectory.
-        """
+        split_dir = self.splits_dir / cache_key
 
-        split_dir = self.splits_dir / classification_or_regression / subdir_name
+        def _save_component(df: pd.DataFrame, which: str) -> None:
+            path = split_dir / which / self.split_datafile_name
+            path.parent.mkdir(parents=True, exist_ok=True)
+            df.to_csv(path, index=False)
+            params = {
+                "friendly_name": f"{classification_or_regression[:3]}_{which}_{split_friendly_name}",
+                "raw_or_derived": "derived",
+                "task": classification_or_regression,
+            }
+            with open(path.parent / "params.yaml", "w") as fh:
+                yaml.dump(params, fh)
 
-        def save_split_component(df: pd.DataFrame, train_or_test: str):
-            component_path = split_dir / train_or_test / self.split_datafile_name
-            component_path.parent.mkdir(parents=True, exist_ok=True)
-            df.to_csv(component_path, index=False)
-            params_path = split_dir / train_or_test / "params.yaml"
-            component_friendly_name = f"{classification_or_regression[:3]}_{train_or_test}_{split_friendly_name}"
-            with open(params_path, "w") as f:
-                yaml.dump(
-                    {
-                        "friendly_name": component_friendly_name,
-                        "raw_or_derived": "derived",
-                        "task": classification_or_regression,
-                    },
-                    f,
-                )
-
-        save_split_component(train_df, "train")
-        save_split_component(test_df, "test")
-
-        operative_config_path = split_dir / "operative_config.txt"
-        with open(operative_config_path, "w") as f:
-            f.write(gin.operative_config_str())
-
-        timestamp = datetime.now().strftime("%Y-%m-%d-%H-%M-%S")
+        _save_component(train_df, "train")
+        _save_component(test_df, "test")
+        split_dir.mkdir(parents=True, exist_ok=True)
+        with open(split_dir / "operative_config.txt", "w") as fh:
+            fh.write(gin.operative_config_str())
 
         if console_log:
-            logs_path = split_dir / f"console.log"
-            with open(logs_path, "w") as f:
-                f.write(timestamp + "\n")
-                f.write(console_log)
+            with open(split_dir / "console.log", "w") as fh:
+                fh.write(datetime.now().strftime("%Y-%m-%d-%H-%M-%S") + "\n")
+                fh.write(console_log)
 
-        logging.info(f"Train-test split was saved to {split_dir}.")
-        logging.info(f"Generated friendly names:")
-        logging.info(
-            f"- Train: {classification_or_regression[:3]}_train_{split_friendly_name}"
-        )
-        logging.info(
-            f"- Test: {classification_or_regression[:3]}_test_{split_friendly_name}"
-        )
+        logging.info(f"Saved split at `{split_dir}`")
 
-    def update_registries(self):
+    # --- registries ------------------------------------------------------
+    def update_registries(self) -> None:
         self.update_splits_registry()
 
     def update_datasets_registry(self) -> None:
-        """
-        This method looks for .yaml files in the dataset directory and creates/updates a list
-        of all friendly names, which is stores in a text file for convenient presentation to the user.
-        """
-        friendly_names = []
-        for yaml_path in Path(self.dataset_dir).rglob("*.yaml"):
+        names = []
+        for yaml_path in self.dataset_dir.rglob("*.yaml"):
             with open(yaml_path, "r") as f:
-                data = yaml.safe_load(f)
-                if data and data.get("friendly_name"):
-                    friendly_names.append(data["friendly_name"])
-
-        registry_path = self.dataset_dir / self.registry_filename
-        with open(registry_path, "w") as f:
-            for name in friendly_names:
-                f.write(f"{name}\n")
-
-        logging.debug(f"Updated datasets registry at {registry_path}")
+                data = yaml.safe_load(f) or {}
+                if data.get("friendly_name"):
+                    names.append(data["friendly_name"])
+        with open(self.dataset_dir / self.registry_filename, "w") as fh:
+            for n in names:
+                fh.write(f"{n}\n")
+        logging.debug("Updated datasets registry.")
 
     def update_splits_registry(self) -> None:
-        """
-        This method looks for .yaml files in the dataset directory and creates/updates a list
-        of all friendly names, which is stores in a text file for convenient presentation to the user.
-        """
-
         Split = namedtuple("Split", ["friendly_name", "timestamp"])
-
-        splits = []
-        for yaml_path in Path(self.splits_dir).rglob("*.yaml"):
+        splits: List[Tuple[str, str]] = []
+        for yaml_path in self.splits_dir.rglob("*.yaml"):
             with open(yaml_path, "r") as f:
-                data = yaml.safe_load(f)
-                if data and data.get("friendly_name"):
-                    friendly_name = data["friendly_name"]
+                data = yaml.safe_load(f) or {}
+                fname = data.get("friendly_name")
+            ts_path = yaml_path.parent.parent / "console.log"
+            ts = ""
+            if ts_path.exists():
+                with open(ts_path, "r") as fh:
+                    ts = fh.readline().strip()
+            if fname:
+                splits.append(Split(fname, ts))
+        splits.sort(key=lambda s: s.timestamp)
+        with open(self.splits_dir / self.registry_filename, "w") as fh:
+            for s in splits:
+                fh.write(f"{s.timestamp} {s.friendly_name}\n")
+        logging.debug("Updated splits registry.")
 
-            timestamp_path = yaml_path.parent.parent / "console.log"
-            with open(timestamp_path, "r") as f:
-                timestamp = f.readline().strip()
+    # --- classification helpers -----------------------------------------
+    def _parse_classification_threshold(self, dataset_dir_path: Path) -> float:
+        cfg = self._read_data_config(dataset_dir_path)
+        if not cfg:
+            raise RuntimeError("No data config yaml found to parse threshold for classification task.")
+        if cfg.get("threshold_source"):
+            ds = self.get_by_friendly_name(cfg["threshold_source"])
+            if "y_cont" not in ds.columns:
+                raise RuntimeError("threshold_source dataset must contain `y_cont`.")
+            return float(ds["y_cont"].median())
+        if "threshold" in cfg:
+            return cfg["threshold"]
+        raise RuntimeError("No `threshold` or `threshold_source` in data config.")
 
-            splits.append(Split(friendly_name, timestamp))
+    def _clean_relation_series(self, df: pd.DataFrame) -> Tuple[pd.Series, Optional[str]]:
+        if 'Standard Relation' in df.columns:
+            cleaned = (
+                df['Standard Relation']
+                .astype(str)
+                .str.replace(r"^['\"]|['\"]$", "", regex=True)
+                .str.strip()
+            )
+            return cleaned
+        # no column found -> return empty strings
+        return pd.Series([""] * len(df), index=df.index), None
 
-        splits.sort(key=lambda x: x.timestamp)
-
-        registry_path = self.splits_dir / self.registry_filename
-        with open(registry_path, "w") as f:
-            for split in splits:
-                f.write(f"{split.timestamp} {split.friendly_name}\n")
-
-        logging.debug(f"Updated splits registry at {registry_path}")
-
-    def _parse_classification_threshold(self, dataset_dir_path: Path):
-        """Parse threshold for classification tasks from yaml config."""
-        config_path = dataset_dir_path / self.data_config_filename
-        if config_path.exists():
-            with open(config_path, "r") as f:
-                data = yaml.safe_load(f)
-
-            if data and data.get("threshold_source"):
-                logging.info(
-                    f"Using {data.get('threshold_source')} metadata to establish classification threshold."
-                )
-                dataset = self.get_by_friendly_name(data.get("threshold_source"))
-                threshold_value = dataset["y_cont"].median()
-
-            elif data and data.get("threshold"):
-                threshold_value = data.get("threshold")
-
-            else:
-                raise RuntimeError(
-                    "No threshold or threshold_source found in data config yaml."
-                )
-
-            return threshold_value
-        raise RuntimeError(
-            "No data config yaml found to parse threshold for classification task."
-        )
-
-    def _assign_classes_based_on_continous_labels(
-        self, df: pd.DataFrame, dataset_dir_path: Path, is_chembl=True
+    def _assign_binary_classes_based_on_continuous_labels(
+        self, df: pd.DataFrame, dataset_dir_path: Path, is_chembl: bool = True
     ) -> pd.DataFrame:
-        """Assign classes based on threshold for classification tasks."""
-
-        # Read yaml config to get threshold if not provided
         threshold_value = self._parse_classification_threshold(dataset_dir_path)
-
         if threshold_value == "median":
-            threshold_value = df["y"].median()
-            logging.info(
-                f"Using median value {threshold_value} as threshold for class assignment."
-            )
-        elif isinstance(threshold_value, (int, float)):
-            logging.info(
-                f"Using provided threshold value {threshold_value} for class assignment."
-            )
+            threshold_value = float(df["y"].median())
+            logging.info("Assigning binary classes based on continuous labels and given threshold.")
+            logging.info(f"Using median {threshold_value} as threshold.")
         else:
-            raise ValueError(f"Threshold value '{threshold_value}' is not valid.")
+            threshold_value = float(threshold_value)
 
         initial_len = len(df)
         if is_chembl:
+            relation_series = self._clean_relation_series(df)
+            eq = relation_series == "="
+            gt = relation_series == ">"
+            lt = relation_series == "<"
+            ge = relation_series == ">="
+            le = relation_series == "<="
+
             conditions = [
-                (df["Standard Relation"] == "'='") & (df["y"] >= threshold_value),
-                (df["Standard Relation"] == "'='") & (df["y"] < threshold_value),
-                (df["Standard Relation"] == "'>'") & (df["y"] >= threshold_value),
-                (df["Standard Relation"] == "'<'") & (df["y"] < threshold_value),
-                (df["Standard Relation"] == "'>='") & (df["y"] >= threshold_value),
-                (df["Standard Relation"] == "'<='") & (df["y"] < threshold_value),
+                (eq | ge | gt) & (df["y"] >= threshold_value),
+                (eq | le | lt) & (df["y"] < threshold_value),
             ]
-
-            # Corresponding class labels for the conditions
-            choices = [1, 0, 1, 0, 1, 0]
-
+            choices = [1, 0]
             df["class"] = np.select(conditions, choices, default=np.nan)
-            df.dropna(subset=["class"], inplace=True)
+            df = df.dropna(subset=["class"]).reset_index(drop=True)
             df["class"] = df["class"].astype(int)
-
-            rows_dropped = initial_len - len(df)
-            if rows_dropped > 0:
-                logging.info(
-                    f"Dropped {rows_dropped} rows with ambiguous relations for classification."
-                )
-
+            dropped = initial_len - len(df)
+            if dropped:
+                logging.info(f"Dropped {dropped} rows with ambiguous/unsupported relations.")
         else:
-            # For other datasets, we assume a simple thresholding
             df["class"] = (df["y"] >= threshold_value).astype(int)
 
-        # The original 'y' column is no longer needed for classification
-        df.rename(columns={"y": "y_cont"}, inplace=True)
-        df.rename(columns={"class": "y"}, inplace=True)
-
+        # keep continuous label in `y_cont`, classification in `y`
+        df = df.rename(columns={"y": "y_cont", "class": "y"})
         return df
