@@ -3,3 +3,5 @@
 # ProcessingPipeline.do_load_train_test: bool
 # ProcessingPipeline.do_dump_train_test: bool
 # ProcessingPipeline.do_visualize_train_test: bool
+# ProcessingPipeline.do_train_model: bool
+# ProcessingPipeline.do_loop_over_subsequent_with_optimal_hyper: bool
