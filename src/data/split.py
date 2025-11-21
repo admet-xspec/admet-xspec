@@ -2,60 +2,19 @@ import pandas as pd
 from sklearn.model_selection import train_test_split
 from rdkit import Chem
 from rdkit.Chem.Scaffolds import MurckoScaffold
-from src.data.utils import get_label_count
 import numpy as np
 import abc
 import gin
 import logging
-
-from src.data.filter import FilterBase
-
 
 class DataSplitterBase(abc.ABC):
     """
     Abstract base class for data splitters.
     """
 
-    def __init__(self, test_size=0.2, random_state=42, train_filter: FilterBase = None):
+    def __init__(self, test_size=0.2, random_state=42):
         self.test_size = test_size
         self.random_state = random_state
-        self.train_filter = train_filter
-
-    def get_filter(self):
-        return self.train_filter
-
-    def get_filter_name(self):
-        return self.train_filter.name if self.train_filter else "no_filter"
-
-    def filter(
-        self,
-        to_filter_df: pd.DataFrame,
-        filter_against_df: pd.DataFrame,
-        source_col: str = "source",
-    ) -> pd.DataFrame:
-        """
-        Filter one dataset using another dataset, both passed to the filter object
-        """
-        if self.train_filter:
-            pre_filter_source_count = get_label_count(
-                df=to_filter_df, column_name=source_col
-            )
-            logging.info(f"Training set size before filtering: {len(to_filter_df)}")
-            filtered = self.train_filter.get_filtered_df(
-                to_filter_df, filter_against_df
-            )
-            logging.info(f"Training set size after filtering: {len(filtered)}")
-            post_filter_source_count = get_label_count(
-                df=filtered, column_name=source_col
-            )
-
-            for source in pre_filter_source_count.keys():
-                pre_count = pre_filter_source_count.get(source, 0)
-                post_count = post_filter_source_count.get(source, 0)
-                logging.info(f"- {source}: dropped {pre_count - post_count} samples.")
-            return filtered
-        else:
-            return to_filter_df
 
     @abc.abstractmethod
     def split(self, X: pd.Series, y: pd.Series):
@@ -94,7 +53,7 @@ class DataSplitterBase(abc.ABC):
 
     def get_cache_key(self):
         """
-        Generate a 5-character cache key based on the splitter's parameters.
+        Generate a 5-character cache key.
         """
         return f"{self.name}_{abs(hash(frozenset(self.get_hashable_params_values()))) % (10 ** 5):05d}"
 
@@ -110,11 +69,10 @@ class RandomSplitter(DataSplitterBase):
         self,
         test_size=0.2,
         random_state=42,
-        train_filter: FilterBase = None,
         stratify=None,
     ):
         super().__init__(
-            test_size=test_size, random_state=random_state, train_filter=train_filter
+            test_size=test_size, random_state=random_state
         )
         self.stratify = stratify
 
@@ -157,9 +115,9 @@ class ScaffoldSplitter(DataSplitterBase):
     providing a more challenging and realistic task for model evaluation.
     """
 
-    def __init__(self, test_size=0.2, random_state=42, train_filter: FilterBase = None):
+    def __init__(self, test_size=0.2, random_state=42):
         super().__init__(
-            test_size=test_size, random_state=random_state, train_filter=train_filter
+            test_size=test_size, random_state=random_state
         )
 
     @property
