@@ -25,6 +25,10 @@ class PredictorBase(abc.ABC):
         """Return the hyperparameters of the model."""
         return self.hyperparams
 
+    def set_hyperparameters(self, hyperparams: dict):
+        """Inject hyperparameters into the model."""
+        self.hyperparams = hyperparams
+
     def get_cache_key(self) -> str:
         """Return a unique cache key for the predictor configuration.
         Hash is based on:
@@ -33,12 +37,12 @@ class PredictorBase(abc.ABC):
         Does not include model hyperparameters.
         """
         featurizer_hashables = (
-            self.get_featurizer.get_hashable_params_values()
+            self.get_featurizer().get_hashable_params_values()
             if self.get_featurizer
             else []
         )
         feturizer_name = (
-            self.get_featurizer.name if self.get_featurizer else "nofeaturizer"
+            self.get_featurizer().name if self.get_featurizer else "nofeaturizer"
         )
         model_name = self.name
         return f"{model_name}_{feturizer_name}_{abs(hash(frozenset(featurizer_hashables))) % (10 ** 5):05d}"
