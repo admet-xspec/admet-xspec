@@ -439,6 +439,8 @@ class ProcessingPipeline:
         logging.warning(
             "This configuration will override hyperparameters provided in the predictor config file."
         )
+        # Inject loaded hyperparameters into predictor
+        self.predictor.set_hyperparameters(self.optimized_hyperparameters)
 
     def _train(self, train_df: pd.DataFrame, optimize: bool) -> None:
         """Train (and optionally optimize) the predictor and persist model + hyperparams."""
