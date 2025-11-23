@@ -32,6 +32,10 @@ class RfRegressor(ScikitRegressor):
     def _init_model(self):
         return sklearn.ensemble.RandomForestRegressor()
 
+    @property
+    def name(self) -> str:
+        return "RF_reg"
+
 
 @gin.configurable()
 class RfClassifier(ScikitBinaryClassifier):
@@ -59,6 +63,10 @@ class RfClassifier(ScikitBinaryClassifier):
 
     def _init_model(self):
         return sklearn.ensemble.RandomForestClassifier()
+
+    @property
+    def name(self) -> str:
+        return "RF_clf"
 
 
 @gin.configurable()
@@ -88,6 +96,10 @@ class SvmRegressor(ScikitRegressor):
     def _init_model(self):
         return sklearn.svm.SVR()
 
+    @property
+    def name(self) -> str:
+        return "SVM_reg"
+
 
 @gin.configurable()
 class SvmClassifier(ScikitBinaryClassifier):
@@ -115,6 +127,10 @@ class SvmClassifier(ScikitBinaryClassifier):
 
     def _init_model(self):
         return sklearn.svm.SVC(probability=True)
+
+    @property
+    def name(self) -> str:
+        return "SVM_clf"
 
 
 @gin.configurable()
@@ -145,6 +161,10 @@ class XGBoostRegressor(ScikitRegressor):
     def _init_model(self):
         return xgb.XGBRegressor()
 
+    @property
+    def name(self) -> str:
+        return "XGB_reg"
+
 
 @gin.configurable()
 class XGBoostClassifier(ScikitBinaryClassifier):
@@ -173,3 +193,7 @@ class XGBoostClassifier(ScikitBinaryClassifier):
 
     def _init_model(self):
         return xgb.XGBClassifier()
+
+    @property
+    def name(self) -> str:
+        return "XGB_clf"

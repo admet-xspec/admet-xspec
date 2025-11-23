@@ -1,13 +1,47 @@
 from typing import List
 import abc
-from pathlib import Path
-import pickle
+
+from src import FeaturizerBase
 
 
 class PredictorBase(abc.ABC):
     def __init__(self):
         self.model = self._init_model()
+        self.hyperparams = {}
         self.evaluation_metrics = []  # will be set by the child
+        self.featurizer: FeaturizerBase | None = None  # will be set if applicable
+
+    @property
+    @abc.abstractmethod
+    def name(self) -> str:
+        """Return the name of the predictor."""
+        pass
+
+    def get_featurizer(self) -> FeaturizerBase | None:
+        """Return the featurizer if set."""
+        return self.featurizer
+
+    def get_hyperparameters(self) -> dict:
+        """Return the hyperparameters of the model."""
+        return self.hyperparams
+
+    def get_cache_key(self) -> str:
+        """Return a unique cache key for the predictor configuration.
+        Hash is based on:
+        - Predictor name
+        - Featurizer name and its parameters (if any)
+        Does not include model hyperparameters.
+        """
+        featurizer_hashables = (
+            self.get_featurizer.get_hashable_params_values()
+            if self.get_featurizer
+            else []
+        )
+        feturizer_name = (
+            self.get_featurizer.name if self.get_featurizer else "nofeaturizer"
+        )
+        model_name = self.name
+        return f"{model_name}_{feturizer_name}_{abs(hash(frozenset(featurizer_hashables))) % (10 ** 5):05d}"
 
     @abc.abstractmethod
     def _init_model(self):
@@ -21,7 +55,12 @@ class PredictorBase(abc.ABC):
 
     @abc.abstractmethod
     def train(self, smiles_list: List[str], target_list: List[float]):
-        """Train the model with the given smiles and target list."""
+        """Train the model with set hyperparameters."""
+        pass
+
+    @abc.abstractmethod
+    def train_optimize(self, smiles_list: List[str], target_list: List[float]):
+        """Train the model and optimize hyperparameters"""
         pass
 
     @abc.abstractmethod
@@ -31,23 +70,3 @@ class PredictorBase(abc.ABC):
         Returns a dictionary of metrics appropriate for the task.
         """
         pass
-
-    def save(self, dir_path: str | Path, name: str = "model"):
-        """
-        Pickle the model to dir_path/model.pkl
-        """
-        path = Path(dir_path) / f"{name}.pkl"
-        Path(path).parent.mkdir(parents=True, exist_ok=True)
-        # Pickle the model
-        with open(path, "wb") as f:
-            pickle.dump(self, f)
-
-    def load(self, path: str):
-        """Load the model from the given path."""
-        # Check if the path exists
-        if not Path(path).exists():
-            raise FileNotFoundError(f"Model file not found at {path}")
-        # Load the model
-        with open(path, "rb") as f:
-            loaded_model = pickle.load(f)
-            self.__dict__.update(loaded_model.__dict__)

@@ -1,8 +1,8 @@
 # python
 from typing import Optional, List, Dict, Tuple
 from pathlib import Path
-from datetime import datetime
 from collections import namedtuple
+import pickle
 import logging
 import yaml
 import gin
@@ -11,6 +11,7 @@ import numpy as np
 from PIL.Image import Image
 
 from src.utils import detect_csv_delimiter, get_clean_smiles
+from src.predictor.predictor_base import PredictorBase
 
 
 @gin.configurable
@@ -18,8 +19,9 @@ class DataInterface:
     """
     Manage dataset loading, normalization and train/test split saving.
     """
-    #TODO: add support for multi-class classification datasets
-    #TODO: handle model saving/loading here?
+
+    # TODO: add support for multi-class classification datasets
+    # TODO: handle model saving/loading here?
 
     possible_smiles_cols = ["SMILES", "Smiles", "smiles", "molecule"]
     possible_label_cols = ["LABEL", "Label", "label", "Y", "y", "Standard Value"]
@@ -28,24 +30,28 @@ class DataInterface:
         self,
         dataset_dir: str,
         cache_dir: str,
-        splits_dir: str,
         visualizations_dir: str,
         data_config_filename: str,
         prepared_filename: str,
-        metrics_dir: Optional[str] = None,
         registry_filename: str = "registry.txt",
     ):
         self.dataset_dir = Path(dataset_dir)
         self.cache_dir = Path(cache_dir)
-        self.splits_dir = cache_dir / splits_dir
         self.visualizations_dir = Path(visualizations_dir)
         self.data_config_filename = data_config_filename
         self.prepared_filename = prepared_filename
         self.registry_filename = registry_filename
-        self.metrics_dir = Path(metrics_dir) if metrics_dir else Path("data/metrics")
-        self.split_datafile_name = "data.csv"
         self.taks_setting: Optional[str] = None  # must be set externally before use
         self.logfile: Optional[Path] = None  # must be set externally before use
+
+        # Those may not need to be configurable
+        self.splits_dir = cache_dir / "splits"
+        self.models_dir = cache_dir / "models"
+        self.split_datafile_name = "data.csv"
+        self.model_filename = "model.pkl"
+        self.model_refit_filename = "model_final_refit.pkl"
+        self.model_metrics_filename = "metrics.yaml"
+        self.model_params_filename = "params.yaml"
 
         self._init_create_dirs()
         self.update_registries()
@@ -53,21 +59,32 @@ class DataInterface:
 
     def _init_create_dirs(self) -> None:
         self.dataset_dir.mkdir(parents=True, exist_ok=True)
-        self.metrics_dir.mkdir(parents=True, exist_ok=True)
         self.visualizations_dir.mkdir(parents=True, exist_ok=True)
         self.splits_dir.mkdir(parents=True, exist_ok=True)
 
     def set_logfile(self, logfile: str) -> None:
         self.logfile = Path(logfile)
 
+    def dump_logs(self, path: Path) -> None:
+        if self.logfile:
+            with open(self.logfile, "r") as fh:
+                contents = fh.read()
+            with open(path, "w") as fh:
+                fh.write(contents)
+
     # --- discovery helpers -------------------------------------------------
     def _find_dataset_dir(self, friendly_name: str) -> Path:
         for yaml_path in self.dataset_dir.rglob("*.yaml"):
             with open(yaml_path, "r") as f:
                 data = yaml.safe_load(f) or {}
-                if data.get("friendly_name") == friendly_name and data.get("task_setting") == self.task_setting:
+                if (
+                    data.get("friendly_name") == friendly_name
+                    and data.get("task_setting") == self.task_setting
+                ):
                     return yaml_path.parent
-        raise FileNotFoundError(f"No dataset directory with yaml containing friendly_name: `{friendly_name}` found")
+        raise FileNotFoundError(
+            f"No dataset directory with yaml containing friendly_name: `{friendly_name}` found"
+        )
 
     def _find_split_dir(self, friendly_name: str) -> Path:
         for yaml_path in self.splits_dir.rglob("*.yaml"):
@@ -75,7 +92,9 @@ class DataInterface:
                 data = yaml.safe_load(f) or {}
                 if data.get("friendly_name") == friendly_name:
                     return yaml_path.parent
-        raise FileNotFoundError(f"No split directory with yaml containing friendly_name: `{friendly_name}` found")
+        raise FileNotFoundError(
+            f"No split directory with yaml containing friendly_name: `{friendly_name}` found"
+        )
 
     def _check_prepared_dataset_exists(self, dataset_dir_path: Path) -> bool:
         return (dataset_dir_path / self.prepared_filename).exists()
@@ -98,7 +117,9 @@ class DataInterface:
         return self._read_data_config(dataset_dir_path).get("is_chembl", False)
 
     # --- dataframe transformations ----------------------------------------
-    def _apply_filter_criteria(self, df: pd.DataFrame, dataset_dir_path: Path) -> pd.DataFrame:
+    def _apply_filter_criteria(
+        self, df: pd.DataFrame, dataset_dir_path: Path
+    ) -> pd.DataFrame:
         criteria = self._parse_filter_criteria(dataset_dir_path)
         if not criteria:
             return df
@@ -109,17 +130,23 @@ class DataInterface:
                 if len(df) != pre:
                     logging.info(f"Filter `{column}` dropped {pre - len(df)} rows.")
             else:
-                logging.warning(f"Filter criteria field `{column}` not present on dataframe; skipping.")
+                logging.warning(
+                    f"Filter criteria field `{column}` not present on dataframe; skipping."
+                )
         return df
 
-    def _apply_label_transformations(self, df: pd.DataFrame, dataset_dir_path: Path) -> pd.DataFrame:
+    def _apply_label_transformations(
+        self, df: pd.DataFrame, dataset_dir_path: Path
+    ) -> pd.DataFrame:
         transformations = self._parse_label_transformations(dataset_dir_path) or []
         for t in transformations:
             if t == "log10":
                 pre = len(df)
                 df = df[df["y"] > 0].reset_index(drop=True)
                 if len(df) != pre:
-                    logging.warning(f"log10 dropped {pre - len(df)} rows (non-positive labels).")
+                    logging.warning(
+                        f"log10 dropped {pre - len(df)} rows (non-positive labels)."
+                    )
                 df["y"] = np.log10(df["y"])
             elif t == "negate":
                 df["y"] = -df["y"]
@@ -129,17 +156,25 @@ class DataInterface:
 
     def _load_df(self, dataset_path: Path) -> pd.DataFrame:
         # If raw dataset is from ChEMBL, use ';' as delimiter, else detect
-        delimiter = ";" if self._parse_is_chembl(dataset_path.parent) else detect_csv_delimiter(dataset_path)
+        delimiter = (
+            ";"
+            if self._parse_is_chembl(dataset_path.parent)
+            else detect_csv_delimiter(dataset_path)
+        )
         loaded = pd.read_csv(dataset_path, delimiter=delimiter)
         logging.info(f"Loaded raw dataset from `{dataset_path}`")
         if loaded is None or len(loaded) <= 2:
-            raise RuntimeError(f"Loading dataset from `{dataset_path}` produced {0 if loaded is None else len(loaded)} rows.")
+            raise RuntimeError(
+                f"Loading dataset from `{dataset_path}` produced {0 if loaded is None else len(loaded)} rows."
+            )
         # detect SMILES and drop NaNs
         smiles_col = self.get_smiles_col_in_raw(loaded)
         pre = len(loaded)
         df = loaded.dropna(subset=[smiles_col]).reset_index(drop=True)
         if len(df) != pre:
-            logging.info(f"Dropped {pre - len(df)} rows with NaN SMILES when loading `{dataset_path}`.")
+            logging.info(
+                f"Dropped {pre - len(df)} rows with NaN SMILES when loading `{dataset_path}`."
+            )
         return df
 
     def _save_prepared_df(self, df: pd.DataFrame, dir_path: Path) -> None:
@@ -147,16 +182,15 @@ class DataInterface:
         (dir_path).mkdir(parents=True, exist_ok=True)
         # Save prepared dataset
         df.to_csv(dir_path / self.prepared_filename, index=False)
-
         # Save preparation logs
-        if self.logfile:
-            with open(self.logfile, "r") as fh:
-                contents = fh.read()
-            with open(dir_path / "preparation.log", "w") as fh:
-                fh.write(contents)
+        self.dump_logs(dir_path / "preparation.log")
 
     def _generate_prepared_dataset(self, dataset_dir_path: Path) -> None:
-        csvs = [p for p in dataset_dir_path.rglob("*.csv") if p.name != self.prepared_filename]
+        csvs = [
+            p
+            for p in dataset_dir_path.rglob("*.csv")
+            if p.name != self.prepared_filename
+        ]
         if not csvs:
             raise RuntimeError(f"No raw dataset found in `{dataset_dir_path}`")
         if len(csvs) > 1:
@@ -173,19 +207,28 @@ class DataInterface:
         prepared = self._apply_label_transformations(prepared, dataset_dir_path)
         # for classification tasks, assign binary classes based on continuous labels
         if self.task_setting == "binary_classification":
-            prepared = self._assign_binary_classes_based_on_continuous_labels(prepared, dataset_dir_path, is_chembl=True)
+            prepared = self._assign_binary_classes_based_on_continuous_labels(
+                prepared, dataset_dir_path, is_chembl=True
+            )
         elif self.task_setting == "multi_class_classification":
-            raise NotImplementedError("Multi-class classification datasets are not yet supported.")
+            raise NotImplementedError(
+                "Multi-class classification datasets are not yet supported."
+            )
         if prepared is None:
-            raise RuntimeError(f"Failed to generate prepared dataset for `{dataset_dir_path}`")
+            raise RuntimeError(
+                f"Failed to generate prepared dataset for `{dataset_dir_path}`"
+            )
         self._save_prepared_df(prepared, dataset_dir_path)
 
     def _load_prepared_dataset(self, dataset_dir_path: Path) -> pd.DataFrame:
         return pd.read_csv(dataset_dir_path / self.prepared_filename)
 
     def set_task_setting(self, task_setting: str) -> None:
-        assert task_setting in ["regression", "binary_classification", "multi_class_classification"],\
-            f"Unknown task_setting parsed: {task_setting}"
+        assert task_setting in [
+            "regression",
+            "binary_classification",
+            "multi_class_classification",
+        ], f"Unknown task_setting parsed: {task_setting}"
         self.task_setting = task_setting
 
     @staticmethod
@@ -195,7 +238,9 @@ class DataInterface:
         df[smiles_col] = df[smiles_col].apply(get_clean_smiles)
         df = df.dropna(subset=[smiles_col]).reset_index(drop=True)
         if len(df) != pre:
-            logging.info(f"get_clean_smiles dropped {pre - len(df)} rows with invalid SMILES.")
+            logging.info(
+                f"get_clean_smiles dropped {pre - len(df)} rows with invalid SMILES."
+            )
         return df
 
     @classmethod
@@ -203,14 +248,18 @@ class DataInterface:
         for c in cls.possible_smiles_cols:
             if c in raw_df.columns:
                 return c
-        raise ValueError("No SMILES column found. Looked for: " + ", ".join(cls.possible_smiles_cols))
+        raise ValueError(
+            "No SMILES column found. Looked for: " + ", ".join(cls.possible_smiles_cols)
+        )
 
     @classmethod
     def get_label_col_in_raw(cls, raw_df: pd.DataFrame) -> str:
         for c in cls.possible_label_cols:
             if c in raw_df.columns:
                 return c
-        raise ValueError("No label column found. Looked for: " + ", ".join(cls.possible_label_cols))
+        raise ValueError(
+            "No label column found. Looked for: " + ", ".join(cls.possible_label_cols)
+        )
 
     def get_normalized_df(self, df_to_prepare: pd.DataFrame) -> pd.DataFrame:
         logging.debug(f"Normalizing dataset with {len(df_to_prepare)}")
@@ -259,7 +308,6 @@ class DataInterface:
         cache_key: str,
         split_friendly_name: str,
         classification_or_regression: str,
-        console_log: Optional[str] = None,
     ) -> None:
         split_dir = self.splits_dir / cache_key
 
@@ -278,15 +326,89 @@ class DataInterface:
         _save_component(train_df, "train")
         _save_component(test_df, "test")
         split_dir.mkdir(parents=True, exist_ok=True)
+
+        # dump gin config
         with open(split_dir / "operative_config.txt", "w") as fh:
             fh.write(gin.operative_config_str())
 
-        if console_log:
-            with open(split_dir / "console.log", "w") as fh:
-                fh.write(datetime.now().strftime("%Y-%m-%d-%H-%M-%S") + "\n")
-                fh.write(console_log)
+        # dump console log
+        self.dump_logs(split_dir / "console.log")
 
         logging.info(f"Saved split at `{split_dir}`")
+
+    # --- models saving/loading -------------------------------------------
+
+    def pickle_model(
+        self,
+        model: PredictorBase,
+        model_cache_key: str,
+        data_cache_key: str,
+        save_as_refit: bool = False,
+    ) -> None:
+        path = self.models_dir / model_cache_key / data_cache_key
+        path = (
+            path / self.model_refit_filename
+            if save_as_refit
+            else path / self.model_filename
+        )
+        Path(path).parent.mkdir(parents=True, exist_ok=True)
+        # Pickle the model
+        with open(path, "wb") as f:
+            pickle.dump(model, f)
+
+    def unpickle_model(
+        self, model_cache_key: str, data_cache_key: str
+    ) -> PredictorBase:
+        # Check if the path exists
+        path = self.models_dir / model_cache_key / data_cache_key / self.model_filename
+        if not path.exists():
+            raise FileNotFoundError(f"Model file not found at {path}")
+        # Load the model
+        with open(path, "rb") as f:
+            loaded_model = pickle.load(f)
+            return loaded_model
+
+    def save_metrics(
+        self, metrics: Dict, model_cache_key: str, data_cache_key: str
+    ) -> None:
+        path = (
+            self.models_dir
+            / model_cache_key
+            / data_cache_key
+            / self.model_metrics_filename
+        )
+        Path(path).parent.mkdir(parents=True, exist_ok=True)
+        with open(path, "w") as fh:
+            yaml.dump(metrics, fh)
+
+    def save_hyperparams(
+        self, params: Dict, model_cache_key: str, data_cache_key: str
+    ) -> None:
+        path = (
+            self.models_dir
+            / model_cache_key
+            / data_cache_key
+            / self.model_params_filename
+        )
+        Path(path).parent.mkdir(parents=True, exist_ok=True)
+        with open(path, "w") as fh:
+            yaml.dump(params, fh)
+
+    def load_hyperparams(self, model_cache_key: str, data_cache_key: str) -> Dict:
+        path = (
+            self.models_dir
+            / model_cache_key
+            / data_cache_key
+            / self.model_params_filename
+        )
+        if not path.exists():
+            raise FileNotFoundError(f"Model params file not found at {path}")
+        with open(path, "r") as fh:
+            return yaml.safe_load(fh) or {}
+
+    def dump_training_logs(self, model_cache_key: str, data_cache_key: str) -> None:
+        path = self.models_dir / model_cache_key / data_cache_key / "training.log"
+        self.dump_logs(path)
 
     # --- registries ------------------------------------------------------
     def update_registries(self) -> None:
@@ -328,7 +450,9 @@ class DataInterface:
     def _parse_classification_threshold(self, dataset_dir_path: Path) -> float:
         cfg = self._read_data_config(dataset_dir_path)
         if not cfg:
-            raise RuntimeError("No data config yaml found to parse threshold for classification task.")
+            raise RuntimeError(
+                "No data config yaml found to parse threshold for classification task."
+            )
         if cfg.get("threshold_source"):
             ds = self.get_by_friendly_name(cfg["threshold_source"])
             if "y_cont" not in ds.columns:
@@ -338,10 +462,12 @@ class DataInterface:
             return cfg["threshold"]
         raise RuntimeError("No `threshold` or `threshold_source` in data config.")
 
-    def _clean_relation_series(self, df: pd.DataFrame) -> Tuple[pd.Series, Optional[str]]:
-        if 'Standard Relation' in df.columns:
+    def _clean_relation_series(
+        self, df: pd.DataFrame
+    ) -> Tuple[pd.Series, Optional[str]]:
+        if "Standard Relation" in df.columns:
             cleaned = (
-                df['Standard Relation']
+                df["Standard Relation"]
                 .astype(str)
                 .str.replace(r"^['\"]|['\"]$", "", regex=True)
                 .str.strip()
@@ -356,7 +482,9 @@ class DataInterface:
         threshold_value = self._parse_classification_threshold(dataset_dir_path)
         if threshold_value == "median":
             threshold_value = float(df["y"].median())
-            logging.info("Assigning binary classes based on continuous labels and given threshold.")
+            logging.info(
+                "Assigning binary classes based on continuous labels and given threshold."
+            )
             logging.info(f"Using median {threshold_value} as threshold.")
         else:
             threshold_value = float(threshold_value)
@@ -380,7 +508,9 @@ class DataInterface:
             df["class"] = df["class"].astype(int)
             dropped = initial_len - len(df)
             if dropped:
-                logging.info(f"Dropped {dropped} rows with ambiguous/unsupported relations.")
+                logging.info(
+                    f"Dropped {dropped} rows with ambiguous/unsupported relations."
+                )
         else:
             df["class"] = (df["y"] >= threshold_value).astype(int)
 
