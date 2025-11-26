@@ -1,4 +1,4 @@
-#include "configs/featurizers/proprietary/tanimoto_ecfp.gin"
+include "configs/featurizers/proprietary/tanimoto_ecfp.gin"
 TanimotoFilter.featurizer = %featurizer
 
 sim_filter/gin.singleton.constructor = @TanimotoFilter

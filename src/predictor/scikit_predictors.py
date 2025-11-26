@@ -17,6 +17,7 @@ class RfRegressor(ScikitRegressor):
         optimization_iterations: int | None = None,
         n_folds: int | None = None,
         n_jobs: int | None = None,
+        random_state: int = 42,
     ):
         super().__init__(
             params=params,
@@ -27,6 +28,7 @@ class RfRegressor(ScikitRegressor):
             evaluation_metrics=evaluation_metrics,
             n_folds=n_folds,
             n_jobs=n_jobs,
+            random_state=random_state
         )
 
     def _init_model(self):
@@ -49,6 +51,7 @@ class RfClassifier(ScikitBinaryClassifier):
         optimization_iterations: int | None = None,
         n_folds: int | None = None,
         n_jobs: int | None = None,
+        random_state: int = 42,
     ):
         super().__init__(
             params=params,
@@ -59,6 +62,7 @@ class RfClassifier(ScikitBinaryClassifier):
             optimization_iterations=optimization_iterations,
             n_folds=n_folds,
             n_jobs=n_jobs,
+            random_state=random_state,
         )
 
     def _init_model(self):
@@ -81,6 +85,7 @@ class SvmRegressor(ScikitRegressor):
         optimization_iterations: int | None = None,
         n_folds: int | None = None,
         n_jobs: int | None = None,
+        random_state: int = 42,
     ):
         super().__init__(
             params=params,
@@ -91,6 +96,7 @@ class SvmRegressor(ScikitRegressor):
             optimization_iterations=optimization_iterations,
             n_folds=n_folds,
             n_jobs=n_jobs,
+            random_state=random_state
         )
 
     def _init_model(self):
@@ -113,6 +119,7 @@ class SvmClassifier(ScikitBinaryClassifier):
         optimization_iterations: int | None = None,
         n_folds: int | None = None,
         n_jobs: int | None = None,
+        random_state: int = 42,
     ):
         super().__init__(
             params=params,
@@ -123,6 +130,7 @@ class SvmClassifier(ScikitBinaryClassifier):
             optimization_iterations=optimization_iterations,
             n_folds=n_folds,
             n_jobs=n_jobs,
+            random_state=random_state
         )
 
     def _init_model(self):
@@ -146,6 +154,7 @@ class XGBoostRegressor(ScikitRegressor):
         optimization_iterations: int | None = None,
         n_folds: int | None = None,
         n_jobs: int | None = None,
+        random_state: int = 42,
     ):
         super().__init__(
             params=params,
@@ -156,6 +165,7 @@ class XGBoostRegressor(ScikitRegressor):
             optimization_iterations=optimization_iterations,
             n_folds=n_folds,
             n_jobs=n_jobs,
+            random_state=42
         )
 
     def _init_model(self):
@@ -179,6 +189,7 @@ class XGBoostClassifier(ScikitBinaryClassifier):
         optimization_iterations: int | None = None,
         n_folds: int | None = None,
         n_jobs: int | None = None,
+        random_state: int = 42,
     ):
         super().__init__(
             params=params,
@@ -189,6 +200,7 @@ class XGBoostClassifier(ScikitBinaryClassifier):
             optimization_iterations=optimization_iterations,
             n_folds=n_folds,
             n_jobs=n_jobs,
+            random_state=random_state
         )
 
     def _init_model(self):

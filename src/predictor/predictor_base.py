@@ -1,15 +1,19 @@
 from typing import List
 import abc
+import numpy as np
+import hashlib
 
 from src.data.featurizer import FeaturizerBase
 
-
 class PredictorBase(abc.ABC):
-    def __init__(self):
+    def __init__(self, random_state: int = 42):
         self.model = self._init_model()
         self.hyperparams = {}
         self.evaluation_metrics = []  # will be set by the child
         self.featurizer: FeaturizerBase | None = None  # will be set if applicable
+        self.random_state = random_state
+        # Set random seed for reproducibility
+        np.random.seed(random_state)
 
     @property
     @abc.abstractmethod
@@ -45,16 +49,8 @@ class PredictorBase(abc.ABC):
         - Featurizer name and its parameters (if any)
         Does not include model hyperparameters.
         """
-        featurizer_hashables = (
-            self.get_featurizer().get_hashable_params_values()
-            if self.get_featurizer
-            else []
-        )
-        feturizer_name = (
-            self.get_featurizer().name if self.get_featurizer else "nofeaturizer"
-        )
-        model_name = self.name
-        return f"{model_name}_{feturizer_name}_{abs(hash(frozenset(featurizer_hashables))) % (10 ** 5):05d}"
+        feturizer_key = self.featurizer.get_cache_key() if self.featurizer else 'nofeaturizer'
+        return f"{self.name}_{feturizer_key}"
 
     @abc.abstractmethod
     def _init_model(self):

@@ -25,9 +25,10 @@ class ScikitPredictor(PredictorBase):
         optimization_iterations: int | None = None,
         n_folds: int | None = None,
         n_jobs: int | None = None,
+        random_state: int = 42,
         **kwargs,
     ):
-        super().__init__()
+        super().__init__(random_state=random_state)
 
         # Initialize the featurizer
         self.featurizer = None

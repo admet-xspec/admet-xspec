@@ -21,6 +21,7 @@ if __name__ == "__main__":
         help="Can be one of: DEBUG, INFO, WARNING, ERROR, CRITICAL",
         default="INFO",
     )
+
     args = parser.parse_args()
 
     # Configure logger
