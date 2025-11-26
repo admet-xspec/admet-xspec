@@ -1,14 +1,12 @@
 from typing import List
 import abc
 import numpy as np
-import hashlib
 
 from src.data.featurizer import FeaturizerBase
 
 class PredictorBase(abc.ABC):
     def __init__(self, random_state: int = 42):
         self.model = self._init_model()
-        self.hyperparams = {}
         self.evaluation_metrics = []  # will be set by the child
         self.featurizer: FeaturizerBase | None = None  # will be set if applicable
         self.random_state = random_state
@@ -26,31 +24,15 @@ class PredictorBase(abc.ABC):
         """Return True if the model uses a propriotary featurizer."""
         return False
 
-    def get_featurizer(self) -> FeaturizerBase | None:
-        """Return the featurizer if set."""
-        return self.featurizer
-
-    def set_featurizer(self, featurizer: FeaturizerBase):
-        """Inject featurizer into the model."""
-        self.featurizer = featurizer
-
+    @abc.abstractmethod
     def get_hyperparameters(self) -> dict:
         """Return the hyperparameters of the model."""
-        return self.hyperparams
+        pass
 
+    @abc.abstractmethod
     def set_hyperparameters(self, hyperparams: dict):
         """Inject hyperparameters into the model."""
-        self.hyperparams = hyperparams
-
-    def get_cache_key(self) -> str:
-        """Return a unique cache key for the predictor configuration.
-        Hash is based on:
-        - Predictor name
-        - Featurizer name and its parameters (if any)
-        Does not include model hyperparameters.
-        """
-        feturizer_key = self.featurizer.get_cache_key() if self.featurizer else 'nofeaturizer'
-        return f"{self.name}_{feturizer_key}"
+        pass
 
     @abc.abstractmethod
     def _init_model(self):
@@ -79,3 +61,22 @@ class PredictorBase(abc.ABC):
         Returns a dictionary of metrics appropriate for the task.
         """
         pass
+
+    def get_featurizer(self) -> FeaturizerBase | None:
+        """Return the featurizer if set."""
+        return self.featurizer if self.featurizer else None
+
+    def set_featurizer(self, featurizer: FeaturizerBase):
+        """Inject featurizer into the model."""
+        assert isinstance(featurizer, FeaturizerBase), "Featurizer must be an instance of FeaturizerBase"
+        self.featurizer = featurizer
+
+    def get_cache_key(self) -> str:
+        """Return a unique cache key for the predictor configuration.
+        Hash is based on:
+        - Predictor name
+        - Featurizer name and its parameters (if any)
+        Does not include model hyperparameters.
+        """
+        feturizer_key = self.featurizer.get_cache_key() if self.featurizer else 'nofeaturizer'
+        return f"{self.name}_{feturizer_key}"

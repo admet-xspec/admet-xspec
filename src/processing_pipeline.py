@@ -310,8 +310,10 @@ class ProcessingPipeline:
             train_df, test_df = self.sim_filter.get_filtered_train_test(
                 augmentation_df, split_train_df, split_test_df
             )
-            post_counts = get_label_counts(augmentation_df, self.source_col)
+            post_counts = get_label_counts(train_df, self.source_col)
             for src, pre in pre_counts.items():
+                if src == self.test_origin_dataset:
+                    continue  # Skip origin dataset
                 post = post_counts.get(src, 0)
                 logging.info("Source '%s': %d -> %d after filtering", src, pre, post)
             logging.info(
@@ -438,6 +440,7 @@ class ProcessingPipeline:
 
     def _log_pipeline_start(self) -> None:
         """Log initial pipeline configuration for easy debugging."""
+        logging.info(datetime.now().strftime("%Y-%m-%d-%H-%M%-S"))
         logging.info("# =================== Processing Pipeline ==================== #")
         logging.info("Starting processing pipeline with datasets: %s", self.datasets)
         if self.splitter:
@@ -455,22 +458,17 @@ class ProcessingPipeline:
         """Generate a compact, deterministic identifier for the split configuration."""
         splitter_key = self.splitter.get_cache_key() if self.splitter else "nosplit"
         filter_key = self.sim_filter.get_cache_key() if self.sim_filter else "nofilter"
-        datasets_hash = self._get_datasets_hash()
+        datasets_params = (
+            tuple(sorted(datasets)),
+            self.test_origin_dataset,
+            self.task_setting,
+        )
+        datasets_hash = hashlib.md5(str(datasets_params).encode()).hexdigest()[:5]
         return f"{splitter_key}_{filter_key}_{datasets_hash}"
 
     def _get_predictor_key(self) -> str:
         """Return predictor cache key or placeholder if missing."""
         return self.predictor.get_cache_key() if self.predictor else "nopredictor"
-
-    def _get_datasets_hash(self) -> str:
-        """Generate a hash representing the current datasets configuration."""
-        datasets_params = (
-            tuple(sorted(self.datasets)),
-            self.test_origin_dataset,
-            self.task_setting,
-        )
-        datasets_hash = hashlib.md5(str(datasets_params).encode()).hexdigest()[:5]
-        return f"{datasets_hash}"
 
     # --------------------- Model training / evaluation --------------------- #
 
@@ -507,13 +505,29 @@ class ProcessingPipeline:
             logging.info("Training the model on set hyperparameters")
             self.predictor.train(X_train, y_train)
 
+        # Save trained model
         self.data_interface.pickle_model(
             self.predictor, self.predictor_key, self.split_key
         )
+
+        # Save hyperparameters
         hyperparams = self.predictor.get_hyperparameters()
         self.data_interface.save_hyperparams(
             hyperparams, self.predictor_key, self.split_key
         )
+
+        # Save model metadata
+        metadata_dict = {
+            "Datasets": self.datasets,
+            "Test Origin Dataset": self.test_origin_dataset,
+            "Task Setting": self.task_setting,
+            "Splitter": self.splitter.name if self.splitter else "None",
+            "Similarity Filter": self.sim_filter.name if self.sim_filter else "None",
+            "Featurizer": self.featurizer.name if self.featurizer else "None",
+            "Predictor": self.predictor.name,
+            "Optimized Hyperparameters": optimize
+        }
+        self.data_interface.save_model_metadata(metadata_dict, self.predictor_key, self.split_key)
 
     def _evaluate(self, test_df: pd.DataFrame) -> None:
         """Evaluate trained predictor, log metrics and persist them."""

@@ -1,4 +1,4 @@
-include 'configs/processing_plans/train.gin'
+include 'configs/processing_plans/train_load_hyperparams.gin'
 include 'configs/data_interface/data_interface.gin'
 include 'configs/splitters/scaffold.gin'
 include 'configs/featurizers/ecfp.gin'
@@ -14,6 +14,7 @@ ProcessingPipeline.predictor = %predictor
 
 ProcessingPipeline.datasets = [
     'AChE_human_IC50',
+    'AChE_mouse_IC50'
 ]
 
 ProcessingPipeline.test_origin_dataset = 'AChE_human_IC50'

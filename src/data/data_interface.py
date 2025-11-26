@@ -52,7 +52,9 @@ class DataInterface:
         self.model_filename = "model.pkl"
         self.model_refit_filename = "model_final_refit.pkl"
         self.model_metrics_filename = "metrics.yaml"
-        self.model_params_filename = "params.yaml"
+        self.params_filename = "params.yaml"
+        self.model_params_filename = "hyperparams.yaml"
+        self.model_metadata_filename = "model_metadata.yaml"
 
         self._init_create_dirs()
         self.update_registries()
@@ -308,45 +310,45 @@ class DataInterface:
 
     def get_split_friendly_names(self, cache_key: str) -> Tuple[str, str]:
         split_dir = self.splits_dir / cache_key
-        train_params_path = split_dir / "train" / "params.yaml"
-        test_params_path = split_dir / "test" / "params.yaml"
+        train_params_path = split_dir / "train" / self.params_filename
+        test_params_path = split_dir / "test" / self.params_filename
         if not train_params_path.exists():
             raise FileNotFoundError(
-                f"No params.yaml found for train split with cache_key `{cache_key}`"
+                f"No {self.params_filename} found for train split with cache_key `{cache_key}`"
             )
         if not test_params_path.exists():
             raise FileNotFoundError(
-                f"No params.yaml found for test split with cache_key `{cache_key}`"
+                f"No {self.params_filename} found for test split with cache_key `{cache_key}`"
             )
         with open(train_params_path, "r") as fh:
             train_params = yaml.safe_load(fh) or {}
             train_friendly_name = train_params.get("friendly_name")
             if not train_friendly_name:
                 raise RuntimeError(
-                    f"No `friendly_name` found in train params.yaml for split with cache_key `{cache_key}`"
+                    f"No `friendly_name` found in train {self.params_filename} for split with cache_key `{cache_key}`"
                 )
         with open(test_params_path, "r") as fh:
             test_params = yaml.safe_load(fh) or {}
             test_friendly_name = test_params.get("friendly_name")
             if not test_friendly_name:
                 raise RuntimeError(
-                    f"No `friendly_name` found in test params.yaml for split with cache_key `{cache_key}`"
+                    f"No `friendly_name` found in test {self.params_filename} for split with cache_key `{cache_key}`"
                 )
         return train_friendly_name, test_friendly_name
 
     def get_train_test_friendly_names(self, cache_key: str) -> str:
         split_dir = self.splits_dir / cache_key
-        params_path = split_dir / "train" / "params.yaml"
+        params_path = split_dir / "train" / self.params_filename
         if not params_path.exists():
             raise FileNotFoundError(
-                f"No params.yaml found for split with cache_key `{cache_key}`"
+                f"No {self.params_filename} found for split with cache_key `{cache_key}`"
             )
         with open(params_path, "r") as fh:
             params = yaml.safe_load(fh) or {}
             friendly_name = params.get("friendly_name")
             if not friendly_name:
                 raise RuntimeError(
-                    f"No `friendly_name` found in params.yaml for split with cache_key `{cache_key}`"
+                    f"No `friendly_name` found in {self.params_filename} for split with cache_key `{cache_key}`"
                 )
             return friendly_name
 
@@ -373,7 +375,7 @@ class DataInterface:
                 "raw_or_derived": "derived",
                 "task": classification_or_regression,
             }
-            with open(path.parent / "params.yaml", "w") as fh:
+            with open(path.parent / self.params_filename, "w") as fh:
                 yaml.dump(params, fh)
 
         _save_component(train_df, "train")
@@ -414,6 +416,17 @@ class DataInterface:
         # Pickle the model
         with open(path, "wb") as f:
             pickle.dump(model, f)
+
+    def save_model_metadata(
+        self,
+        metadata: Dict,
+        model_cache_key: str,
+        data_cache_key: str,
+    ) -> None:
+        path = self.models_dir / model_cache_key / data_cache_key / self.model_filename
+        Path(path).parent.mkdir(parents=True, exist_ok=True)
+        with open(path, "w") as fh:
+            yaml.dump(metadata, fh)
 
     def unpickle_model(
         self, model_cache_key: str, data_cache_key: str

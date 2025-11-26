@@ -4,6 +4,7 @@ include 'configs/splitters/scaffold.gin'
 include 'configs/featurizers/ecfp.gin'
 include 'configs/sim_filters/tanimoto_5p_to_whole.gin'
 include 'configs/predictors/classifiers/rf.gin'
+
 ProcessingPipeline.data_interface = %data_interface
 ProcessingPipeline.splitter = %splitter
 ProcessingPipeline.featurizer = %featurizer
