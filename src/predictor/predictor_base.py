@@ -1,7 +1,7 @@
 from typing import List
 import abc
 
-from src import FeaturizerBase
+from src.data.featurizer import FeaturizerBase
 
 
 class PredictorBase(abc.ABC):
@@ -17,9 +17,18 @@ class PredictorBase(abc.ABC):
         """Return the name of the predictor."""
         pass
 
+    @property
+    def uses_internal_featurizer(self) -> bool:
+        """Return True if the model uses a propriotary featurizer."""
+        return False
+
     def get_featurizer(self) -> FeaturizerBase | None:
         """Return the featurizer if set."""
         return self.featurizer
+
+    def set_featurizer(self, featurizer: FeaturizerBase):
+        """Inject featurizer into the model."""
+        self.featurizer = featurizer
 
     def get_hyperparameters(self) -> dict:
         """Return the hyperparameters of the model."""

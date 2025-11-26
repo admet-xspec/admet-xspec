@@ -92,6 +92,11 @@ class ProcessingPipeline:
         self.data_interface.set_task_setting(task_setting)
         self.data_interface.set_logfile(logfile)
 
+        # If the predictor object does not implement internal featurization,
+        # inject the configured featurizer
+        if self.predictor and not self.predictor.uses_internal_featurizer:
+            self.predictor.set_featurizer(self.featurizer)
+
         # Derived identifiers / caches
         self.split_key = self._get_split_key(self.datasets)
         self.predictor_key = self._get_predictor_key()
@@ -102,35 +107,43 @@ class ProcessingPipeline:
 
     def run(self) -> None:
 
+        # Log pipeline start
         self._log_pipeline_start()
 
+        # Step 1: Load datasets
         augmentation_dfs, origin_df = self._load_all_datasets()
 
+        # Step 2: Visualize raw datasets if requested
         if self.do_visualize_datasets:
             self._visualize_raw_datasets(augmentation_dfs, origin_df)
 
+        # Step 3: Create train/test splits if requested
         train_df, test_df = pd.DataFrame(), pd.DataFrame()
         if self.do_load_train_test:
-            train_df, test_df = self._create_train_test_splits(
-                augmentation_dfs, origin_df
-            )
+            train_df, test_df = self._get_train_test_splits(augmentation_dfs, origin_df)
 
+            # Step 4: Save train/test splits if requested
             if self.do_dump_train_test:
                 self._save_splits(train_df, test_df)
 
+            # Step 5: Visualize train/test splits if requested
             if self.do_visualize_train_test:
                 self._visualize_splits(train_df, test_df)
 
         # Update registries regardless of train/test decisions
         self._update_registries()
 
+        # Step 6: Load optimized hyperparameters if requested
         if self.do_load_optimized_hyperparams:
             self._load_hyperparams_optimized_on_test_origin()
 
+        # Step 7: Train and evaluate the model if requested
         if self.do_train_model:
+
             self._train(train_df, optimize=self.do_train_optimize)
             self._evaluate(test_df)
 
+            # Step 8: Refit final model on full dataset if requested
             if self.do_refit_final_model:
                 self._train_final_model(train_df, test_df)
 
@@ -225,7 +238,7 @@ class ProcessingPipeline:
 
     # --------------------- Splitting logic --------------------- #
 
-    def _create_train_test_splits(
+    def _get_train_test_splits(
         self, augmentation_dfs: List[pd.DataFrame], origin_df: Optional[pd.DataFrame]
     ) -> Tuple[pd.DataFrame, pd.DataFrame]:
         """
@@ -234,8 +247,25 @@ class ProcessingPipeline:
         - Otherwise manual splits are used from `manual_train_splits` / `manual_test_splits`.
         """
         if self.datasets:
-            return self._create_automatic_splits(augmentation_dfs, origin_df)
-        return self._create_manual_splits()
+            # Check for cached automatic splits and load if available
+            if self._check_if_already_splitted(self.split_key):
+                logging.info(
+                    "Train/test split with key %s already exists; loading from cache",
+                    self.split_key,
+                )
+                train_friendly_name, test_friendly_name = (
+                    self.data_interface.get_split_friendly_names(self.split_key)
+                )
+                return self._get_cached_splits(
+                    [train_friendly_name], [test_friendly_name]
+                )
+            # Create automatic splits
+            else:
+                return self._create_automatic_splits(augmentation_dfs, origin_df)
+        # Read manual splits
+        return self._get_cached_splits(
+            self.manual_train_splits, self.manual_test_splits
+        )
 
     def _create_automatic_splits(
         self, augmentation_dfs: List[pd.DataFrame], origin_df: Optional[pd.DataFrame]
@@ -278,23 +308,21 @@ class ProcessingPipeline:
         logging.info("No filtering applied. Combined train=%d", len(train_df))
         return train_df, split_test_df
 
-    def _create_manual_splits(self) -> Tuple[pd.DataFrame, pd.DataFrame]:
+    def _get_cached_splits(
+        self, train_fiendly_names: List[str], test_firendly_names: List[str]
+    ) -> Tuple[pd.DataFrame, pd.DataFrame]:
         """Load and aggregate DataFrames listed in manual split lists."""
         train_dfs = (
-            self._load_datasets(self.manual_train_splits)
-            if self.manual_train_splits
-            else []
+            self._load_datasets(train_fiendly_names) if train_fiendly_names else []
         )
         test_dfs = (
-            self._load_datasets(self.manual_test_splits)
-            if self.manual_test_splits
-            else []
+            self._load_datasets(test_firendly_names) if test_firendly_names else []
         )
 
         train = self._aggregate_dataframes(train_dfs, empty_if_none=True)
         test = self._aggregate_dataframes(test_dfs, empty_if_none=True)
 
-        logging.info("Manual splits created: train=%d, test=%d", len(train), len(test))
+        logging.info("Caches split loaded: train=%d, test=%d", len(train), len(test))
         return train, test
 
     def _save_splits(self, train_df: pd.DataFrame, test_df: pd.DataFrame) -> None:
@@ -312,6 +340,10 @@ class ProcessingPipeline:
             classification_or_regression=self.task_setting,
         )
         logging.info("Saved split with cache key: %s", self.split_key)
+
+    def _check_if_already_splitted(self, split_key: str) -> bool:
+        """Check if a train/test split with the given key already exists."""
+        return self.data_interface.check_train_test_split_exists(split_key)
 
     def _split_dataset(
         self, df: Optional[pd.DataFrame]
