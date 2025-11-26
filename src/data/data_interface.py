@@ -45,8 +45,8 @@ class DataInterface:
         self.logfile: Optional[Path] = None  # must be set externally before use
 
         # Those may not need to be configurable
-        self.splits_dir = cache_dir / "splits"
-        self.models_dir = cache_dir / "models"
+        self.splits_dir = self.cache_dir / "splits"
+        self.models_dir = self.cache_dir / "models"
         self.split_datafile_name = "data.csv"
         self.model_filename = "model.pkl"
         self.model_refit_filename = "model_final_refit.pkl"
@@ -293,9 +293,49 @@ class DataInterface:
         logging.debug(f"Loading prepared dataset `{friendly_name}`")
         return self._load_prepared_dataset(dataset_dir_path)
 
-    def get_split_by_friendly_name(self, friendly_name: str) -> pd.DataFrame:
-        split_dir_path = self._find_split_dir(friendly_name)
-        return pd.read_csv(split_dir_path / self.split_datafile_name)
+    def get_split_friendly_names(self, cache_key: str) -> Tuple[str, str]:
+        split_dir = self.splits_dir / cache_key
+        train_params_path = split_dir / "train" / "params.yaml"
+        test_params_path = split_dir / "test" / "params.yaml"
+        if not train_params_path.exists():
+            raise FileNotFoundError(
+                f"No params.yaml found for train split with cache_key `{cache_key}`"
+            )
+        if not test_params_path.exists():
+            raise FileNotFoundError(
+                f"No params.yaml found for test split with cache_key `{cache_key}`"
+            )
+        with open(train_params_path, "r") as fh:
+            train_params = yaml.safe_load(fh) or {}
+            train_friendly_name = train_params.get("friendly_name")
+            if not train_friendly_name:
+                raise RuntimeError(
+                    f"No `friendly_name` found in train params.yaml for split with cache_key `{cache_key}`"
+                )
+        with open(test_params_path, "r") as fh:
+            test_params = yaml.safe_load(fh) or {}
+            test_friendly_name = test_params.get("friendly_name")
+            if not test_friendly_name:
+                raise RuntimeError(
+                    f"No `friendly_name` found in test params.yaml for split with cache_key `{cache_key}`"
+                )
+        return train_friendly_name, test_friendly_name
+
+    def get_train_test_friendly_names(self, cache_key: str) -> str:
+        split_dir = self.splits_dir / cache_key
+        params_path = split_dir / "train" / "params.yaml"
+        if not params_path.exists():
+            raise FileNotFoundError(
+                f"No params.yaml found for split with cache_key `{cache_key}`"
+            )
+        with open(params_path, "r") as fh:
+            params = yaml.safe_load(fh) or {}
+            friendly_name = params.get("friendly_name")
+            if not friendly_name:
+                raise RuntimeError(
+                    f"No `friendly_name` found in params.yaml for split with cache_key `{cache_key}`"
+                )
+            return friendly_name
 
     def save_visualization(self, friendly_name: str, visualization: Image) -> None:
         out = self.visualizations_dir / f"vis_{friendly_name}.png"
@@ -335,6 +375,12 @@ class DataInterface:
         self.dump_logs(split_dir / "console.log")
 
         logging.info(f"Saved split at `{split_dir}`")
+
+    def check_train_test_split_exists(self, cache_key: str) -> bool:
+        split_dir = self.splits_dir / cache_key
+        train_path = split_dir / "train" / self.split_datafile_name
+        test_path = split_dir / "test" / self.split_datafile_name
+        return train_path.exists() and test_path.exists()
 
     # --- models saving/loading -------------------------------------------
 
