@@ -43,6 +43,7 @@ class DataInterface:
         self.registry_filename = registry_filename
         self.taks_setting: Optional[str] = None  # must be set externally before use
         self.logfile: Optional[Path] = None  # must be set externally before use
+        self.override_cache = False
 
         # Those may not need to be configurable
         self.splits_dir = self.cache_dir / "splits"
@@ -64,6 +65,9 @@ class DataInterface:
 
     def set_logfile(self, logfile: str) -> None:
         self.logfile = Path(logfile)
+
+    def set_override_cache(self, override_cache: bool) -> None:
+        self.override_cache = override_cache
 
     def dump_logs(self, path: Path) -> None:
         if self.logfile:
@@ -223,6 +227,10 @@ class DataInterface:
     def _load_prepared_dataset(self, dataset_dir_path: Path) -> pd.DataFrame:
         return pd.read_csv(dataset_dir_path / self.prepared_filename)
 
+    def _load_split_component(
+        self, split_dir_path: Path) -> pd.DataFrame:
+        return pd.read_csv(split_dir_path / self.split_datafile_name)
+
     def set_task_setting(self, task_setting: str) -> None:
         assert task_setting in [
             "regression",
@@ -286,12 +294,17 @@ class DataInterface:
         return df_to_prepare
 
     # --- public dataset getters ------------------------------------------
-    def get_by_friendly_name(self, friendly_name: str) -> pd.DataFrame:
-        dataset_dir_path = self._find_dataset_dir(friendly_name)
-        if not self._check_prepared_dataset_exists(dataset_dir_path):
-            self._generate_prepared_dataset(dataset_dir_path)
-        logging.debug(f"Loading prepared dataset `{friendly_name}`")
-        return self._load_prepared_dataset(dataset_dir_path)
+    def get_by_friendly_name(self, friendly_name: str, is_in_splits = False) -> pd.DataFrame:
+        if is_in_splits:
+            dataset_dir_path = self._find_split_dir(friendly_name)
+            dataset = self._load_split_component(dataset_dir_path)
+        else:
+            dataset_dir_path = self._find_dataset_dir(friendly_name)
+            if not self._check_prepared_dataset_exists(dataset_dir_path) or self.override_cache:
+                self._generate_prepared_dataset(dataset_dir_path)
+            logging.debug(f"Loading prepared dataset `{friendly_name}`")
+            dataset = self._load_prepared_dataset(dataset_dir_path)
+        return dataset
 
     def get_split_friendly_names(self, cache_key: str) -> Tuple[str, str]:
         split_dir = self.splits_dir / cache_key

@@ -13,6 +13,7 @@ from src.data.sim_filter import SimilarityFilterBase
 from src.predictor.predictor_base import PredictorBase
 from src.utils import log_markdown_table
 from src.data.utils import get_label_counts
+import hashlib
 
 
 @gin.configurable
@@ -51,12 +52,13 @@ class ProcessingPipeline:
         manual_train_splits: Optional[List[str]] = None,
         manual_test_splits: Optional[List[str]] = None,
         test_origin_dataset: Optional[str] = None,
-        # Task configuration
+        # Other
         task_setting: str = "regression",
         smiles_col: str = "smiles",
         source_col: str = "source",
         target_col: str = "y",
         logfile: Optional[str] = None,
+        override_cache: bool = False
     ):
         # Execution flags
         self.do_load_datasets = do_load_datasets
@@ -87,10 +89,12 @@ class ProcessingPipeline:
         self.source_col = source_col
         self.target_col = target_col
         self.logfile = logfile
+        self.override_cache = override_cache
 
         # Let the data interface know global settings
         self.data_interface.set_task_setting(task_setting)
         self.data_interface.set_logfile(logfile)
+        self.data_interface.set_override_cache(override_cache)
 
         # If the predictor object does not implement internal featurization,
         # inject the configured featurizer
@@ -139,7 +143,6 @@ class ProcessingPipeline:
 
         # Step 7: Train and evaluate the model if requested
         if self.do_train_model:
-
             self._train(train_df, optimize=self.do_train_optimize)
             self._evaluate(test_df)
 
@@ -161,6 +164,18 @@ class ProcessingPipeline:
             df = self.data_interface.get_by_friendly_name(name)
             df = df[[self.smiles_col, self.target_col]].copy()
             df[self.source_col] = name
+            dfs.append(df)
+        return dfs
+
+    def _load_split_datasets(self, friendly_names: List[str]) -> List[pd.DataFrame]:
+        """Load datasets by friendly name for split datasets (no source column added)."""
+        if not friendly_names:
+            return []
+
+        dfs = []
+        for name in friendly_names:
+            df = self.data_interface.get_by_friendly_name(name, is_in_splits=True)
+            df = df[[self.smiles_col, self.target_col, self.source_col]].copy()
             dfs.append(df)
         return dfs
 
@@ -248,7 +263,7 @@ class ProcessingPipeline:
         """
         if self.datasets:
             # Check for cached automatic splits and load if available
-            if self._check_if_already_splitted(self.split_key):
+            if self._check_if_already_splitted(self.split_key) and not self.override_cache:
                 logging.info(
                     "Train/test split with key %s already exists; loading from cache",
                     self.split_key,
@@ -256,6 +271,7 @@ class ProcessingPipeline:
                 train_friendly_name, test_friendly_name = (
                     self.data_interface.get_split_friendly_names(self.split_key)
                 )
+
                 return self._get_cached_splits(
                     [train_friendly_name], [test_friendly_name]
                 )
@@ -292,7 +308,7 @@ class ProcessingPipeline:
             )
             pre_counts = get_label_counts(combined_pre, self.source_col)
             train_df, test_df = self.sim_filter.get_filtered_train_test(
-                split_train_df, split_test_df, augmentation_df
+                augmentation_df, split_train_df, split_test_df
             )
             post_counts = get_label_counts(augmentation_df, self.source_col)
             for src, pre in pre_counts.items():
@@ -313,10 +329,10 @@ class ProcessingPipeline:
     ) -> Tuple[pd.DataFrame, pd.DataFrame]:
         """Load and aggregate DataFrames listed in manual split lists."""
         train_dfs = (
-            self._load_datasets(train_fiendly_names) if train_fiendly_names else []
+            self._load_split_datasets(train_fiendly_names) if train_fiendly_names else []
         )
         test_dfs = (
-            self._load_datasets(test_firendly_names) if test_firendly_names else []
+            self._load_split_datasets(test_firendly_names) if test_firendly_names else []
         )
 
         train = self._aggregate_dataframes(train_dfs, empty_if_none=True)
@@ -439,17 +455,22 @@ class ProcessingPipeline:
         """Generate a compact, deterministic identifier for the split configuration."""
         splitter_key = self.splitter.get_cache_key() if self.splitter else "nosplit"
         filter_key = self.sim_filter.get_cache_key() if self.sim_filter else "nofilter"
-        datasets_params = (
-            tuple(sorted(datasets)),
-            self.test_origin_dataset,
-            self.task_setting,
-        )
-        datasets_hash = abs(hash(frozenset(datasets_params))) % (10**5)
-        return f"{splitter_key}_{filter_key}_{datasets_hash:05d}"
+        datasets_hash = self._get_datasets_hash()
+        return f"{splitter_key}_{filter_key}_{datasets_hash}"
 
     def _get_predictor_key(self) -> str:
         """Return predictor cache key or placeholder if missing."""
         return self.predictor.get_cache_key() if self.predictor else "nopredictor"
+
+    def _get_datasets_hash(self) -> str:
+        """Generate a hash representing the current datasets configuration."""
+        datasets_params = (
+            tuple(sorted(self.datasets)),
+            self.test_origin_dataset,
+            self.task_setting,
+        )
+        datasets_hash = hashlib.md5(str(datasets_params).encode()).hexdigest()[:5]
+        return f"{datasets_hash}"
 
     # --------------------- Model training / evaluation --------------------- #
 

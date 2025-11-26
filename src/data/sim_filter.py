@@ -3,6 +3,7 @@ from typing import Hashable, Tuple
 
 import gin
 import pandas as pd
+import hashlib
 
 from src.data.utils import TanimotoCalculator
 from src.data.featurizer import FeaturizerBase
@@ -34,9 +35,12 @@ class SimilarityFilterBase(abc.ABC):
 
     def get_cache_key(self):
         """
-        Generate a 5-character cache key based on the splitter's parameters.
+        Generate a 5-character cache key.
         """
-        return f"{self.name}_{abs(hash(frozenset(self.get_hashable_params_values()))) % (10 ** 5):05d}"
+        params_values = self.get_hashable_params_values()
+        params_values = str(params_values).encode("utf-8")
+        hash_string = hashlib.md5(params_values).hexdigest()
+        return f"{self.name}_{hash_string[:5]}"
 
     @abc.abstractmethod
     def get_filtered_df(

@@ -1,6 +1,7 @@
 import abc
 import logging
 from typing import List, Hashable
+import hashlib
 
 import gin
 import numpy as np
@@ -40,8 +41,10 @@ class FeaturizerBase(abc.ABC):
         """
         Generate a 5-character cache key.
         """
-        return f"{self.name}_{abs(hash(frozenset(self.get_hashable_params_values()))) % (10 ** 5):05d}"
-
+        params_values = self.get_hashable_params_values()
+        params_values = str(params_values).encode("utf-8")
+        hash_string = hashlib.md5(params_values).hexdigest()
+        return f"{self.name}_{hash_string[:5]}"
 
 @gin.configurable
 class EcfpFeaturizer(FeaturizerBase):
