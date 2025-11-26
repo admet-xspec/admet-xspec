@@ -4,6 +4,7 @@ from typing import Hashable, Tuple
 import gin
 import pandas as pd
 import hashlib
+import logging
 
 from src.data.utils import TanimotoCalculator
 from src.data.featurizer import FeaturizerBase
@@ -71,7 +72,7 @@ class SimilarityFilterBase(abc.ABC):
         """
         # Early exit if no augmentation data
         if augmenting_df is None or augmenting_df.empty:
-            return train_df.copy(), test_df.copy()
+            return train_df, test_df
 
         # Select reference set based on strategy
         if self.against == "test":
@@ -80,10 +81,11 @@ class SimilarityFilterBase(abc.ABC):
             filter_against = pd.concat([train_df, test_df], ignore_index=True)
 
         # Filter augmentation data
-        filtered_aug = self.get_filtered_df(augmenting_df.copy(), filter_against.copy())
+        logging.info(f"Filtering {augmenting_df.shape[0]} molecules based on similarity to {filter_against.shape[0]} molecules.")
+        filtered_aug = self.get_filtered_df(augmenting_df, filter_against)
 
         # Combine train with filtered augmentation
-        combined_train = pd.concat([train_df.copy(), filtered_aug], ignore_index=True)
+        combined_train = pd.concat([train_df, filtered_aug], ignore_index=True)
 
         return combined_train, test_df.copy()
 
