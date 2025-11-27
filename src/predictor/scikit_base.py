@@ -84,7 +84,7 @@ class ScikitPredictor(PredictorBase):
             param_distributions=self.hyper_opt["params_distribution"],
             n_iter=self.hyper_opt["n_iter"],
             cv=self.hyper_opt["n_folds"],
-            verbose=2,
+            verbose=1,
             n_jobs=self.hyper_opt["n_jobs"],
             refit=True,
             scoring=self.target_metric,
