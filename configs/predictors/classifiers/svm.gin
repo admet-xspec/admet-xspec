@@ -8,4 +8,4 @@ predictor = @predictor/gin.singleton()
         }
 
 # Include hyperparameter optimization config
-include 'configs/predictors/regressors/optimization/svm_hyperparams.gin'
+include 'configs/predictors/classifiers/optimization/svm_hyperparams.gin'

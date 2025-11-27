@@ -8,4 +8,4 @@ SvmRegressor.params = {
     }
 
 # Include hyperparameter optimization config
-include 'configs/predictors/regressors/optimization/svn_hyperparams.gin'
+include 'configs/predictors/regressors/optimization/svm_hyperparams.gin'
