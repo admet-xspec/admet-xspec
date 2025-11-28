@@ -10,6 +10,7 @@ import pandas as pd
 import numpy as np
 from PIL.Image import Image
 
+from src.data.utils import get_label_counts
 from src.utils import detect_csv_delimiter, get_clean_smiles
 from src.predictor.predictor_base import PredictorBase
 
@@ -213,9 +214,25 @@ class DataInterface:
         prepared = self._apply_label_transformations(prepared, dataset_dir_path)
         # for classification tasks, assign binary classes based on continuous labels
         if self.task_setting == "binary_classification":
-            prepared = self._assign_binary_classes_based_on_continuous_labels(
-                prepared, dataset_dir_path, is_chembl=True
-            )
+            # at this point we expect the labels to be in `y` column
+            num_unique_labels = get_label_counts(prepared, column_name="y")
+            if len(num_unique_labels.keys()) > 2:
+                logging.warning(
+                    f"Dataset has {len(num_unique_labels.keys())} unique labels. The labels are assumed to be continuous and will be converted to binary classes."
+                )
+                prepared = self._assign_binary_classes_based_on_continuous_labels(
+                    prepared, dataset_dir_path, is_chembl=self._parse_is_chembl(dataset_dir_path)
+                )
+            else:
+                logging.info(
+                    f"Binary labels detected: {num_unique_labels.keys()}."
+                )
+                # ensure labels are 0 and 1
+                unique_labels = sorted(num_unique_labels.keys())
+                if unique_labels != [0, 1]:
+                    logging.warning("The binary labels are not 0 and 1; remapping to 0 and 1.")
+                    mapping = {old: new for new, old in enumerate(unique_labels)}
+                    prepared["y"] = prepared["y"].map(mapping)
         elif self.task_setting == "multi_class_classification":
             raise NotImplementedError(
                 "Multi-class classification datasets are not yet supported."
