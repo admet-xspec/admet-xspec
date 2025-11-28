@@ -150,7 +150,7 @@ class ProcessingPipeline:
             if self.do_refit_final_model:
                 self._train_final_model(train_df, test_df)
 
-            self._dump_training_logs()
+            self._dump_training_info()
 
     # --------------------- Dataset loading & visualization --------------------- #
 
@@ -451,6 +451,11 @@ class ProcessingPipeline:
                 self.sim_filter.name,
                 self.sim_filter.against,
             )
+        if self.featurizer:
+            logging.info("Using featurizer: %s", self.featurizer.name)
+        if self.predictor:
+            logging.info("Using predictor: %s", self.predictor.name)
+        logging.info("Task setting: %s", self.task_setting)
 
     # --------------------- Identification / caching --------------------- #
 
@@ -551,9 +556,10 @@ class ProcessingPipeline:
             self.predictor, self.predictor_key, self.split_key, save_as_refit=True
         )
 
-    def _dump_training_logs(self) -> None:
-        """Persist the console logs related to the training run."""
+    def _dump_training_info(self) -> None:
         self.data_interface.dump_training_logs(self.predictor_key, self.split_key)
+        self.data_interface.dump_gin_config_to_model_dir(self.predictor_key, self.split_key)
+        self.data_interface
 
     # --------------------- Configuration validation --------------------- #
 

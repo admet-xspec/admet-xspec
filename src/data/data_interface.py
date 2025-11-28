@@ -413,6 +413,7 @@ class DataInterface:
             else path / self.model_filename
         )
         Path(path).parent.mkdir(parents=True, exist_ok=True)
+        logging.info(f"Saving trained model to `{path}`")
         # Pickle the model
         with open(path, "wb") as f:
             pickle.dump(model, f)
@@ -423,7 +424,7 @@ class DataInterface:
         model_cache_key: str,
         data_cache_key: str,
     ) -> None:
-        path = self.models_dir / model_cache_key / data_cache_key / self.model_filename
+        path = self.models_dir / model_cache_key / data_cache_key / self.model_metadata_filename
         Path(path).parent.mkdir(parents=True, exist_ok=True)
         with open(path, "w") as fh:
             yaml.dump(metadata, fh)
@@ -481,6 +482,11 @@ class DataInterface:
     def dump_training_logs(self, model_cache_key: str, data_cache_key: str) -> None:
         path = self.models_dir / model_cache_key / data_cache_key / "training.log"
         self.dump_logs(path)
+
+    def dump_gin_config_to_model_dir(self, model_cache_key: str, data_cache_key: str) -> None:
+        path = self.models_dir / model_cache_key / data_cache_key / "operative_config.gin"
+        with open(path, "w") as fh:
+            fh.write(gin.operative_config_str())
 
     # --- registries ------------------------------------------------------
     def update_registries(self) -> None:
