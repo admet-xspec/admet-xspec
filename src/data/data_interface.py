@@ -90,7 +90,7 @@ class DataInterface:
                 ):
                     return yaml_path.parent
         raise FileNotFoundError(
-            f"No dataset directory with yaml containing friendly_name: `{friendly_name}` found"
+            f"No dataset directory with yaml containing friendly_name: `{friendly_name}` for the task of {self.task_setting} found"
         )
 
     def _find_split_dir(self, friendly_name: str) -> Path:
