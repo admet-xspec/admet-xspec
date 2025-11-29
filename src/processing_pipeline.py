@@ -162,7 +162,7 @@ class ProcessingPipeline:
         dfs = []
         for name in friendly_names:
             df = self.data_interface.get_by_friendly_name(name)
-            df = df[[self.smiles_col, self.target_col]].copy()
+            df = df[[self.smiles_col, self.target_col]]
             df[self.source_col] = name
             dfs.append(df)
         return dfs
