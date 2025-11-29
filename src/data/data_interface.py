@@ -251,7 +251,7 @@ class DataInterface:
     def _load_prepared_dataset(self, dataset_dir_path: Path) -> pd.DataFrame:
         df = pd.read_csv(dataset_dir_path / self.prepared_filename)
         pre_nan_len = len(df)
-        df = df.dropna().reset_index(drop=True)
+        df = df.dropna(subset=['smiles', 'y']).reset_index(drop=True)
         if len(df) != pre_nan_len:
             logging.warning(f"Unexpected behaviour: dropped {pre_nan_len - len(df)} rows with NaN labels when loading prepared dataset. Check data preparation step.")
         return df

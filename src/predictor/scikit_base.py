@@ -126,14 +126,19 @@ class ScikitPredictor(PredictorBase):
         return y_pred
 
     def get_hyperparameters(self) -> dict:
-        return self.model.get_params()
+        hyperparams = self.model.get_params()
+        # convert any numpy types to native python types for serialization
+        for key, value in hyperparams.items():
+            if isinstance(value, np.generic):
+                hyperparams[key] = value.item()
+        return hyperparams
 
     def set_hyperparameters(self, hyperparams: dict):
-        self._check_params(self.model, hyperparams)
+        self._check_hyperparams(self.model, hyperparams)
         self.model.set_params(**hyperparams)
 
     @staticmethod
-    def _check_params(model, params):
+    def _check_hyperparams(model, params):
         model_params = model.get_params()
         for key in params:
             if key not in model_params:
