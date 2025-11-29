@@ -244,7 +244,15 @@ class DataInterface:
         self._save_prepared_df(prepared, dataset_dir_path)
 
     def _load_prepared_dataset(self, dataset_dir_path: Path) -> pd.DataFrame:
-        return pd.read_csv(dataset_dir_path / self.prepared_filename)
+        df = pd.read_csv(dataset_dir_path / self.prepared_filename)
+        # Drop rows with NaN labels just in case
+        pre_nan_len = len(df)
+        df = df.dropna().reset_index(drop=True)
+        #TODO: find out why this happens sometimes (permeability dataset) and fix upstream
+        if len(df) != pre_nan_len:
+            logging.warning(f"Unexpected behaviour: {pre_nan_len - len(df)} rows with NaN labels found and dropped from the prepared dataset. "
+                            f"Check data preparation code.")
+        return df
 
     def _load_split_component(
         self, split_dir_path: Path) -> pd.DataFrame:

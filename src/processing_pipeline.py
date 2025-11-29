@@ -287,8 +287,6 @@ class ProcessingPipeline:
         self, augmentation_dfs: List[pd.DataFrame], origin_df: Optional[pd.DataFrame]
     ) -> Tuple[pd.DataFrame, pd.DataFrame]:
         """Automatic split: split origin, optionally filter augmentations, combine for training."""
-        if not self.test_origin_dataset:
-            raise ValueError("test_origin_dataset must be set for automatic splitting")
 
         split_train_df, split_test_df = self._split_dataset(origin_df)
         logging.info(
