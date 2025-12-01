@@ -243,9 +243,10 @@ class DataInterface:
             )
         # Drop rows with NaN labels after all transformations
         pre = len(prepared)
-        prepared = prepared.dropna().reset_index(drop=True)
+        prepared = prepared.dropna(subset=['smiles', 'y']).reset_index(drop=True)
         if len(prepared) != pre:
-            logging.warning(f"After all transformations, dropped additional {pre - len(prepared)} rows with NaN labels.")
+            logging.warning(f"After all transformations, dropped additional {pre - len(prepared)} rows with NaN values in 'smiles' or 'y' columns.")
+        logging.info(f"Prepared dataset size: {len(prepared)}")
         self._save_prepared_df(prepared, dataset_dir_path)
 
     def _load_prepared_dataset(self, dataset_dir_path: Path) -> pd.DataFrame:
