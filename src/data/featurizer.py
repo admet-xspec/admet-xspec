@@ -119,7 +119,18 @@ class PropertyFeaturizer(FeaturizerBase):
             self.scaler.fit(desc_array)
             self.is_fitted = True
 
-        return self.scaler.transform(desc_array)
+        desc_array = self.scaler.transform(desc_array)
+        # Check for nans and infs and replace them with zeros
+        desc_array = np.array(desc_array, dtype=np.float32)
+        if np.isnan(desc_array).sum() or np.isinf(desc_array).sum():
+            logging.warning(
+                f"PropertyFeaturizer: Found {np.isnan(desc_array).sum()} NaNs and "
+                f"{np.isinf(desc_array).sum()} infinite values in descriptors. "
+                "Replacing with zeros."
+            )
+            desc_array = np.nan_to_num(desc_array, nan=0.0, posinf=0.0, neginf=0.0)
+
+        return np.array(desc_array, dtype=np.float32)
 
     @staticmethod
     def _compute_descriptors(mol) -> dict:
