@@ -46,7 +46,7 @@ class ScikitPredictor(PredictorBase):
             "params_distribution": params_distribution,
         }
 
-    def _feraturize(self, smiles_list: List[str]) -> np.ndarray:
+    def _featurize(self, smiles_list: List[str]) -> np.ndarray:
         if self.featurizer is None:
             raise ValueError("Featurizer is not set. Please inject a featurizer first.")
         X = self.featurizer.featurize(smiles_list)
@@ -55,7 +55,7 @@ class ScikitPredictor(PredictorBase):
     def train(self, smiles_list: List[str], target_list: List[float]):
 
         # Featurize the smiles
-        X = self._feraturize(smiles_list)
+        X = self._featurize(smiles_list)
         y = np.array(target_list, dtype=np.float32)
 
         # Train the model
@@ -69,7 +69,7 @@ class ScikitPredictor(PredictorBase):
     def train_optimize(self, smiles_list: List[str], target_list: List[float]):
 
         # Featurize the smiles
-        X = self._feraturize(smiles_list)
+        X = self._featurize(smiles_list)
         y = np.array(target_list, dtype=np.float32)
 
         logging.info(
