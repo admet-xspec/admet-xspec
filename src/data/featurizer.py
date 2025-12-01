@@ -46,6 +46,7 @@ class FeaturizerBase(abc.ABC):
         hash_string = hashlib.md5(params_values).hexdigest()
         return f"{self.name}_{hash_string[:5]}"
 
+
 @gin.configurable
 class EcfpFeaturizer(FeaturizerBase):
     """Extended Connectivity Fingerprint (Morgan/ECFP) featurizer."""

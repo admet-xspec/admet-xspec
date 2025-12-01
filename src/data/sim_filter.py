@@ -21,7 +21,9 @@ class SimilarityFilterBase(abc.ABC):
 
     def __init__(self, against: str) -> None:
         if against not in ["test", "test_origin"]:
-            raise ValueError(f"Arg `against` must be 'test' or 'test_origin'. Got: {against}")
+            raise ValueError(
+                f"Arg `against` must be 'test' or 'test_origin'. Got: {against}"
+            )
         self.against = against
 
     @property
@@ -81,7 +83,9 @@ class SimilarityFilterBase(abc.ABC):
             filter_against = pd.concat([train_df, test_df], ignore_index=True)
 
         # Filter augmentation data
-        logging.info(f"Filtering {augmenting_df.shape[0]} molecules based on similarity to {filter_against.shape[0]} molecules.")
+        logging.info(
+            f"Filtering {augmenting_df.shape[0]} molecules based on similarity to {filter_against.shape[0]} molecules."
+        )
         filtered_aug = self.get_filtered_df(augmenting_df, filter_against)
 
         # Combine train with filtered augmentation
@@ -102,16 +106,18 @@ class TanimotoFilter(SimilarityFilterBase):
     """
 
     def __init__(
-            self,
-            featurizer: FeaturizerBase,
-            min_distance_to_test_post_filtering: float,
-            against: str = "test",
+        self,
+        featurizer: FeaturizerBase,
+        min_distance_to_test_post_filtering: float,
+        against: str = "test",
     ) -> None:
         """Initialize Tanimoto filter with validation."""
         super().__init__(against)
 
         if not 0.0 <= min_distance_to_test_post_filtering <= 1.0:
-            raise ValueError("`min_distance_to_test_post_filtering` must be between 0.0 and 1.0")
+            raise ValueError(
+                "`min_distance_to_test_post_filtering` must be between 0.0 and 1.0"
+            )
 
         self.featurizer = featurizer
         self.min_distance_to_test_post_filtering = min_distance_to_test_post_filtering
@@ -135,7 +141,7 @@ class TanimotoFilter(SimilarityFilterBase):
         ]
 
     def get_filtered_df(
-            self, to_filter_df: pd.DataFrame, filter_against_df: pd.DataFrame
+        self, to_filter_df: pd.DataFrame, filter_against_df: pd.DataFrame
     ) -> pd.DataFrame:
         """
         Filter molecules based on minimum Tanimoto distance to reference set.
@@ -145,28 +151,34 @@ class TanimotoFilter(SimilarityFilterBase):
         """
         # Early exits
         if to_filter_df is None or to_filter_df.empty:
-            return pd.DataFrame(columns=to_filter_df.columns if to_filter_df is not None else ["smiles"])
+            return pd.DataFrame(
+                columns=to_filter_df.columns if to_filter_df is not None else ["smiles"]
+            )
 
         if filter_against_df is None or filter_against_df.empty:
             return to_filter_df.copy().reset_index(drop=True)
 
         # Validate required columns
         required_col = "smiles"
-        for df, name in [(to_filter_df, "to_filter_df"), (filter_against_df, "filter_against_df")]:
+        for df, name in [
+            (to_filter_df, "to_filter_df"),
+            (filter_against_df, "filter_against_df"),
+        ]:
             if required_col not in df.columns:
                 raise KeyError(f"`{name}` must contain a '{required_col}' column")
 
         # Compute distances using batch calculator
         calculator = TanimotoCalculator(
-            smiles_list=filter_against_df["smiles"].tolist(),
-            featurizer=self.featurizer
+            smiles_list=filter_against_df["smiles"].tolist(), featurizer=self.featurizer
         )
         results = calculator.run_batch(queries=to_filter_df["smiles"].tolist())
 
         # Apply threshold filter
         min_distances = results.get("min_distance")
         if min_distances is None:
-            raise RuntimeError("TanimotoCalculator.run_batch did not return 'min_distance'")
+            raise RuntimeError(
+                "TanimotoCalculator.run_batch did not return 'min_distance'"
+            )
 
         filtered_df = (
             to_filter_df.copy()

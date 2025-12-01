@@ -8,6 +8,7 @@ import gin
 import logging
 import hashlib
 
+
 class DataSplitterBase(abc.ABC):
     """
     Abstract base class for data splitters.
@@ -75,9 +76,7 @@ class RandomSplitter(DataSplitterBase):
         random_state=42,
         stratify=None,
     ):
-        super().__init__(
-            test_size=test_size, random_state=random_state
-        )
+        super().__init__(test_size=test_size, random_state=random_state)
         self.stratify = stratify
 
     @property
@@ -120,9 +119,7 @@ class ScaffoldSplitter(DataSplitterBase):
     """
 
     def __init__(self, test_size=0.2, random_state=42):
-        super().__init__(
-            test_size=test_size, random_state=random_state
-        )
+        super().__init__(test_size=test_size, random_state=random_state)
 
     @property
     def name(self):

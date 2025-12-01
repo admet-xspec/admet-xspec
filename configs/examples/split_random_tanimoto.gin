@@ -17,4 +17,3 @@ ProcessingPipeline.datasets = [
 
 ProcessingPipeline.test_origin_dataset = 'AChE_human_IC50'
 ProcessingPipeline.task_setting = "regression"
-

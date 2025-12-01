@@ -62,7 +62,7 @@ class DeepChemStableWrapper:
         """Check if the DeepChemStable directory exists."""
         if not self.dcs_path.exists():
             raise FileNotFoundError(
-                f"""DeepChemStable directory not found at {self.dcs_path}. Please set up 
+                f"""DeepChemStable directory not found at {self.dcs_path}. Please set up
             DeepChemStable according to the instructions provided in the README."""
             )
         # Ensure the cache directory exists
