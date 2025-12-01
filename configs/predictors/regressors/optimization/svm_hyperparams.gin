@@ -11,7 +11,7 @@
     SvmRegressor.optimization_iterations = 25    # maximum times the script is allowed to draw and
                                                         # evaluate a new set of hyperparameter values
 
-    SvmRegressor.n_jobs = -1                      # number of CPUs to use
+    SvmRegressor.n_jobs = -1                      # number of CPUs to use (-1 for all available)
     SvmRegressor.n_folds = 5                     # number of cross-validation folds
 
 #   Dictionary of distributions to sample hyperparameter values from. To each of the models' hyperparameters
