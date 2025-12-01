@@ -57,6 +57,8 @@ class DataInterface:
         self.params_filename = "params.yaml"
         self.model_params_filename = "hyperparams.yaml"
         self.model_metadata_filename = "model_metadata.yaml"
+        self.console_log_filename = "console.log"
+        self.operative_config_filename = "operative_config.gin"
 
         self._init_create_dirs()
         self.update_registries()
@@ -77,8 +79,12 @@ class DataInterface:
         if self.logfile:
             with open(self.logfile, "r") as fh:
                 contents = fh.read()
-            with open(path, "w") as fh:
+            with open(path / self.console_log_filename, "w") as fh:
                 fh.write(contents)
+
+    def dump_gin_config(self, path: Path) -> None:
+        with open(path / self.operative_config_filename, "w") as fh:
+            fh.write(gin.operative_config_str())
 
     # --- discovery helpers -------------------------------------------------
     def _find_dataset_dir(self, friendly_name: str) -> Path:
@@ -104,7 +110,7 @@ class DataInterface:
             f"No split directory with yaml containing friendly_name: `{friendly_name}` found"
         )
 
-    def _check_prepared_dataset_exists(self, dataset_dir_path: Path) -> bool:
+    def _check_prepared_dataset_exists(self, dumdataset_dir_path: Path) -> bool:
         return (dataset_dir_path / self.prepared_filename).exists()
 
     # --- yaml parsing small helpers ---------------------------------------
@@ -186,8 +192,7 @@ class DataInterface:
         return df
 
     def _save_prepared_df(self, df: pd.DataFrame, dir_path: Path) -> None:
-
-        (dir_path).mkdir(parents=True, exist_ok=True)
+        dir_path.mkdir(parents=True, exist_ok=True)
         # Save prepared dataset
         df.to_csv(dir_path / self.prepared_filename, index=False)
         # Save preparation logs
@@ -403,10 +408,10 @@ class DataInterface:
         split_friendly_name: str,
         classification_or_regression: str,
     ) -> None:
-        split_dir = self.splits_dir / cache_key
+        split_dir_w_hash = self.splits_dir / cache_key
 
         def _save_component(df: pd.DataFrame, which: str) -> None:
-            path = split_dir / which / self.split_datafile_name
+            path = split_dir_w_hash / which / self.split_datafile_name
             path.parent.mkdir(parents=True, exist_ok=True)
             df.to_csv(path, index=False)
             params = {
@@ -419,21 +424,20 @@ class DataInterface:
 
         _save_component(train_df, "train")
         _save_component(test_df, "test")
-        split_dir.mkdir(parents=True, exist_ok=True)
+        split_dir_w_hash.mkdir(parents=True, exist_ok=True)
 
         # dump gin config
-        with open(split_dir / "operative_config.txt", "w") as fh:
-            fh.write(gin.operative_config_str())
+        self.dump_gin_config(split_dir_w_hash)
 
         # dump console log
-        self.dump_logs(split_dir / "console.log")
+        self.dump_logs(split_dir_w_hash)
 
-        logging.info(f"Saved split at `{split_dir}`")
+        logging.info(f"Saved split at `{split_dir_w_hash}`")
 
     def check_train_test_split_exists(self, cache_key: str) -> bool:
-        split_dir = self.splits_dir / cache_key
-        train_path = split_dir / "train" / self.split_datafile_name
-        test_path = split_dir / "test" / self.split_datafile_name
+        split_dir_w_hash = self.splits_dir / cache_key
+        train_path = split_dir_w_hash / "train" / self.split_datafile_name
+        test_path = split_dir_w_hash / "test" / self.split_datafile_name
         return train_path.exists() and test_path.exists()
 
     # --- models saving/loading -------------------------------------------
@@ -530,11 +534,8 @@ class DataInterface:
     def dump_gin_config_to_model_dir(
         self, model_cache_key: str, data_cache_key: str
     ) -> None:
-        path = (
-            self.models_dir / model_cache_key / data_cache_key / "operative_config.gin"
-        )
-        with open(path, "w") as fh:
-            fh.write(gin.operative_config_str())
+        path = self.models_dir / model_cache_key / data_cache_key
+        self.dump_gin_config(path)
 
     # --- registries ------------------------------------------------------
     def update_registries(self) -> None:
