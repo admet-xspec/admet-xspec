@@ -21,11 +21,6 @@ class ProcessingPipeline:
     """
     Orchestrates dataset loading, splitting, optional similarity filtering,
     visualization, training and evaluation.
-
-    The design aims for:
-    - Small, focused helper methods
-    - Clear validation of configuration errors early
-    - Minimal duplication between automatic and manual split flows
     """
 
     def __init__(
@@ -42,23 +37,23 @@ class ProcessingPipeline:
         do_refit_final_model: bool,
         # Core components
         data_interface: DataInterface,
-        predictor: Optional[PredictorBase] = None,
-        featurizer: Optional[FeaturizerBase] = None,
-        reducer: Optional[ReducerBase] = None,
-        splitter: Optional[DataSplitterBase] = None,
-        sim_filter: Optional[SimilarityFilterBase] = None,
+        predictor: PredictorBase | None = None,
+        featurizer: FeaturizerBase | None = None,
+        reducer: ReducerBase | None = None,
+        splitter: DataSplitterBase | None = None,
+        sim_filter: SimilarityFilterBase | None = None,
         # Dataset configuration
-        datasets: Optional[List[str]] = None,
-        manual_train_splits: Optional[List[str]] = None,
-        manual_test_splits: Optional[List[str]] = None,
-        test_origin_dataset: Optional[str] = None,
+        datasets: List[str] | None = None,
+        manual_train_splits: List[str] | None = None,
+        manual_test_splits: List[str] | None = None,
+        test_origin_dataset: str | None = None,
         # Other
-        task_setting: str = "regression",
+        task_setting: str = "regression",  # "regression" or "binary_classification"
         smiles_col: str = "smiles",
         source_col: str = "source",
         target_col: str = "y",
-        logfile: Optional[str] = None,
-        override_cache: bool = False
+        logfile: str | None = None,
+        override_cache: bool = False,
     ):
         # Execution flags
         self.do_load_datasets = do_load_datasets
@@ -190,16 +185,14 @@ class ProcessingPipeline:
         augmentation_names = [n for n in self.datasets if n != self.test_origin_dataset]
         augmentation_dfs = self._load_datasets(augmentation_names)
         logging.info(
-            "Loaded %d augmentation datasets: %s",
-            len(augmentation_dfs),
-            augmentation_names,
+            f"Loaded {len(augmentation_dfs)} augmentation datasets: {augmentation_names}"
         )
 
         origin_df = None
         if self.test_origin_dataset:
             origin_list = self._load_datasets([self.test_origin_dataset])
             origin_df = origin_list[0] if origin_list else self._empty_dataframe()
-            logging.info("Loaded split-origin dataset: %s", self.test_origin_dataset)
+            logging.info(f"Loaded split-origin dataset: {self.test_origin_dataset}")
 
         return augmentation_dfs, origin_df
 
@@ -249,7 +242,7 @@ class ProcessingPipeline:
         timestamp = datetime.now().strftime("%d_%H_%M_%S")
         save_path = self.data_interface.save_visualization(f"{timestamp}_{suffix}", img)
         img.save(save_path)
-        logging.info("Saved visualization to: %s", save_path)
+        logging.info(f"Saved visualization to: {save_path}")
 
     # --------------------- Splitting logic --------------------- #
 
@@ -263,10 +256,12 @@ class ProcessingPipeline:
         """
         if self.datasets:
             # Check for cached automatic splits and load if available
-            if self._check_if_already_splitted(self.split_key) and not self.override_cache:
+            if (
+                self._check_if_already_splitted(self.split_key)
+                and not self.override_cache
+            ):
                 logging.info(
-                    "Train/test split with key %s already exists; loading from cache",
-                    self.split_key,
+                    f"Train/test split with key {self.split_key} already exists; loading from cache"
                 )
                 train_friendly_name, test_friendly_name = (
                     self.data_interface.get_split_friendly_names(self.split_key)
@@ -290,15 +285,13 @@ class ProcessingPipeline:
 
         split_train_df, split_test_df = self._split_dataset(origin_df)
         logging.info(
-            "Split origin into train=%d, test=%d",
-            len(split_train_df),
-            len(split_test_df),
+            f"Split origin into train={len(split_train_df)}, test={len(split_test_df)}"
         )
 
         augmentation_df = self._aggregate_dataframes(
             augmentation_dfs, empty_if_none=True
         )
-        logging.info("Aggregated %d augmentation samples", len(augmentation_df))
+        logging.info(f"Aggregated {len(augmentation_df)} augmentation samples")
 
         if self.sim_filter:
             combined_pre = pd.concat(
@@ -313,15 +306,13 @@ class ProcessingPipeline:
                 if src == self.test_origin_dataset:
                     continue  # Skip origin dataset
                 post = post_counts.get(src, 0)
-                logging.info("Source '%s': %d -> %d after filtering", src, pre, post)
-            logging.info(
-                "After filtering: train=%d, test=%d", len(train_df), len(test_df)
-            )
+                logging.info(f"Source {src}: {pre} -> {post} samples after filtering")
+            logging.info(f"After filtering: train={len(train_df)}, test={len(test_df)}")
             return train_df, test_df
 
         # No filtering: concatenate augmentation with split train
         train_df = pd.concat([split_train_df, augmentation_df], ignore_index=True)
-        logging.info("No filtering applied. Combined train=%d", len(train_df))
+        logging.info(f"No filtering applied. Combined train={len(train_df)}")
         return train_df, split_test_df
 
     def _get_cached_splits(
@@ -329,16 +320,20 @@ class ProcessingPipeline:
     ) -> Tuple[pd.DataFrame, pd.DataFrame]:
         """Load and aggregate DataFrames listed in manual split lists."""
         train_dfs = (
-            self._load_split_datasets(train_fiendly_names) if train_fiendly_names else []
+            self._load_split_datasets(train_fiendly_names)
+            if train_fiendly_names
+            else []
         )
         test_dfs = (
-            self._load_split_datasets(test_firendly_names) if test_firendly_names else []
+            self._load_split_datasets(test_firendly_names)
+            if test_firendly_names
+            else []
         )
 
         train = self._aggregate_dataframes(train_dfs, empty_if_none=True)
         test = self._aggregate_dataframes(test_dfs, empty_if_none=True)
 
-        logging.info("Caches split loaded: train=%d, test=%d", len(train), len(test))
+        logging.info(f"Cached split loaded: train={len(train)}, test={len(test)}")
         return train, test
 
     def _save_splits(self, train_df: pd.DataFrame, test_df: pd.DataFrame) -> None:
@@ -355,7 +350,7 @@ class ProcessingPipeline:
             split_friendly_name=friendly,
             classification_or_regression=self.task_setting,
         )
-        logging.info("Saved split with cache key: %s", self.split_key)
+        logging.info(f"Saved split with cache key: {self.split_key}")
 
     def _check_if_already_splitted(self, split_key: str) -> bool:
         """Check if a train/test split with the given key already exists."""
@@ -432,28 +427,25 @@ class ProcessingPipeline:
         """Attempt to update back-end registries; log exceptions rather than failing the whole run."""
         try:
             self.data_interface.update_registries()
-            logging.info("Successfully updated data registries")
         except Exception as exc:
-            logging.exception("Failed to update registries: %s", exc)
+            logging.exception(f"Failed to update registries: {exc}")
 
     def _log_pipeline_start(self) -> None:
         """Log initial pipeline configuration for easy debugging."""
         logging.info(datetime.now().strftime("%Y-%m-%d-%H-%M%-S"))
         logging.info("# =================== Processing Pipeline ==================== #")
-        logging.info("Starting processing pipeline with datasets: %s", self.datasets)
+        logging.info(f"Starting processing pipeline with datasets: {self.datasets}")
         if self.splitter:
-            logging.info("Using splitter: %s", self.splitter.name)
+            logging.info(f"Splitter: {self.splitter.name}")
         if self.sim_filter:
             logging.info(
-                "Filtering augmented datasets with: %s against %s",
-                self.sim_filter.name,
-                self.sim_filter.against,
+                f"Filtering augmented datasets with: {self.sim_filter.name} against {self.sim_filter.against}"
             )
         if self.featurizer:
-            logging.info("Using featurizer: %s", self.featurizer.name)
+            logging.info(f"Using featurizer: {self.featurizer.name}")
         if self.predictor:
-            logging.info("Using predictor: %s", self.predictor.name)
-        logging.info("Task setting: %s", self.task_setting)
+            logging.info(f"Using predictor: {self.predictor.name}")
+        logging.info(f"Task setting: {self.task_setting}")
 
     # --------------------- Identification / caching --------------------- #
 
@@ -486,12 +478,11 @@ class ProcessingPipeline:
             model_key, test_origin_split_key
         )
         logging.warning(
-            "Loaded hyperparameters optimized previously on %s",
-            self.test_origin_dataset,
+            f"Loaded hyperparameters optimized previously on {self.test_origin_dataset}"
         )
-        logging.warning("Optimized hyperparameters: %s", self.optimized_hyperparameters)
+        logging.warning(f"Optimized hyperparameters: {self.optimized_hyperparameters}")
         logging.warning(
-            "This configuration will override hyperparameters provided in the predictor config file."
+            f"This configuration will override hyperparameters provided in the predictor config file."
         )
         # Inject loaded hyperparameters into predictor
         self.predictor.set_hyperparameters(self.optimized_hyperparameters)
@@ -529,9 +520,11 @@ class ProcessingPipeline:
             "Similarity Filter": self.sim_filter.name if self.sim_filter else "None",
             "Featurizer": self.featurizer.name if self.featurizer else "None",
             "Predictor": self.predictor.name,
-            "Optimized Hyperparameters": optimize
+            "Optimized Hyperparameters": optimize,
         }
-        self.data_interface.save_model_metadata(metadata_dict, self.predictor_key, self.split_key)
+        self.data_interface.save_model_metadata(
+            metadata_dict, self.predictor_key, self.split_key
+        )
 
     def _evaluate(self, test_df: pd.DataFrame) -> None:
         """Evaluate trained predictor, log metrics and persist them."""
@@ -539,7 +532,7 @@ class ProcessingPipeline:
         X_test = test_df[self.smiles_col].tolist()
         y_test = test_df[self.target_col].tolist()
         metrics = self.predictor.evaluate(X_test, y_test)
-        logging.info("Evaluation metrics: %s", metrics)
+        logging.info(f"Evaluation metrics: {metrics}")
         logging.info("Metrics (markdown):")
         log_markdown_table(metrics)
         self.data_interface.save_metrics(metrics, self.predictor_key, self.split_key)
@@ -557,8 +550,9 @@ class ProcessingPipeline:
 
     def _dump_training_info(self) -> None:
         self.data_interface.dump_training_logs(self.predictor_key, self.split_key)
-        self.data_interface.dump_gin_config_to_model_dir(self.predictor_key, self.split_key)
-        self.data_interface
+        self.data_interface.dump_gin_config_to_model_dir(
+            self.predictor_key, self.split_key
+        )
 
     # --------------------- Configuration validation --------------------- #
 

@@ -10,10 +10,12 @@ from rdkit.DataStructs import ExplicitBitVect
 
 from src.data.featurizer import FeaturizerBase, EcfpFeaturizer
 
+
 def load_multiple_datasets(
     dataset_paths: list[Path],
 ) -> list[pd.DataFrame]:
     return [pd.read_csv(ds_path) for ds_path in dataset_paths]
+
 
 def check_dataset_is_raw_chembl(dataset_path: Path) -> bool:
     with open(dataset_path, "r") as f:
@@ -22,11 +24,13 @@ def check_dataset_is_raw_chembl(dataset_path: Path) -> bool:
             return True
     return False
 
+
 def get_label_counts(df: pd.DataFrame, column_name="source") -> dict:
     source_count = {}
     for name in df[column_name].unique():
         source_count[name] = len(df[df[column_name] == name])
     return source_count
+
 
 class TanimotoCalculator:
     """Efficiently calculate Tanimoto distance between a query molecule and a set of molecules.
@@ -47,7 +51,8 @@ class TanimotoCalculator:
         """
         if featurizer is None:
             logging.warning(
-                "No featurizer object provided to the constructor of TanimotoCalculator, defaulting to 2048-bit ECFP4.")
+                "No featurizer object provided to the constructor of TanimotoCalculator, defaulting to 2048-bit ECFP4."
+            )
             self.featurizer = EcfpFeaturizer(n_bits=2048, radius=2)
         else:
             self.featurizer = featurizer

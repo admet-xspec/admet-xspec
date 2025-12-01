@@ -22,7 +22,6 @@ class DataInterface:
     """
 
     # TODO: add support for multi-class classification datasets
-    # TODO: handle model saving/loading here?
 
     possible_smiles_cols = ["SMILES", "Smiles", "smiles", "molecule"]
     possible_label_cols = ["LABEL", "Label", "label", "Y", "y", "Standard Value"]
@@ -44,7 +43,9 @@ class DataInterface:
         self.registry_filename = registry_filename
         self.taks_setting: Optional[str] = None  # must be set externally before use
         self.logfile: Optional[Path] = None  # must be set externally before use
-        self.override_cache = False
+        self.override_cache = (
+            False  # Will override cached prepared datasets and splits if True
+        )
 
         # Those may not need to be configurable
         self.splits_dir = self.cache_dir / "splits"
@@ -221,16 +222,18 @@ class DataInterface:
                     f"Dataset has {len(num_unique_labels.keys())} unique labels. The labels are assumed to be continuous and will be converted to binary classes."
                 )
                 prepared = self._assign_binary_classes_based_on_continuous_labels(
-                    prepared, dataset_dir_path, is_chembl=self._parse_is_chembl(dataset_dir_path)
+                    prepared,
+                    dataset_dir_path,
+                    is_chembl=self._parse_is_chembl(dataset_dir_path),
                 )
             else:
-                logging.info(
-                    f"Binary labels detected: {num_unique_labels.keys()}."
-                )
+                logging.info(f"Binary labels detected: {num_unique_labels.keys()}.")
                 # ensure labels are 0 and 1
                 unique_labels = sorted(num_unique_labels.keys())
                 if unique_labels != [0, 1]:
-                    logging.warning("The binary labels are not 0 and 1; remapping to 0 and 1.")
+                    logging.warning(
+                        "The binary labels are not 0 and 1; remapping to 0 and 1."
+                    )
                     mapping = {old: new for new, old in enumerate(unique_labels)}
                     prepared["y"] = prepared["y"].map(mapping)
         elif self.task_setting == "multi_class_classification":
@@ -243,22 +246,25 @@ class DataInterface:
             )
         # Drop rows with NaN labels after all transformations
         pre = len(prepared)
-        prepared = prepared.dropna(subset=['smiles', 'y']).reset_index(drop=True)
+        prepared = prepared.dropna(subset=["smiles", "y"]).reset_index(drop=True)
         if len(prepared) != pre:
-            logging.warning(f"After all transformations, dropped additional {pre - len(prepared)} rows with NaN values in 'smiles' or 'y' columns.")
+            logging.warning(
+                f"After all transformations, dropped additional {pre - len(prepared)} rows with NaN values in 'smiles' or 'y' columns."
+            )
         logging.info(f"Prepared dataset size: {len(prepared)}")
         self._save_prepared_df(prepared, dataset_dir_path)
 
     def _load_prepared_dataset(self, dataset_dir_path: Path) -> pd.DataFrame:
         df = pd.read_csv(dataset_dir_path / self.prepared_filename)
         pre_nan_len = len(df)
-        df = df.dropna(subset=['smiles', 'y']).reset_index(drop=True)
+        df = df.dropna(subset=["smiles", "y"]).reset_index(drop=True)
         if len(df) != pre_nan_len:
-            logging.warning(f"Unexpected behaviour: dropped {pre_nan_len - len(df)} rows with NaN labels when loading prepared dataset. Check data preparation step.")
+            logging.warning(
+                f"Unexpected behaviour: dropped {pre_nan_len - len(df)} rows with NaN labels when loading prepared dataset. Check data preparation step."
+            )
         return df
 
-    def _load_split_component(
-        self, split_dir_path: Path) -> pd.DataFrame:
+    def _load_split_component(self, split_dir_path: Path) -> pd.DataFrame:
         return pd.read_csv(split_dir_path / self.split_datafile_name)
 
     def set_task_setting(self, task_setting: str) -> None:
@@ -324,13 +330,18 @@ class DataInterface:
         return df_to_prepare
 
     # --- public dataset getters ------------------------------------------
-    def get_by_friendly_name(self, friendly_name: str, is_in_splits = False) -> pd.DataFrame:
+    def get_by_friendly_name(
+        self, friendly_name: str, is_in_splits=False
+    ) -> pd.DataFrame:
         if is_in_splits:
             dataset_dir_path = self._find_split_dir(friendly_name)
             dataset = self._load_split_component(dataset_dir_path)
         else:
             dataset_dir_path = self._find_dataset_dir(friendly_name)
-            if not self._check_prepared_dataset_exists(dataset_dir_path) or self.override_cache:
+            if (
+                not self._check_prepared_dataset_exists(dataset_dir_path)
+                or self.override_cache
+            ):
                 self._generate_prepared_dataset(dataset_dir_path)
             logging.debug(f"Loading prepared dataset `{friendly_name}`")
             dataset = self._load_prepared_dataset(dataset_dir_path)
@@ -452,7 +463,12 @@ class DataInterface:
         model_cache_key: str,
         data_cache_key: str,
     ) -> None:
-        path = self.models_dir / model_cache_key / data_cache_key / self.model_metadata_filename
+        path = (
+            self.models_dir
+            / model_cache_key
+            / data_cache_key
+            / self.model_metadata_filename
+        )
         Path(path).parent.mkdir(parents=True, exist_ok=True)
         with open(path, "w") as fh:
             yaml.dump(metadata, fh)
@@ -511,8 +527,12 @@ class DataInterface:
         path = self.models_dir / model_cache_key / data_cache_key / "training.log"
         self.dump_logs(path)
 
-    def dump_gin_config_to_model_dir(self, model_cache_key: str, data_cache_key: str) -> None:
-        path = self.models_dir / model_cache_key / data_cache_key / "operative_config.gin"
+    def dump_gin_config_to_model_dir(
+        self, model_cache_key: str, data_cache_key: str
+    ) -> None:
+        path = (
+            self.models_dir / model_cache_key / data_cache_key / "operative_config.gin"
+        )
         with open(path, "w") as fh:
             fh.write(gin.operative_config_str())
 
@@ -530,7 +550,6 @@ class DataInterface:
         with open(self.dataset_dir / self.registry_filename, "w") as fh:
             for n in names:
                 fh.write(f"{n}\n")
-        logging.debug("Updated datasets registry.")
 
     def update_splits_registry(self) -> None:
         Split = namedtuple("Split", ["friendly_name", "timestamp"])
@@ -550,7 +569,6 @@ class DataInterface:
         with open(self.splits_dir / self.registry_filename, "w") as fh:
             for s in splits:
                 fh.write(f"{s.timestamp} {s.friendly_name}\n")
-        logging.debug("Updated splits registry.")
 
     # --- classification helpers -----------------------------------------
     def _parse_classification_threshold(self, dataset_dir_path: Path) -> float:

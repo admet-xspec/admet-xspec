@@ -4,6 +4,7 @@ import numpy as np
 
 from src.data.featurizer import FeaturizerBase
 
+
 class PredictorBase(abc.ABC):
     def __init__(self, random_state: int = 42):
         self.model = self._init_model()
@@ -68,7 +69,9 @@ class PredictorBase(abc.ABC):
 
     def set_featurizer(self, featurizer: FeaturizerBase):
         """Inject featurizer into the model."""
-        assert isinstance(featurizer, FeaturizerBase), "Featurizer must be an instance of FeaturizerBase"
+        assert isinstance(
+            featurizer, FeaturizerBase
+        ), "Featurizer must be an instance of FeaturizerBase"
         self.featurizer = featurizer
 
     def get_cache_key(self) -> str:
@@ -78,5 +81,7 @@ class PredictorBase(abc.ABC):
         - Featurizer name and its parameters (if any)
         Does not include model hyperparameters.
         """
-        feturizer_key = self.featurizer.get_cache_key() if self.featurizer else 'nofeaturizer'
+        feturizer_key = (
+            self.featurizer.get_cache_key() if self.featurizer else "nofeaturizer"
+        )
         return f"{self.name}_{feturizer_key}"
