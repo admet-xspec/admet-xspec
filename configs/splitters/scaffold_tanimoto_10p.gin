@@ -1,8 +1,0 @@
-include 'configs/splitters/filters/tanimoto_10p.gin'
-
-ScaffoldSplitter.test_size = 0.2
-ScaffoldSplitter.random_state = 42
-ScaffoldSplitter.train_filter = @filter/gin.singleton()
-
-splitter/gin.singleton.constructor = @ScaffoldSplitter
-splitter = @splitter/gin.singleton()

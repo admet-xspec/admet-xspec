@@ -1,7 +1,0 @@
-include 'configs/featurizers/ecfp.gin'
-
-filter/gin.singleton.constructor = @TanimotoFilter
-filter = @filter/gin.singleton()
-
-TanimotoFilter.featurizer = @featurizer/gin.singleton()
-TanimotoFilter.min_distance_to_test_post_filtering = 0.1
