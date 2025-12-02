@@ -220,3 +220,10 @@ def detect_csv_delimiter(path: str | Path) -> str:
     sniffer = csv.Sniffer()
     dialect = sniffer.sniff(sample)
     return dialect.delimiter
+
+
+def read_logfile(log_path) -> str | None:
+    if Path(log_path).exists():
+        with open(log_path, "r") as f:
+            return f.read()
+    return None

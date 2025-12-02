@@ -1,0 +1,15 @@
+friendly_name: "AChE_rat_IC50"
+raw_or_derived: "raw"
+category: "AChE_IC50"
+is_chembl: true
+task_setting: "regression"
+filter_criteria:
+    Standard Units:
+      - "nM"
+    Standard Relation:
+      - "'='"
+    Standard Type:
+      - "IC50"
+label_transformations:
+  - "log10"
+  - "negate"

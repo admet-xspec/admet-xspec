@@ -1,5 +1,5 @@
 DataInterface.dataset_dir = 'data/datasets'
-DataInterface.splits_dir = 'data/splits'
+DataInterface.cache_dir = 'data/cache'
 DataInterface.visualizations_dir = 'data/visualizations'
 DataInterface.data_config_filename = 'params.yaml'
 DataInterface.prepared_filename = 'prepared_data.csv'

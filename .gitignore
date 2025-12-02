@@ -12,6 +12,6 @@
 **/logs/*
 .vscode
 /data/splits
-/data/datasets/processing_logs
 /data/datasets/registry.txt
 /data/splits/registry.txt
+*prepared_data.csv

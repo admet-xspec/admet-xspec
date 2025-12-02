@@ -1,0 +1,15 @@
+friendly_name: "MAOA_rat_IC50"
+raw_or_derived: "raw"
+category: "MAOA_IC50"
+task_setting: "regression"
+is_chembl: true
+filter_criteria:
+    Standard Units:
+      - "nM"
+    Standard Relation:
+      - "'='"
+    Standard Type:
+      - "IC50"
+label_transformations:
+  - "log10"
+  - "negate"

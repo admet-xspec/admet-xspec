@@ -6,8 +6,7 @@ import numpy as np
 import abc
 import gin
 import logging
-
-from src.data.filter import FilterBase
+import hashlib
 
 
 class DataSplitterBase(abc.ABC):
@@ -15,24 +14,9 @@ class DataSplitterBase(abc.ABC):
     Abstract base class for data splitters.
     """
 
-    def __init__(self, test_size=0.2, random_state=42, train_filter: FilterBase = None):
+    def __init__(self, test_size=0.2, random_state=42):
         self.test_size = test_size
         self.random_state = random_state
-        self.train_filter = train_filter
-
-    def get_filter(self):
-        return self.train_filter
-
-    def filter(
-        self, to_filter_df: pd.DataFrame, filter_against_df: pd.DataFrame
-    ) -> pd.DataFrame:
-        """
-        Filter one dataset using another dataset, both passed to the filter object
-        """
-        if self.train_filter:
-            return self.train_filter.get_filtered_df(to_filter_df, filter_against_df)
-        else:
-            return to_filter_df
 
     @abc.abstractmethod
     def split(self, X: pd.Series, y: pd.Series):
@@ -71,9 +55,12 @@ class DataSplitterBase(abc.ABC):
 
     def get_cache_key(self):
         """
-        Generate a 5-character cache key based on the splitter's parameters.
+        Generate a 5-character cache key.
         """
-        return f"{self.name}_{abs(hash(frozenset(self.get_hashable_params_values()))) % (10 ** 5):05d}"
+        params_values = self.get_hashable_params_values()
+        params_values = str(params_values).encode("utf-8")
+        hash_string = hashlib.md5(params_values).hexdigest()
+        return f"{self.name}_{hash_string[:5]}"
 
 
 @gin.configurable
@@ -87,12 +74,9 @@ class RandomSplitter(DataSplitterBase):
         self,
         test_size=0.2,
         random_state=42,
-        train_filter: FilterBase = None,
         stratify=None,
     ):
-        super().__init__(
-            test_size=test_size, random_state=random_state, train_filter=train_filter
-        )
+        super().__init__(test_size=test_size, random_state=random_state)
         self.stratify = stratify
 
     @property
@@ -134,10 +118,8 @@ class ScaffoldSplitter(DataSplitterBase):
     providing a more challenging and realistic task for model evaluation.
     """
 
-    def __init__(self, test_size=0.2, random_state=42, train_filter: FilterBase = None):
-        super().__init__(
-            test_size=test_size, random_state=random_state, train_filter=train_filter
-        )
+    def __init__(self, test_size=0.2, random_state=42):
+        super().__init__(test_size=test_size, random_state=random_state)
 
     @property
     def name(self):

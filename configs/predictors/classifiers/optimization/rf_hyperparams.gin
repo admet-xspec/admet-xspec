@@ -8,10 +8,10 @@
 #   If optimize_hyperparameters is set to True, the training script will first optimize the values of
 #   hyperparameters using random search - CV strategy
 
-    RfClassifier.optimization_iterations = 200    # maximum times the script is allowed to draw and
+    RfClassifier.optimization_iterations = 100    # maximum times the script is allowed to draw and
                                                         # evaluate a new set of hyperparameter values
 
-    RfClassifier.n_jobs = 20                      # number of CPUs to use
+    RfClassifier.n_jobs = -1                      # number of CPUs to use (-1 for all available)
     RfClassifier.n_folds = 5                     # number of cross-validation folds
 
 #   Dictionary of distributions to sample hyperparameter values from. To each of the models' hyperparameters
