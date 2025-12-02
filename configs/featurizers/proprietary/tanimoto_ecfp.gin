@@ -1,0 +1,6 @@
+EcfpFeaturizer.radius = 2
+EcfpFeaturizer.n_bits = 2048
+EcfpFeaturizer.count = False
+
+tanimoto_featurizer/gin.singleton.constructor = @EcfpFeaturizer
+tanimoto_featurizer = @featurizer/gin.singleton()

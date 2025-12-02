@@ -1,75 +1,78 @@
 import abc
-from rdkit.Chem.rdFingerprintGenerator import GetMorganGenerator
-from rdkit import Chem
-import pandas as pd
-from typing import List
 import logging
-import numpy as np
+from typing import List, Hashable
+import hashlib
+
 import gin
+import numpy as np
+import pandas as pd
+from rdkit import Chem
 from rdkit.Chem import Descriptors
+from rdkit.Chem.rdFingerprintGenerator import GetMorganGenerator
 from sklearn.preprocessing import StandardScaler
 
 
 class FeaturizerBase(abc.ABC):
-    def __init__(self):
-        pass
+    """Base class for molecular featurizers."""
 
     @abc.abstractmethod
     def featurize(self, smiles_list: List[str]) -> np.ndarray:
-        """
-        Featurize the given SMILES string and return a numpy array of descriptors.
-        """
+        """Convert SMILES strings to numerical feature arrays."""
         pass
 
     @property
     @abc.abstractmethod
     def feature_name(self) -> str:
+        """Column name for storing features."""
         pass
 
     @property
     @abc.abstractmethod
     def name(self) -> str:
+        """Human-readable featurizer name."""
         pass
 
-    # TODO: make abstract, dunno what the rest should implement yet
-    def feature_to_str(self, feature) -> str:
+    @abc.abstractmethod
+    def get_hashable_params_values(self) -> List[Hashable]:
+        """Return parameters for hashing/caching purposes."""
         pass
 
-    def str_to_feature(self, string: str):
-        pass
+    def get_cache_key(self):
+        """
+        Generate a 5-character cache key.
+        """
+        params_values = self.get_hashable_params_values()
+        params_values = str(params_values).encode("utf-8")
+        hash_string = hashlib.md5(params_values).hexdigest()
+        return f"{self.name}_{hash_string[:5]}"
 
 
 @gin.configurable
 class EcfpFeaturizer(FeaturizerBase):
+    """Extended Connectivity Fingerprint (Morgan/ECFP) featurizer."""
+
     def __init__(self, radius: int = 2, n_bits: int = 2048, count: bool = False):
-        super().__init__()
         self.radius = radius
         self.n_bits = n_bits
         self.count = count
         self.generator = GetMorganGenerator(radius=radius, fpSize=n_bits)
 
-    def featurize(
-        self,
-        smiles_list: List[str],
-    ) -> np.ndarray:
-        """
-        Featurize the given SMILES string
-        """
+    def featurize(self, smiles_list: List[str]) -> np.ndarray:
+        """Generate ECFP fingerprints for given SMILES."""
         mols = [Chem.MolFromSmiles(smi) for smi in smiles_list]
-        for i, mol in enumerate(mols):
-            if not mol:
-                logging.info(f"Failed to featurize {i}: {smiles_list[i]}")
 
-        # if any(mol is None for mol in mols):
-        #     raise ValueError(
-        #         "One or more SMILES strings could not be converted to RDKit mol object"
-        #     )
+        # Log failed conversions
+        for i, (mol, smi) in enumerate(zip(mols, smiles_list)):
+            if mol is None:
+                logging.debug(f"Failed to convert SMILES at index {i}: {smi}")
+
+        # Generate fingerprints
         if self.count:
-            fp_list = [self.generator.GetCountFingerprintAsNumPy(mol) for mol in mols]
+            fps = [self.generator.GetCountFingerprintAsNumPy(mol) for mol in mols]
         else:
-            fp_list = [self.generator.GetFingerprintAsNumPy(mol) for mol in mols]
+            fps = [self.generator.GetFingerprintAsNumPy(mol) for mol in mols]
 
-        return np.stack(fp_list)
+        return np.stack(fps)
 
     @property
     def feature_name(self) -> str:
@@ -79,48 +82,67 @@ class EcfpFeaturizer(FeaturizerBase):
     def name(self) -> str:
         return "ecfp_featurizer"
 
-    def feature_to_str(self, feature) -> str:
-        inner = feature[0]
-        return "".join([str(num) for num in inner])
-
-    def str_to_feature(self, string: str):
-        return np.array([[int(bit) for bit in string]])
+    def get_hashable_params_values(self) -> List[Hashable]:
+        return [self.radius, self.n_bits, self.count]
 
     def __getstate__(self):
+        """Pickle support: exclude non-serializable generator."""
         state = self.__dict__.copy()
-        # Don't pickle the generator
         del state["generator"]
         return state
 
     def __setstate__(self, state):
+        """Pickle support: reconstruct generator after unpickling."""
         self.__dict__.update(state)
         self.generator = GetMorganGenerator(radius=self.radius, fpSize=self.n_bits)
 
 
 @gin.configurable
 class PropertyFeaturizer(FeaturizerBase):
+    """RDKit molecular property descriptor featurizer with normalization."""
+
     def __init__(self):
-        super().__init__()
-        # Initialize a StandardScaler to normalize the descriptors
         self.scaler = StandardScaler()
-        self.scaler_fitted = False
+        self.is_fitted = False
 
     def featurize(self, smiles_list: List[str]) -> np.ndarray:
+        """Generate normalized molecular descriptors."""
         mols = [Chem.MolFromSmiles(smi) for smi in smiles_list]
-        descs = [self.get_descriptors(mol, missing=np.nan) for mol in mols]
-        # Convert a list of dicts to DataFrame
-        desc_df = pd.DataFrame(descs)
-        # Fill NaN values with 0
-        desc_df.fillna(0, inplace=True)
-        # Convert DataFrame to a numpy array
-        descs = desc_df.to_numpy()
-        # Normalize the descriptors
-        if not self.scaler_fitted:
-            self.scaler.fit(descs)
-            self.scaler_fitted = True
-        descs = self.scaler.transform(descs)
 
-        return descs
+        # Compute descriptors for each molecule
+        descriptor_dicts = [self._compute_descriptors(mol) for mol in mols]
+
+        # Convert to DataFrame and handle missing values
+        desc_array = pd.DataFrame(descriptor_dicts).fillna(0).to_numpy()
+
+        # Fit scaler on first call, then transform
+        if not self.is_fitted:
+            self.scaler.fit(desc_array)
+            self.is_fitted = True
+
+        desc_array = self.scaler.transform(desc_array)
+        # Check for nans and infs and replace them with zeros
+        desc_array = np.array(desc_array, dtype=np.float32)
+        if np.isnan(desc_array).sum() or np.isinf(desc_array).sum():
+            logging.warning(
+                f"PropertyFeaturizer: Found {np.isnan(desc_array).sum()} NaNs and "
+                f"{np.isinf(desc_array).sum()} infinite values in descriptors. "
+                "Replacing with zeros."
+            )
+            desc_array = np.nan_to_num(desc_array, nan=0.0, posinf=0.0, neginf=0.0)
+
+        return np.array(desc_array, dtype=np.float32)
+
+    @staticmethod
+    def _compute_descriptors(mol) -> dict:
+        """Compute all RDKit descriptors for a molecule."""
+        descriptors = {}
+        for name, func in Descriptors._descList:
+            try:
+                descriptors[name] = func(mol)
+            except Exception:
+                descriptors[name] = np.nan
+        return descriptors
 
     @property
     def feature_name(self) -> str:
@@ -130,32 +152,23 @@ class PropertyFeaturizer(FeaturizerBase):
     def name(self) -> str:
         return "prop_featurizer"
 
-    @staticmethod
-    def get_descriptors(mol, missing=None):
-        desc_dict = {}
-        for name, fn in Descriptors._descList:
-            try:
-                value = fn(mol)
-            except:
-                value = missing
-            desc_dict[name] = value
-        return desc_dict
+    def get_hashable_params_values(self) -> List[Hashable]:
+        return [self.feature_name]
 
 
 @gin.configurable
 class PropertyEcfpFeaturizer(FeaturizerBase):
+    """Combined property descriptor and ECFP fingerprint featurizer."""
+
     def __init__(self, radius: int = 2, n_bits: int = 2048, count: bool = False):
-        super().__init__()
-        self.ecfp_featurizer = EcfpFeaturizer(radius=radius, n_bits=n_bits, count=count)
-        self.property_featurizer = PropertyFeaturizer()
+        self.ecfp = EcfpFeaturizer(radius=radius, n_bits=n_bits, count=count)
+        self.properties = PropertyFeaturizer()
 
     def featurize(self, smiles_list: List[str]) -> np.ndarray:
-        ecfp_features = self.ecfp_featurizer.featurize(smiles_list)
-        property_features = self.property_featurizer.featurize(smiles_list)
-
-        # Combine features
-        combined_features = np.hstack((ecfp_features, property_features))
-        return combined_features
+        """Generate combined ECFP and property features."""
+        ecfp_features = self.ecfp.featurize(smiles_list)
+        property_features = self.properties.featurize(smiles_list)
+        return np.hstack((ecfp_features, property_features))
 
     @property
     def feature_name(self) -> str:
@@ -164,3 +177,10 @@ class PropertyEcfpFeaturizer(FeaturizerBase):
     @property
     def name(self) -> str:
         return "prop_ecfp_featurizer"
+
+    def get_hashable_params_values(self) -> List[Hashable]:
+        return [
+            self.feature_name,
+            *self.ecfp.get_hashable_params_values(),
+            *self.properties.get_hashable_params_values(),
+        ]

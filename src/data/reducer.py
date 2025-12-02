@@ -44,9 +44,12 @@ class ScikitReducerBase(ReducerBase):
         self,
         n_dims: int = 2,
         params: Dict[str, Any] = None,
+        plot_title: str | None = None,
     ):
         super().__init__(params)
-        self.visualizer = ProjectionVisualizer(n_dims=n_dims, projection_type=self.name)
+        self.visualizer = ProjectionVisualizer(
+            n_dims=n_dims, projection_type=self.name, plot_title=plot_title
+        )
 
     def get_associated_visualizer(self):
         """Return the visualizer object for this reducer."""

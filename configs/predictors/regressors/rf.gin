@@ -1,0 +1,11 @@
+predictor/gin.singleton.constructor = @RfRegressor
+predictor = @predictor/gin.singleton()
+
+RfRegressor.params = {'max_depth': 38,
+     'max_features': 'sqrt',
+     'min_samples_leaf': 1,
+     'min_samples_split': 3,
+     'n_estimators': 860}
+
+# Include hyperparameter optimization config
+include 'configs/predictors/regressors/optimization/rf_hyperparams.gin'

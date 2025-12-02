@@ -1,0 +1,11 @@
+friendly_name: "liver_human_T12"
+raw_or_derived: "raw"
+category: "liver_T12"
+is_chembl: true
+task_setting: "binary_classification"
+filter_criteria:
+    Standard Units:
+      - "hr"
+    Standard Type:
+      - "T1/2"
+threshold: "median"
