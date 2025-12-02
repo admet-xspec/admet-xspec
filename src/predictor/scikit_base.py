@@ -1,13 +1,11 @@
 import logging
 
 import numpy as np
-from src.utils import get_nice_class_name
 from src.predictor.predictor_base import PredictorBase
 from src.data.featurizer import FeaturizerBase
 import sklearn
 from typing import List
 from sklearn.utils.validation import check_array
-import abc
 from src.utils import get_metric_callable
 
 
@@ -18,28 +16,25 @@ class ScikitPredictor(PredictorBase):
 
     def __init__(
         self,
-        params: dict | None = None,
-        optimize_hyperparameters: bool = False,
+        hyperparams: dict | None = None,
         target_metric: str | None = None,
         params_distribution: dict | None = None,
         optimization_iterations: int | None = None,
         n_folds: int | None = None,
         n_jobs: int | None = None,
+        random_state: int = 42,
         **kwargs,
     ):
-        super().__init__()
+        super().__init__(random_state=random_state)
 
-        # Initialize the featurizer
+        # Initialize the featurizer (will be injected later)
         self.featurizer = None
 
         # Set the hyperparameters
-        if not (params is None or optimize_hyperparameters):
+        if hyperparams:
             # Check if params will be recognized by the model
-            self._check_params(self.model, params)
-            self.model.set_params(**params)
-
-        # Params for hyperparameter optimalization with randomized search CV
-        self.optimize = optimize_hyperparameters
+            self._check_params(self.model, hyperparams)
+            self.model.set_params(**hyperparams)
 
         # Set the target metric for optimization and metrics for final evaluation
         self.target_metric = target_metric
@@ -51,42 +46,38 @@ class ScikitPredictor(PredictorBase):
             "params_distribution": params_distribution,
         }
 
-    def inject_featurizer(self, featurizer):
-        """
-        Inject a featurizer into the model
-        :param featurizer: Featurizer object
-        """
-        if not isinstance(featurizer, FeaturizerBase):
-            raise ValueError("Featurizer must be an instance of FeaturizerBase")
-        logging.info(f"Using {get_nice_class_name(featurizer)} for featurization")
-        self.featurizer = featurizer
+    def _featurize(self, smiles_list: List[str]) -> np.ndarray:
+        if self.featurizer is None:
+            raise ValueError("Featurizer is not set. Please inject a featurizer first.")
+        X = self.featurizer.featurize(smiles_list)
+        return np.array(X, dtype=np.float32)
 
     def train(self, smiles_list: List[str], target_list: List[float]):
 
         # Featurize the smiles
-        if self.featurizer is None:
-            raise ValueError("Featurizer is not set. Please inject a featurizer first.")
-        X = self.featurizer.featurize(smiles_list)
-        y = target_list
+        X = self._featurize(smiles_list)
+        y = np.array(target_list, dtype=np.float32)
 
         # Train the model
-        if self.optimize:
-            # Use random search to optimize hyperparameters
-            logging.info(
-                f"Starting {get_nice_class_name(self.model)} hyperparameter optimization"
-            )
-            self.train_optimize(X, y)
-        else:
-            # Use a set of fixed hyperparameters
-            logging.info(
-                f"Training {get_nice_class_name(self.model)} with fixed hyperparameters"
-            )
-            self.model.fit(X, y)
+        logging.info(
+            f"Training {self.model.__class__.__name__} with fixed hyperparameters"
+        )
+        self.model.fit(X, y)
 
-        logging.info(f"Fitting of {get_nice_class_name(self.model)} has converged")
+        logging.info(f"Fitting of {self.model.__class__.__name__} has converged")
 
     def train_optimize(self, smiles_list: List[str], target_list: List[float]):
 
+        # Featurize the smiles
+        X = self._featurize(smiles_list)
+        y = np.array(target_list, dtype=np.float32)
+
+        logging.info(
+            f"Starting {self.model.__class__.__name__} hyperparameter optimization."
+        )
+        logging.info(
+            f"Using {self.hyper_opt['n_iter']} iterations of RandomizedSearchCV strategy with {self.hyper_opt['n_folds']}-fold cross-validation."
+        )
         # Use random search to optimize hyperparameters
         random_search = sklearn.model_selection.RandomizedSearchCV(
             estimator=self.model,
@@ -100,7 +91,7 @@ class ScikitPredictor(PredictorBase):
         )
 
         # Fit the model
-        random_search.fit(smiles_list, target_list)
+        random_search.fit(X, y)
 
         # Save only the best model after refitting to the whole training data
         self.model = random_search.best_estimator_
@@ -134,13 +125,25 @@ class ScikitPredictor(PredictorBase):
             y_pred = self.model.predict(X)
         return y_pred
 
+    def get_hyperparameters(self) -> dict:
+        hyperparams = self.model.get_params()
+        # convert any numpy types to native python types for serialization
+        for key, value in hyperparams.items():
+            if isinstance(value, np.generic):
+                hyperparams[key] = value.item()
+        return hyperparams
+
+    def set_hyperparameters(self, hyperparams: dict):
+        self._check_hyperparams(self.model, hyperparams)
+        self.model.set_params(**hyperparams)
+
     @staticmethod
-    def _check_params(model, params):
+    def _check_hyperparams(model, params):
         model_params = model.get_params()
         for key in params:
             if key not in model_params:
                 raise ValueError(
-                    f"Model {type(model).__name__} does not accept hyperparameter {key}."
+                    f"Model {model.__class__.__name__} does not accept hyperparameter {key}."
                 )
 
 
@@ -168,7 +171,7 @@ class ScikitBinaryClassifier(ScikitPredictor):
     """
 
     def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+        super().__init__(task="classification", *args, **kwargs)
         self.class_threshold = 0.5
         # evaluation metrics for classifier models
         self.evaluation_metrics = ["accuracy", "roc_auc", "f1", "precision", "recall"]

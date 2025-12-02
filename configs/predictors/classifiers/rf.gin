@@ -1,0 +1,14 @@
+predictor/gin.singleton.constructor = @RfClassifier
+predictor = @predictor/gin.singleton()
+
+    RfClassifier.params = {
+        'n_estimators': 500,
+        'criterion': 'gini',
+        'max_depth': 20,
+        'min_samples_split': 3,
+        'min_samples_leaf': 1,
+        'max_features': 'sqrt'
+        }
+
+# Include hyperparameter optimization config
+include 'configs/predictors/classifiers/optimization/rf_hyperparams.gin'

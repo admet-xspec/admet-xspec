@@ -17,6 +17,7 @@ class RfRegressor(ScikitRegressor):
         optimization_iterations: int | None = None,
         n_folds: int | None = None,
         n_jobs: int | None = None,
+        random_state: int = 42,
     ):
         super().__init__(
             params=params,
@@ -27,10 +28,15 @@ class RfRegressor(ScikitRegressor):
             evaluation_metrics=evaluation_metrics,
             n_folds=n_folds,
             n_jobs=n_jobs,
+            random_state=random_state,
         )
 
     def _init_model(self):
         return sklearn.ensemble.RandomForestRegressor()
+
+    @property
+    def name(self) -> str:
+        return "RF_reg"
 
 
 @gin.configurable()
@@ -45,6 +51,7 @@ class RfClassifier(ScikitBinaryClassifier):
         optimization_iterations: int | None = None,
         n_folds: int | None = None,
         n_jobs: int | None = None,
+        random_state: int = 42,
     ):
         super().__init__(
             params=params,
@@ -55,10 +62,15 @@ class RfClassifier(ScikitBinaryClassifier):
             optimization_iterations=optimization_iterations,
             n_folds=n_folds,
             n_jobs=n_jobs,
+            random_state=random_state,
         )
 
     def _init_model(self):
         return sklearn.ensemble.RandomForestClassifier()
+
+    @property
+    def name(self) -> str:
+        return "RF_clf"
 
 
 @gin.configurable()
@@ -73,6 +85,7 @@ class SvmRegressor(ScikitRegressor):
         optimization_iterations: int | None = None,
         n_folds: int | None = None,
         n_jobs: int | None = None,
+        random_state: int = 42,
     ):
         super().__init__(
             params=params,
@@ -83,10 +96,15 @@ class SvmRegressor(ScikitRegressor):
             optimization_iterations=optimization_iterations,
             n_folds=n_folds,
             n_jobs=n_jobs,
+            random_state=random_state,
         )
 
     def _init_model(self):
         return sklearn.svm.SVR()
+
+    @property
+    def name(self) -> str:
+        return "SVM_reg"
 
 
 @gin.configurable()
@@ -101,6 +119,7 @@ class SvmClassifier(ScikitBinaryClassifier):
         optimization_iterations: int | None = None,
         n_folds: int | None = None,
         n_jobs: int | None = None,
+        random_state: int = 42,
     ):
         super().__init__(
             params=params,
@@ -111,10 +130,15 @@ class SvmClassifier(ScikitBinaryClassifier):
             optimization_iterations=optimization_iterations,
             n_folds=n_folds,
             n_jobs=n_jobs,
+            random_state=random_state,
         )
 
     def _init_model(self):
         return sklearn.svm.SVC(probability=True)
+
+    @property
+    def name(self) -> str:
+        return "SVM_clf"
 
 
 @gin.configurable()
@@ -130,6 +154,7 @@ class XGBoostRegressor(ScikitRegressor):
         optimization_iterations: int | None = None,
         n_folds: int | None = None,
         n_jobs: int | None = None,
+        random_state: int = 42,
     ):
         super().__init__(
             params=params,
@@ -140,10 +165,15 @@ class XGBoostRegressor(ScikitRegressor):
             optimization_iterations=optimization_iterations,
             n_folds=n_folds,
             n_jobs=n_jobs,
+            random_state=42,
         )
 
     def _init_model(self):
         return xgb.XGBRegressor()
+
+    @property
+    def name(self) -> str:
+        return "XGB_reg"
 
 
 @gin.configurable()
@@ -159,6 +189,7 @@ class XGBoostClassifier(ScikitBinaryClassifier):
         optimization_iterations: int | None = None,
         n_folds: int | None = None,
         n_jobs: int | None = None,
+        random_state: int = 42,
     ):
         super().__init__(
             params=params,
@@ -169,7 +200,12 @@ class XGBoostClassifier(ScikitBinaryClassifier):
             optimization_iterations=optimization_iterations,
             n_folds=n_folds,
             n_jobs=n_jobs,
+            random_state=random_state,
         )
 
     def _init_model(self):
         return xgb.XGBClassifier()
+
+    @property
+    def name(self) -> str:
+        return "XGB_clf"

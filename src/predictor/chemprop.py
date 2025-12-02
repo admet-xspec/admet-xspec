@@ -51,7 +51,7 @@ class ChempropPredictor(PredictorBase):
         self.n_tries = optimization_iterations
         self.epochs = epochs
         self.use_gpu = use_gpu
-        super(ChempropPredictor, self).__init__()
+        super(ChempropPredictor, self).__init__(task="classification")
 
     def _init_ffn(self, num_layers: int, hidden_dim: int):
         """

@@ -1,0 +1,12 @@
+friendly_name: "MAOA_rat_IC50"
+raw_or_derived: "raw"
+category: "MAOA_IC50"
+is_chembl: true
+task_setting: "binary_classification"
+filter_criteria:
+    Standard Units:
+      - "nM"
+    Standard Type:
+      - "IC50"
+threshold: null
+threshold_source: "MAOA_human_IC50"

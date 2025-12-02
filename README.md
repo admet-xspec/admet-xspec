@@ -1,18 +1,65 @@
 # admet-prediction
 ADMET prediction module for GenProSyn
 
-#### Quick start
+### Quick start
+#### Repo setup
 ```bash
 git clone https://github.com/hubertrybka/admet-prediction.git
 cd ./admet-prediction
 
-conda create -n admet-prediction python=3.11.8
-conda activate admet-prediction
+conda create -n admet python=3.11.8
+conda activate admet
+conda install rdkit seaborn conda-forge::py-xgboost conda-forge::ray-all
 
 pip install -r requirements.txt
+
 pre-commit install
 ```
 
+#### Examples
+##### 1. I want to fit an RF using a ChEMBL dataset I left under `data/datasets/brain/human/uptake`.
+
+- Make sure there is a `params.yaml` file under `data/datasets/brain/human/uptake`. Look to the existing files for
+inspiration.
+- Make sure the `params.yaml` file has the `raw_or_derived` field set to `raw`. When using filters (eg. Tanimoto similarity)
+`derived` datasets will be produced in nested directories within the
+same directory as the raw dataset resides (here: `data/datasets/brain/human/uptake`).
+- Look at how the `configs/examples/train_rf.gin` file is set up.
+- Look at the `configs/processing_plans/train.gin` processing plan. This example uses it.
+
+Execute:
+```bash
+python -m process --cfg configs/examples/train_rf.gin
+```
+##### Result:
+1. You can expect a model ready for inference use in `predict.py` to be created under `models/liver_t12_human_mouse_unique_random_ECFP_RF`.
+2. You can expect the train/test split that this model used to be cached under `data/splits`, along with a saved
+gin operative config, timestamp and automatically generated `friendly_name` in that same directory.
+
+##### 2. I want to train a neural network using multiple splits of data that have been created in `data/splits`.
+Note: You may be wondering how to generate "splits". Follow a similar approach as in Example #1, but use
+the `data/processing_plans/split.gin` plan. If you are looking to aggregate human, mouse and rat data, you **should
+run this 3 times to get the manual splits, and only then do a 4th run with the manual splits specified**.
+
+All of this should become clear in a moment:
+
+- Make sure that the manual splits you are interested in are listed in `data/splits/train_registry.txt` and
+`data/splits/test_registry.txt`. The entries in these registries correspond to an automatically-generated `friendly_name`
+within the `params.yaml` of the split of interest within `data/splits`.
+- Look at how the `configs/examples/train_manual_nn.gin` file is set up.
+- Look at the `configs/processing_plans/train.gin` processing plan. This example uses it.
+
+Execute:
+```bash
+python -m process --cfg configs/examples/train_manual_nn.gin
+```
+##### Result:
+1. You can expect a model ready for inference use in `predict.py` to be created under `models/7e5434b/7e5434b`.
+2. You can expect the gin operative config and timestamp of this models creation to be created under `models/7e5434b`.
+Additionally, the model will appear in the `models/registry.txt` file with a row containing its hash associated with a
+timestamp. This registry will be sorted by recency.
+
+## NOQA: Below this, the README might need updating due to big changes in our codebase
 ### Training
 
 Before working with this repository, please take a look at [gin-config docs](https://github.com/google/gin-config).

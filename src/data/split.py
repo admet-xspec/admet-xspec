@@ -6,6 +6,7 @@ import numpy as np
 import abc
 import gin
 import logging
+import hashlib
 
 
 class DataSplitterBase(abc.ABC):
@@ -24,17 +25,42 @@ class DataSplitterBase(abc.ABC):
         """
         pass
 
-    def get_cache_key(self):
-        """
-        Return a key representing the state of the splitter.
-        """
-        return f"{self.__class__.__name__}_{abs(hash(frozenset([self.test_size, self.random_state])))}"
+    @abc.abstractmethod
+    def get_hashable_params_values(self) -> list:
+        pass
+
+    @property
+    @abc.abstractmethod
+    def name(self):
+        pass
 
     @staticmethod
     def _get_number_of_classes(labels):
         if not isinstance(labels, pd.Series):
             labels = pd.Series(labels)
         return len(labels.unique())
+
+    def get_friendly_name(
+        self,
+        multiple_friendly_names: list[str],
+    ) -> str:
+
+        generated_name_chunks: list[str] = [
+            "_".join([part[:3] for part in name.split("_")[:3]])
+            for name in multiple_friendly_names
+        ]
+        generated_name_chunks.append(self.get_cache_key())
+
+        return "_".join(generated_name_chunks)
+
+    def get_cache_key(self):
+        """
+        Generate a 5-character cache key.
+        """
+        params_values = self.get_hashable_params_values()
+        params_values = str(params_values).encode("utf-8")
+        hash_string = hashlib.md5(params_values).hexdigest()
+        return f"{self.name}_{hash_string[:5]}"
 
 
 @gin.configurable
@@ -44,24 +70,35 @@ class RandomSplitter(DataSplitterBase):
     The split can be stratified based on the target variable if specified.
     """
 
-    def __init__(self, test_size=0.2, random_state=42, stratify=None):
+    def __init__(
+        self,
+        test_size=0.2,
+        random_state=42,
+        stratify=None,
+    ):
         super().__init__(test_size=test_size, random_state=random_state)
         self.stratify = stratify
+
+    @property
+    def name(self):
+        return "random"
+
+    def get_hashable_params_values(self):
+        return [self.test_size, self.random_state, self.stratify]
 
     def split(
         self, X: pd.Series, y: pd.Series
     ) -> tuple[pd.Series, pd.Series, pd.Series, pd.Series]:
 
-        labels_to_stratify = None
         if self.stratify:
-            if self._get_number_of_classes(y) == 2:
-                labels_to_stratify = y
-            else:
+            if self._get_number_of_classes(y) >= 5:
                 logging.warning(
-                    """The data splitter was configured to perform a stratified split, but the labels
-                provided are not binary. The stratify=True argument is being ignored."""
+                    f"Detected {self._get_number_of_classes(y)} unique classes of {len(y)} samples. "
+                    "Make sure you are not stratifying on a continuous target variable!"
                 )
-                labels_to_stratify = None
+            labels_to_stratify = y
+        else:
+            labels_to_stratify = None
 
         X_train, X_test, y_train, y_test = train_test_split(
             X,
@@ -83,6 +120,13 @@ class ScaffoldSplitter(DataSplitterBase):
 
     def __init__(self, test_size=0.2, random_state=42):
         super().__init__(test_size=test_size, random_state=random_state)
+
+    @property
+    def name(self):
+        return "scaffold"
+
+    def get_hashable_params_values(self):
+        return [self.test_size, self.random_state]
 
     def split(
         self, X: pd.Series, y: pd.Series

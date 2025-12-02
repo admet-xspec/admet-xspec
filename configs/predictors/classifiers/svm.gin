@@ -1,0 +1,11 @@
+predictor/gin.singleton.constructor = @SvmClassifier
+predictor = @predictor/gin.singleton()
+
+    SvmClassifier.params = {
+        'C': 3,
+        'kernel': 'rbf',
+        'gamma': 'scale',
+        }
+
+# Include hyperparameter optimization config
+include 'configs/predictors/classifiers/optimization/svm_hyperparams.gin'
