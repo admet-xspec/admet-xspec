@@ -7,6 +7,7 @@ import gin
 import numpy as np
 import pandas as pd
 import pathlib
+import map4
 from rdkit import Chem
 from rdkit.Chem import Descriptors, MACCSkeys
 from rdkit.Chem.rdFingerprintGenerator import GetMorganGenerator
@@ -269,3 +270,48 @@ class PropertyEcfpFeaturizer(FeaturizerBase):
             *self.ecfp.get_hashable_params_values(),
             *self.properties.get_hashable_params_values(),
         ]
+
+
+@gin.configurable
+class Map4Featurizer(FeaturizerBase):
+    """MAP4 fingerprint featurizer."""
+
+    def __init__(
+        self,
+        size: int = 2048,
+        radius: int = 2,
+        include_duplicated_shingles: bool = False,
+    ):
+        super().__init__()
+        self.map4_generator = map4.MAP4(
+            dimensions=size,
+            radius=radius,
+            include_duplicated_shingles=include_duplicated_shingles,
+        )
+
+    def featurize(self, smiles_list: List[str]) -> np.ndarray:
+        """Generate MAP4 fingerprints for given SMILES."""
+
+        mols = [Chem.MolFromSmiles(smi) for smi in smiles_list]
+
+        # Log failed conversions
+        for i, (mol, smi) in enumerate(zip(mols, smiles_list)):
+            if mol is None:
+                logging.debug(f"Failed to convert SMILES at index {i}: {smi}")
+
+        fps_array = self.map4_generator.calculate_many(
+            mols, number_of_threads=2, verbose=False
+        )
+
+        return fps_array
+
+    @property
+    def feature_name(self) -> str:
+        return "fp_map4"
+
+    @property
+    def name(self) -> str:
+        return "map4_featurizer"
+
+    def get_hashable_params_values(self) -> List[Hashable]:
+        return [self.feature_name]
