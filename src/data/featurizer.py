@@ -6,8 +6,9 @@ import hashlib
 import gin
 import numpy as np
 import pandas as pd
+import pathlib
 from rdkit import Chem
-from rdkit.Chem import Descriptors
+from rdkit.Chem import Descriptors, MACCSkeys
 from rdkit.Chem.rdFingerprintGenerator import GetMorganGenerator
 from sklearn.preprocessing import StandardScaler
 
@@ -101,8 +102,8 @@ class EcfpFeaturizer(FeaturizerBase):
 class PropertyFeaturizer(FeaturizerBase):
     """RDKit molecular property descriptor featurizer with normalization."""
 
-    def __init__(self):
-        self.scaler = StandardScaler()
+    def __init__(self, scaler=StandardScaler()):
+        self.scaler = scaler
         self.is_fitted = False
 
     def featurize(self, smiles_list: List[str]) -> np.ndarray:
@@ -157,8 +158,92 @@ class PropertyFeaturizer(FeaturizerBase):
 
 
 @gin.configurable
+class MaccsFeaturizer(FeaturizerBase):
+    """MACCS keys fingerprint featurizer."""
+
+    def featurize(self, smiles_list: List[str]) -> np.ndarray:
+        """Generate MACCS keys fingerprints for given SMILES."""
+        mols = [Chem.MolFromSmiles(smi) for smi in smiles_list]
+
+        # Log failed conversions
+        for i, (mol, smi) in enumerate(zip(mols, smiles_list)):
+            if mol is None:
+                logging.debug(f"Failed to convert SMILES at index {i}: {smi}")
+
+        # Generate MACCS keys fingerprints
+        fps = [MACCSkeys.GenMACCSKeys(mol) for mol in mols]
+        fps_array = np.array([np.array(fp) for fp in fps])
+
+        return fps_array
+
+    @property
+    def feature_name(self) -> str:
+        return "fp_maccs"
+
+    @property
+    def name(self) -> str:
+        return "maccs_featurizer"
+
+    def get_hashable_params_values(self) -> List[Hashable]:
+        return [self.feature_name]
+
+
+@gin.configurable
+class KlekotaRothFeaturizer(FeaturizerBase):
+    """Klekota-Roth fingerprint featurizer."""
+
+    def __init__(self, keys_path: str):
+        super().__init__()
+        self.keys_mols = self._read_krfp_keys(keys_path)
+
+    def featurize(self, smiles_list: List[str]) -> np.ndarray:
+        """Generate Klekota-Roth fingerprints for given SMILES."""
+        mols = [Chem.MolFromSmiles(smi) for smi in smiles_list]
+
+        # Log failed conversions
+        for i, (mol, smi) in enumerate(zip(mols, smiles_list)):
+            if mol is None:
+                logging.debug(f"Failed to convert SMILES at index {i}: {smi}")
+
+        fps = [self._get_krfp_fingerprint(mol) for mol in mols]
+        fps_array = np.array(fps)
+        return fps_array
+
+    @property
+    def feature_name(self) -> str:
+        return "fp_krfp"
+
+    @property
+    def name(self) -> str:
+        return "krfp_featurizer"
+
+    def get_hashable_params_values(self) -> List[Hashable]:
+        return [self.feature_name]
+
+    def _read_krfp_keys(self, keys_path: str) -> List[Chem.Mol]:
+        """Read Klekota-Roth fingerprint keys from a file."""
+        if not pathlib.Path(keys_path).exists():
+            raise FileNotFoundError(f"Klekota-Roth keys file not found at: {keys_path}")
+        klek_keys = [line.strip() for line in open(keys_path)]
+        klek_keys_mols = list(map(Chem.MolFromSmarts, klek_keys))
+        return klek_keys_mols
+
+    def _get_krfp_fingerprint(self, mol: Chem.Mol) -> np.ndarray:
+        """Generate Klekota-Roth fingerprint for a single molecule."""
+        fp_list = []
+        for key in self.keys_mols:
+            if mol.HasSubstructMatch(key):
+                fp_list.append(1)
+            else:
+                fp_list.append(0)
+        return np.array(fp_list)
+
+
+@gin.configurable
 class PropertyEcfpFeaturizer(FeaturizerBase):
     """Combined property descriptor and ECFP fingerprint featurizer."""
+
+    # TODO: Remove this class and implement an union featurizer that can combine any n featurizers
 
     def __init__(self, radius: int = 2, n_bits: int = 2048, count: bool = False):
         self.ecfp = EcfpFeaturizer(radius=radius, n_bits=n_bits, count=count)
