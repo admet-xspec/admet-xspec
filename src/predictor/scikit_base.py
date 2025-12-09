@@ -1,192 +1,133 @@
+import abc
 import logging
+from typing import List, Dict, Optional, Any
 
 import numpy as np
-from src.predictor.predictor_base import PredictorBase
-from src.data.featurizer import FeaturizerBase
-import sklearn
-from typing import List
 from sklearn.utils.validation import check_array
-from src.utils import get_metric_callable
+from sklearn.model_selection import RandomizedSearchCV
+from sklearn.base import BaseEstimator
 
+from src.data.featurizer import FeaturizerBase
 
-class ScikitPredictor(PredictorBase):
+class ScikitPredictorBase(abc.ABC):
     """
-    Common interface for scikit-learn-based regressors and classifiers.
-    """
+    Mixin providing scikit-learn based training, optimization and prediction helpers.
 
+    Intended to be combined with PredictorBase-derived classes:
+      class MyRegressor(ScikitPredictorBase, RegressorBase): ...
+      class MyClassifier(ScikitPredictorBase, BinaryClassifierBase): ...
+    """
     def __init__(
         self,
-        hyperparams: dict | None = None,
-        target_metric: str | None = None,
-        params_distribution: dict | None = None,
-        optimization_iterations: int | None = None,
-        n_folds: int | None = None,
-        n_jobs: int | None = None,
-        random_state: int = 42,
+        params: Optional[Dict[str, Any]] = None,
+        target_metric: Optional[str] = None,
+        params_distribution: Optional[Dict[str, Any]] = None,
+        optimization_iterations: Optional[int] = None,
+        n_folds: Optional[int] = None,
+        n_jobs: Optional[int] = None,
         **kwargs,
     ):
-        super().__init__(random_state=random_state)
-
-        # Initialize the featurizer (will be injected later)
-        self.featurizer = None
-
-        # Set the hyperparameters
-        if hyperparams:
-            # Check if params will be recognized by the model
-            self._check_params(self.model, hyperparams)
-            self.model.set_params(**hyperparams)
-
-        # Set the target metric for optimization and metrics for final evaluation
+        # Let other bases initialize (RegressorBase/BinaryClassifierBase -> PredictorBase)
+        super().__init__(**kwargs)
+        self.featurizer: Optional[FeaturizerBase] = getattr(self, "featurizer", None)
+        self.model: Optional[BaseEstimator] = None
+        self.params: Dict[str, Any] = params or {}
         self.target_metric = target_metric
-
         self.hyper_opt = {
-            "n_iter": optimization_iterations,
-            "n_folds": n_folds,
-            "n_jobs": n_jobs,
+            "n_iter": optimization_iterations or 10,
+            "n_folds": n_folds or 3,
+            "n_jobs": n_jobs or 1,
             "params_distribution": params_distribution,
         }
 
+    @abc.abstractmethod
+    def _init_model(self) -> BaseEstimator:
+        """Return an uninitialized sklearn estimator (subclass must implement)."""
+        ...
+
     def _featurize(self, smiles_list: List[str]) -> np.ndarray:
         if self.featurizer is None:
-            raise ValueError("Featurizer is not set. Please inject a featurizer first.")
+            raise ValueError("Featurizer is not set. Inject a FeaturizerBase before calling this method.")
         X = self.featurizer.featurize(smiles_list)
-        return np.array(X, dtype=np.float32)
+        arr = np.array(X, dtype=np.float32)
+        arr = np.atleast_2d(arr)
+        return arr
 
-    def train(self, smiles_list: List[str], target_list: List[float]):
+    def train(self, smiles_list: List[str], target_list: List[float]) -> None:
+        self.model = self._init_model()
+        if self.params:
+            self.set_hyperparameters(self.params)
 
-        # Featurize the smiles
         X = self._featurize(smiles_list)
         y = np.array(target_list, dtype=np.float32)
 
-        # Train the model
-        logging.info(
-            f"Training {self.model.__class__.__name__} with fixed hyperparameters"
-        )
+        logging.info(f"Training {self.model.__class__.__name__} with hyperparameters: {self.get_hyperparameters()}")
         self.model.fit(X, y)
+        logging.info(f"Training complete for {self.model.__class__.__name__}")
 
-        logging.info(f"Fitting of {self.model.__class__.__name__} has converged")
+    def optimize(self, smiles_list: List[str], target_list: List[float]) -> None:
+        if not self.hyper_opt["params_distribution"]:
+            raise ValueError("params_distribution must be provided to run optimization.")
+        self.model = self._init_model()
 
-    def train_optimize(self, smiles_list: List[str], target_list: List[float]):
-
-        # Featurize the smiles
         X = self._featurize(smiles_list)
         y = np.array(target_list, dtype=np.float32)
 
-        logging.info(
-            f"Starting {self.model.__class__.__name__} hyperparameter optimization."
-        )
-        logging.info(
-            f"Using {self.hyper_opt['n_iter']} iterations of RandomizedSearchCV strategy with {self.hyper_opt['n_folds']}-fold cross-validation."
-        )
-        # Use random search to optimize hyperparameters
-        random_search = sklearn.model_selection.RandomizedSearchCV(
+        logging.info(f"Starting hyperparameter optimization for {self.model.__class__.__name__}")
+        rs = RandomizedSearchCV(
             estimator=self.model,
             param_distributions=self.hyper_opt["params_distribution"],
             n_iter=self.hyper_opt["n_iter"],
             cv=self.hyper_opt["n_folds"],
-            verbose=2,
+            verbose=1,
             n_jobs=self.hyper_opt["n_jobs"],
             refit=True,
             scoring=self.target_metric,
         )
+        rs.fit(X, y)
 
-        # Fit the model
-        random_search.fit(X, y)
-
-        # Save only the best model after refitting to the whole training data
-        self.model = random_search.best_estimator_
-
-        logging.info(
-            f"RandomSearchCV: Fitting converged. Keeping the best model, with params: "
-            f"{random_search.best_params_}"
-        )
+        self.params = rs.best_params_.copy()
+        self.model = rs.best_estimator_
+        logging.info(f"Optimization complete. Best params: {self.params}")
 
     def predict(self, smiles_list: List[str]) -> List[float]:
-        # Featurize the smiles
-        X = self.featurizer.featurize(smiles_list)
-        # Cast to numpy array
-        X = np.array(X, dtype=np.float32)
-        # Check for and log the number of data points with NaN or infinite features
-        if np.isnan(X).any() or np.isinf(X).any():
-            num_nan = np.sum(np.isnan(X))
-            num_inf = np.sum(np.isinf(X))
-            logging.warning(
-                f"Input data contains {num_nan} NaN values and {num_inf} infinite values. "
-                "These will be replaced with 0s."
-            )
-            X = np.nan_to_num(X, nan=0.0, posinf=0.0, neginf=0.0)
-        # Ensure the input is a 2D array with finite values
-        X = check_array(X, ensure_all_finite=True, dtype=np.float32)
-        if hasattr(self.model, "predict_proba"):
-            # If the model has a predict_proba method, return probabilities
-            y_pred = self.model.predict_proba(X)
-            y_pred = np.array([y[1] for y in y_pred])
-        else:
-            y_pred = self.model.predict(X)
-        return y_pred
+        if self.model is None:
+            raise ValueError("Model is not initialized. Call `train` or `optimize` first.")
+        X = self._featurize(smiles_list)
 
-    def get_hyperparameters(self) -> dict:
+        if np.isnan(X).any() or np.isinf(X).any():
+            num_nan = int(np.sum(np.isnan(X)))
+            num_inf = int(np.sum(np.isinf(X)))
+            logging.warning(f"Input contains {num_nan} NaN(s) and {num_inf} infinite(s). Replacing with 0.")
+            X = np.nan_to_num(X, nan=0.0, posinf=0.0, neginf=0.0)
+
+        X = check_array(X, ensure_all_finite=True, dtype=np.float32)
+
+        if hasattr(self.model, "predict_proba"):
+            proba = self.model.predict_proba(X)
+            if proba.ndim == 2 and proba.shape[1] >= 2:
+                preds = proba[:, 1]
+            else:
+                preds = proba.ravel()
+        else:
+            preds = self.model.predict(X)
+        return list(map(float, np.asarray(preds)))
+
+    def get_hyperparameters(self) -> Dict[str, Any]:
+        if self.model is None:
+            return {k: (v.item() if isinstance(v, np.generic) else v) for k, v in self.params.items()}
         hyperparams = self.model.get_params()
-        # convert any numpy types to native python types for serialization
-        for key, value in hyperparams.items():
-            if isinstance(value, np.generic):
-                hyperparams[key] = value.item()
+        for k, v in list(hyperparams.items()):
+            if isinstance(v, np.generic):
+                hyperparams[k] = v.item()
         return hyperparams
 
-    def set_hyperparameters(self, hyperparams: dict):
-        self._check_hyperparams(self.model, hyperparams)
-        self.model.set_params(**hyperparams)
-
-    @staticmethod
-    def _check_hyperparams(model, params):
-        model_params = model.get_params()
+    def set_hyperparameters(self, params: Dict[str, Any]) -> None:
+        if self.model is None:
+            self.model = self._init_model()
+        # Validate supported params against model.get_params()
+        model_params = self.model.get_params()
         for key in params:
             if key not in model_params:
-                raise ValueError(
-                    f"Model {model.__class__.__name__} does not accept hyperparameter {key}."
-                )
-
-
-class ScikitRegressor(ScikitPredictor):
-    """
-    A class to interface with scikit-learn-based regression models.
-    """
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        # evaluation metrics for regressor models
-        self.evaluation_metrics = ["mse", "rmse", "mae", "r2"]
-
-    def evaluate(self, smiles_list: List[str], target_list: List[float]) -> dict:
-        preds = self.predict(smiles_list)
-        metrics_dict = {}
-        for m in self.evaluation_metrics:
-            metrics_dict[m] = get_metric_callable(m)(target_list, preds)
-        return metrics_dict
-
-
-class ScikitBinaryClassifier(ScikitPredictor):
-    """
-    A class to interface with scikit-learn-based binary classification models.
-    """
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(task="classification", *args, **kwargs)
-        self.class_threshold = 0.5
-        # evaluation metrics for classifier models
-        self.evaluation_metrics = ["accuracy", "roc_auc", "f1", "precision", "recall"]
-
-    def evaluate(self, smiles_list: List[str], target_list: List[float]) -> dict:
-        preds = self.predict(smiles_list)
-        binary_preds = self.classify(preds)
-        metrics_dict = {}
-        for m in self.evaluation_metrics:
-            if m == "roc_auc":
-                # roc_auc needs class probabilities
-                metrics_dict[m] = get_metric_callable(m)(target_list, preds)
-            else:
-                metrics_dict[m] = get_metric_callable(m)(target_list, binary_preds)
-        return metrics_dict
-
-    def classify(self, preds):
-        return np.array(preds) > self.class_threshold
+                raise ValueError(f"Model {self.model.__class__.__name__} does not accept hyperparameter `{key}`. Supported hyperparameters: {list(model_params.keys())}")
+        self.model.set_params(**params)

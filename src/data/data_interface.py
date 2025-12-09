@@ -79,6 +79,7 @@ class DataInterface:
         if self.logfile:
             with open(self.logfile, "r") as fh:
                 contents = fh.read()
+            path.mkdir(parents=True, exist_ok=True)
             with open(path / self.console_log_filename, "w") as fh:
                 fh.write(contents)
 
@@ -110,7 +111,7 @@ class DataInterface:
             f"No split directory with yaml containing friendly_name: `{friendly_name}` found"
         )
 
-    def _check_prepared_dataset_exists(self, dumdataset_dir_path: Path) -> bool:
+    def _check_prepared_dataset_exists(self, dataset_dir_path: Path) -> bool:
         return (dataset_dir_path / self.prepared_filename).exists()
 
     # --- yaml parsing small helpers ---------------------------------------
@@ -196,7 +197,7 @@ class DataInterface:
         # Save prepared dataset
         df.to_csv(dir_path / self.prepared_filename, index=False)
         # Save preparation logs
-        self.dump_logs(dir_path / "preparation.log")
+        self.dump_logs(dir_path / "preparation_log")
 
     def _generate_prepared_dataset(self, dataset_dir_path: Path) -> None:
         csvs = [
@@ -528,7 +529,7 @@ class DataInterface:
             return yaml.safe_load(fh) or {}
 
     def dump_training_logs(self, model_cache_key: str, data_cache_key: str) -> None:
-        path = self.models_dir / model_cache_key / data_cache_key / "training.log"
+        path = self.models_dir / model_cache_key / data_cache_key / "training_log"
         self.dump_logs(path)
 
     def dump_gin_config_to_model_dir(
