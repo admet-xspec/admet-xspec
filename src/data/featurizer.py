@@ -230,7 +230,12 @@ class KlekotaRothFeaturizer(FeaturizerBase):
         return klek_keys_mols
 
     def _get_krfp_fingerprint(self, mol: Chem.Mol) -> np.ndarray:
-        """Generate Klekota-Roth fingerprint for a single molecule."""
+        """
+        Generate Klekota-Roth fingerprint for a single molecule.
+        Checks for the presence of 4860 predefined substructures corresponding to chemical
+        motifs that were selected as relevant in medicinal chemistry.
+        Original paper: https://doi.org/10.1093/bioinformatics/btn479
+        """
         fp_list = []
         for key in self.keys_mols:
             if mol.HasSubstructMatch(key):
