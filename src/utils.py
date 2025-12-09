@@ -48,23 +48,6 @@ def get_nice_class_name(obj):
     return type(obj).__name__
 
 
-def get_metric_callable(metric_name: str):
-    metrics_dict = {
-        "accuracy": metrics.accuracy_score,
-        "roc_auc": metrics.roc_auc_score,
-        "f1": metrics.f1_score,
-        "precision": metrics.precision_score,
-        "recall": metrics.recall_score,
-        "mse": metrics.mean_squared_error,
-        "mae": metrics.mean_absolute_error,
-        "r2": metrics.r2_score,
-        "rmse": metrics.root_mean_squared_error,
-    }
-    if metric_name not in metrics_dict.keys():
-        raise ValueError
-    return metrics_dict[metric_name]
-
-
 def get_converted_unit(
     val: float,
     from_unit: str,

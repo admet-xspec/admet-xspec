@@ -1,0 +1,30 @@
+LightGbmRegressor.target_metric = 'neg_mean_squared_error'
+LightGbmRegressor.optimization_iterations = 100    # maximum times the script is allowed to draw and
+                                                    # evaluate a new set of hyperparameter values
+
+LightGbmRegressor.n_jobs = -1                      # number of CPUs to use (-1 for all available)
+LightGbmRegressor.n_folds = 5                      # number of cross-validation folds
+
+
+LightGbmRegressor.params_distribution = {
+    'boosting_type': 'gbdt',
+    'n_estimators': @n_estimators/QLogUniform(),
+    'max_depth': @max_depth/QUniform(),
+    'num_leaves': @num_leaves/QUniform(),
+    'min_child_samples': @min_child_samples/QUniform(),
+    'learning_rate': [0.01, 0.05, 0.1],
+    }
+
+#   Parametrizing the distribution functions:
+
+n_estimators/QLogUniform.min = 100
+n_estimators/QLogUniform.max = 2000
+
+max_depth/QUniform.min = 2
+max_depth/QUniform.max = 50
+
+num_leaves/QUniform.min = 20
+num_leaves/QUniform.max = 200
+
+min_child_samples/QUniform.min = 10
+min_child_samples/QUniform.max = 100
