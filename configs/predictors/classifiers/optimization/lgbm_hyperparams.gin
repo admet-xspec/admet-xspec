@@ -7,7 +7,6 @@ LightGbmClassifier.n_folds = 5                      # number of cross-validation
 
 
 LightGbmClassifier.params_distribution = {
-    'boosting_type': 'gbdt',
     'n_estimators': @n_estimators/QLogUniform(),
     'max_depth': @max_depth/QUniform(),
     'num_leaves': @num_leaves/QUniform(),
