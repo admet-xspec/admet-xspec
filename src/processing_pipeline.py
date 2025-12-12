@@ -476,6 +476,7 @@ class ProcessingPipeline:
             "Datasets": self.datasets,
             "Test Origin Dataset": self.test_origin_dataset,
             "Training set size": len(train_df),
+            "Training set sources": get_label_counts(train_df, self.source_col),
             "Task Setting": self.task_setting,
             "Splitter": self.splitter.name if self.splitter else "None",
             "Similarity Filter": self.sim_filter.name if self.sim_filter else "None",
