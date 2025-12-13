@@ -1,7 +1,7 @@
 ProcessingPipeline.do_load_datasets = True
 ProcessingPipeline.do_visualize_datasets = False
 ProcessingPipeline.do_load_train_test = True
-ProcessingPipeline.do_dump_train_test = False
+ProcessingPipeline.do_dump_train_test = True
 ProcessingPipeline.do_visualize_train_test = False
 ProcessingPipeline.do_load_optimized_hyperparams = True
 ProcessingPipeline.do_optimize_hyperparams = False

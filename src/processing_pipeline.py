@@ -100,7 +100,8 @@ class ProcessingPipeline:
                 self.predictor.set_featurizer(self.featurizer)
 
         # Derived identifiers / caches
-        self.split_key = self._get_split_key(self.datasets)
+        self.split_key = self._get_split_key(self.datasets, self.splitter, self.sim_filter,
+                                             self.test_origin_dataset, self.task_setting)
         self.predictor_key = self._get_predictor_key()
         self.optimized_hyperparameters = None
 
@@ -408,14 +409,19 @@ class ProcessingPipeline:
 
     # --------------------- Identification / caching --------------------- #
 
-    def _get_split_key(self, datasets: List[str]) -> str:
+    def _get_split_key(self, datasets: List[str],
+                       splitter: DataSplitterBase | None,
+                       sim_filter: SimilarityFilterBase | None,
+                       test_origin_dataset: str | None,
+                        task_setting: str
+                       ) -> str:
         """Generate a compact, deterministic identifier for the split configuration."""
-        splitter_key = self.splitter.get_cache_key() if self.splitter else "nosplit"
-        filter_key = self.sim_filter.get_cache_key() if self.sim_filter else "nofilter"
+        splitter_key = splitter.get_cache_key() if splitter else "nosplit"
+        filter_key = sim_filter.get_cache_key() if sim_filter else "nofilter"
         datasets_params = (
             tuple(sorted(datasets)),
-            self.test_origin_dataset,
-            self.task_setting,
+            test_origin_dataset,
+            task_setting,
         )
         datasets_hash = hashlib.md5(str(datasets_params).encode()).hexdigest()[:5]
         return f"{splitter_key}_{filter_key}_{datasets_hash}"
@@ -432,7 +438,11 @@ class ProcessingPipeline:
         if not self.predictor:
             raise ValueError("No predictor configured; cannot load or inject hyperparameters")
 
-        test_origin_split_key = self._get_split_key([self.test_origin_dataset])
+        test_origin_split_key = self._get_split_key([self.test_origin_dataset],
+                                                    self.splitter,
+                                                    self.sim_filter,
+                                                    self.test_origin_dataset,
+                                                    self.task_setting)
         model_key = self.predictor.get_cache_key()
         self.optimized_hyperparameters = self.data_interface.load_hyperparams(model_key, test_origin_split_key)
         logging.warning(f"Loaded hyperparameters optimized previously on {self.test_origin_dataset}")
