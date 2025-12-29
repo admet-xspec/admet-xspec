@@ -19,3 +19,5 @@ ProcessingPipeline.datasets = [
 
 ProcessingPipeline.test_origin_dataset = 'MAOA_human_IC50'
 ProcessingPipeline.task_setting = 'binary_classification'
+
+ProcessingPipeline.hyperparams_source_sim_filter = None
