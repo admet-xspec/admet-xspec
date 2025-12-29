@@ -1,0 +1,6 @@
+Map4Featurizer.radius = 2
+Map4Featurizer.size = 2048
+Map4Featurizer.include_duplicated_shingles = False
+
+tanimoto_featurizer/gin.singleton.constructor = @Map4Featurizer
+tanimoto_featurizer = @tanimoto_featurizer/gin.singleton()

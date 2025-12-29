@@ -1,0 +1,4 @@
+KlekotaRothFeaturizer.keys_path = 'data/featurizers/krfp_keys.txt'
+
+tanimoto_featurizer/gin.singleton.constructor = @KlekotaRothFeaturizer
+tanimoto_featurizer = @tanimoto_featurizer/gin.singleton()
