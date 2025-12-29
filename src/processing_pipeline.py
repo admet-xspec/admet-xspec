@@ -45,6 +45,7 @@ class ProcessingPipeline:
         reducer: ReducerBase | None = None,
         splitter: DataSplitterBase | None = None,
         sim_filter: SimilarityFilterBase | None = None,
+        hyperparams_source_sim_filter: SimilarityFilterBase | None = None,
         # Dataset configuration
         datasets: List[str] | None = None,
         manual_train_splits: List[str] | None = None,
@@ -77,6 +78,7 @@ class ProcessingPipeline:
         self.reducer = reducer
         self.splitter = splitter
         self.sim_filter = sim_filter
+        self.hyperparams_source_sim_filter = hyperparams_source_sim_filter
 
         # Dataset & column config
         self.datasets = datasets or []
@@ -461,14 +463,25 @@ class ProcessingPipeline:
             logging.info(f"Using featurizer: {self.featurizer.name}")
         if self.predictor:
             logging.info(f"Using predictor: {self.predictor.name}")
+        if self.hyperparams_source_sim_filter:
+            logging.info(
+                f"Loading hyperparameters filtered by: {self.hyperparams_source_sim_filter.name} against {self.hyperparams_source_sim_filter.against}"
+            )
         logging.info(f"Task setting: {self.task_setting}")
 
     # --------------------- Identification / caching --------------------- #
 
-    def _get_split_key(self, datasets: List[str]) -> str:
+    def _get_split_key(
+        self, datasets: List[str], custom_filter: SimilarityFilterBase | None = None
+    ) -> str:
         """Generate a compact, deterministic identifier for the split configuration."""
         splitter_key = self.splitter.get_cache_key() if self.splitter else "nosplit"
-        filter_key = self.sim_filter.get_cache_key() if self.sim_filter else "nofilter"
+        if custom_filter:
+            filter_key = custom_filter.get_cache_key()
+        else:
+            filter_key = (
+                self.sim_filter.get_cache_key() if self.sim_filter else "nofilter"
+            )
         datasets_params = (
             tuple(sorted(datasets)),
             self.test_origin_dataset,
@@ -493,7 +506,9 @@ class ProcessingPipeline:
                 "No predictor configured; cannot load or inject hyperparameters"
             )
 
-        test_origin_split_key = self._get_split_key([self.test_origin_dataset])
+        test_origin_split_key = self._get_split_key(
+            [self.test_origin_dataset], custom_filter=self.hyperparams_source_sim_filter
+        )
         model_key = self.predictor.get_cache_key()
         self.optimized_hyperparameters = self.data_interface.load_hyperparams(
             model_key, test_origin_split_key
