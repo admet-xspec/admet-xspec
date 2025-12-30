@@ -106,8 +106,7 @@ class ProcessingPipeline:
                 self.predictor.set_featurizer(self.featurizer)
 
         # Derived identifiers / caches
-        self.split_key = self._get_split_key(self.datasets, self.splitter, self.sim_filter,
-                                             self.test_origin_dataset, self.task_setting)
+        self.split_key = self._get_split_key(self.datasets)
         self.predictor_key = self._get_predictor_key()
         self.optimized_hyperparameters = None
 
@@ -485,8 +484,8 @@ class ProcessingPipeline:
             )
         datasets_params = (
             tuple(sorted(datasets)),
-            test_origin_dataset,
-            task_setting,
+            self.test_origin_dataset,
+            self.task_setting,
         )
         datasets_hash = hashlib.md5(str(datasets_params).encode()).hexdigest()[:5]
         return f"{splitter_key}_{filter_key}_{datasets_hash}"
