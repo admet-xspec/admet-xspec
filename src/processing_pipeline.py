@@ -161,9 +161,9 @@ class ProcessingPipeline:
             if self.do_refit_final_model:
                 self._train_final_model(train_df, test_df)
 
-            # Pickle the refitted model if requested
-            if self.do_save_trained_model:
-                self._pickle_trained_model(as_refit=True)
+                # Pickle the refitted model if requested
+                if self.do_save_trained_model:
+                    self._pickle_trained_model(as_refit=True)
 
             self._dump_training_info()
 
