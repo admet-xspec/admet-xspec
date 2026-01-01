@@ -6,4 +6,5 @@ ProcessingPipeline.do_visualize_train_test = False
 ProcessingPipeline.do_load_optimized_hyperparams = False
 ProcessingPipeline.do_optimize_hyperparams = False
 ProcessingPipeline.do_train_model = True
+ProcessingPipeline.do_save_trained_model = True
 ProcessingPipeline.do_refit_final_model = True

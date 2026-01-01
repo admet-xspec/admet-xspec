@@ -1,10 +1,7 @@
 LightGbmRegressor.target_metric = 'neg_mean_squared_error'
-LightGbmRegressor.optimization_iterations = 100    # maximum times the script is allowed to draw and
-                                                    # evaluate a new set of hyperparameter values
-
-LightGbmRegressor.n_jobs = -1                      # number of CPUs to use (-1 for all available)
-LightGbmRegressor.n_folds = 5                      # number of cross-validation folds
-
+LightGbmRegressor.optimization_iterations = 100
+LightGbmRegressor.n_jobs = -1
+LightGbmRegressor.n_folds = 5
 
 LightGbmRegressor.params_distribution = {
     'boosting_type': 'gbdt',

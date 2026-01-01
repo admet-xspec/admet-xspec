@@ -36,6 +36,7 @@ class ProcessingPipeline:
         do_load_optimized_hyperparams: bool,
         do_optimize_hyperparams: bool,
         do_train_model: bool,
+        do_save_trained_model: bool,
         do_refit_final_model: bool,
         # Core components
         data_interface: DataInterface,
@@ -44,6 +45,7 @@ class ProcessingPipeline:
         reducer: ReducerBase | None = None,
         splitter: DataSplitterBase | None = None,
         sim_filter: SimilarityFilterBase | None = None,
+        hyperparams_source_sim_filter: SimilarityFilterBase | None = None,
         # Dataset configuration
         datasets: List[str] | None = None,
         manual_train_splits: List[str] | None = None,
@@ -66,6 +68,7 @@ class ProcessingPipeline:
         self.do_load_optimized_hyperparams = do_load_optimized_hyperparams
         self.do_optimize_hyperparams = do_optimize_hyperparams
         self.do_train_model = do_train_model
+        self.do_save_trained_model = do_save_trained_model
         self.do_refit_final_model = do_refit_final_model
 
         # Core components and settings
@@ -75,6 +78,7 @@ class ProcessingPipeline:
         self.reducer = reducer
         self.splitter = splitter
         self.sim_filter = sim_filter
+        self.hyperparams_source_sim_filter = hyperparams_source_sim_filter
 
         # Dataset & column config
         self.datasets = datasets or []
@@ -95,13 +99,14 @@ class ProcessingPipeline:
 
         # If the predictor object does not implement internal featurization,
         # inject the configured featurizer (only if predictor exists)
-        if self.predictor and not getattr(self.predictor, "uses_internal_featurizer", False):
+        if self.predictor and not getattr(
+            self.predictor, "uses_internal_featurizer", False
+        ):
             if self.featurizer is not None:
                 self.predictor.set_featurizer(self.featurizer)
 
         # Derived identifiers / caches
-        self.split_key = self._get_split_key(self.datasets, self.splitter, self.sim_filter,
-                                             self.test_origin_dataset, self.task_setting)
+        self.split_key = self._get_split_key(self.datasets)
         self.predictor_key = self._get_predictor_key()
         self.optimized_hyperparameters = None
 
@@ -132,7 +137,7 @@ class ProcessingPipeline:
             if self.do_visualize_train_test:
                 self._visualize_splits(train_df, test_df)
 
-        # Update registries regardless of train/test decisions
+        # Update registries
         self._update_registries()
 
         # Step 6: Load optimized hyperparameters if requested
@@ -148,9 +153,17 @@ class ProcessingPipeline:
             self._train(train_df)
             self._evaluate(test_df)
 
+            # Pickle the trained model if requested
+            if self.do_save_trained_model:
+                self._pickle_trained_model(as_refit=False)
+
             # Step 9: Refit final model on full dataset if requested
             if self.do_refit_final_model:
                 self._train_final_model(train_df, test_df)
+
+                # Pickle the refitted model if requested
+                if self.do_save_trained_model:
+                    self._pickle_trained_model(as_refit=True)
 
             self._dump_training_info()
 
@@ -191,7 +204,9 @@ class ProcessingPipeline:
 
         augmentation_names = [n for n in self.datasets if n != self.test_origin_dataset]
         augmentation_dfs = self._load_datasets(augmentation_names)
-        logging.info(f"Loaded {len(augmentation_dfs)} augmentation datasets: {augmentation_names}")
+        logging.info(
+            f"Loaded {len(augmentation_dfs)} augmentation datasets: {augmentation_names}"
+        )
 
         origin_df: Optional[pd.DataFrame] = None
         if self.test_origin_dataset:
@@ -226,8 +241,12 @@ class ProcessingPipeline:
         if not self.reducer:
             return
 
-        train_feat = self._featurize_datasets([train_df])[0] if self.featurizer else train_df
-        test_feat = self._featurize_datasets([test_df])[0] if self.featurizer else test_df
+        train_feat = (
+            self._featurize_datasets([train_df])[0] if self.featurizer else train_df
+        )
+        test_feat = (
+            self._featurize_datasets([test_df])[0] if self.featurizer else test_df
+        )
         self._visualize_and_save([train_feat, test_feat], ["train", "test"], "split")
 
     def _visualize_and_save(
@@ -257,30 +276,49 @@ class ProcessingPipeline:
         """
         if self.datasets:
             # Check for cached automatic splits and load if available
-            if self._check_if_already_splitted(self.split_key) and not self.override_cache:
-                logging.info(f"Train/test split with key {self.split_key} already exists; loading from cache")
-                train_friendly_name, test_friendly_name = self.data_interface.get_split_friendly_names(self.split_key)
-                return self._get_cached_splits([train_friendly_name], [test_friendly_name])
+            if (
+                self._check_if_already_splitted(self.split_key)
+                and not self.override_cache
+            ):
+                logging.info(
+                    f"Train/test split with key {self.split_key} already exists; loading from cache"
+                )
+                train_friendly_name, test_friendly_name = (
+                    self.data_interface.get_split_friendly_names(self.split_key)
+                )
+                return self._get_cached_splits(
+                    [train_friendly_name], [test_friendly_name]
+                )
             # Create automatic splits
             return self._create_automatic_splits(augmentation_dfs, origin_df)
 
         # Read manual splits
-        return self._get_cached_splits(self.manual_train_splits, self.manual_test_splits)
+        return self._get_cached_splits(
+            self.manual_train_splits, self.manual_test_splits
+        )
 
     def _create_automatic_splits(
         self, augmentation_dfs: List[pd.DataFrame], origin_df: Optional[pd.DataFrame]
     ) -> Tuple[pd.DataFrame, pd.DataFrame]:
         """Automatic split: split origin, optionally filter augmentations, combine for training."""
         split_train_df, split_test_df = self._split_dataset(origin_df)
-        logging.info(f"Split origin into train={len(split_train_df)}, test={len(split_test_df)}")
+        logging.info(
+            f"Split origin into train={len(split_train_df)}, test={len(split_test_df)}"
+        )
 
-        augmentation_df = self._aggregate_dataframes(augmentation_dfs, empty_if_none=True)
+        augmentation_df = self._aggregate_dataframes(
+            augmentation_dfs, empty_if_none=True
+        )
         logging.info(f"Aggregated {len(augmentation_df)} augmentation samples")
 
         if self.sim_filter:
-            combined_pre = pd.concat([augmentation_df, split_train_df], ignore_index=True)
+            combined_pre = pd.concat(
+                [augmentation_df, split_train_df], ignore_index=True
+            )
             pre_counts = get_label_counts(combined_pre, self.source_col)
-            train_df, test_df = self.sim_filter.get_filtered_train_test(augmentation_df, split_train_df, split_test_df)
+            train_df, test_df = self.sim_filter.get_filtered_train_test(
+                augmentation_df, split_train_df, split_test_df
+            )
             post_counts = get_label_counts(train_df, self.source_col)
             for src, pre in pre_counts.items():
                 if src == self.test_origin_dataset:
@@ -299,8 +337,16 @@ class ProcessingPipeline:
         self, train_friendly_names: List[str], test_friendly_names: List[str]
     ) -> Tuple[pd.DataFrame, pd.DataFrame]:
         """Load and aggregate DataFrames listed in manual split lists."""
-        train_dfs = self._load_split_datasets(train_friendly_names) if train_friendly_names else []
-        test_dfs = self._load_split_datasets(test_friendly_names) if test_friendly_names else []
+        train_dfs = (
+            self._load_split_datasets(train_friendly_names)
+            if train_friendly_names
+            else []
+        )
+        test_dfs = (
+            self._load_split_datasets(test_friendly_names)
+            if test_friendly_names
+            else []
+        )
 
         train = self._aggregate_dataframes(train_dfs, empty_if_none=True)
         test = self._aggregate_dataframes(test_dfs, empty_if_none=True)
@@ -310,7 +356,11 @@ class ProcessingPipeline:
 
     def _save_splits(self, train_df: pd.DataFrame, test_df: pd.DataFrame) -> None:
         """Persist train/test split using the data interface."""
-        friendly = self.splitter.get_friendly_name(self.datasets) if self.splitter else "manual_split"
+        friendly = (
+            self.splitter.get_friendly_name(self.datasets)
+            if self.splitter
+            else "manual_split"
+        )
         self.data_interface.save_train_test_split(
             train_df,
             test_df,
@@ -335,7 +385,9 @@ class ProcessingPipeline:
         if not self.splitter:
             raise ValueError("No splitter configured for automatic splitting")
 
-        X_train, X_test, y_train, y_test = self.splitter.split(df[self.smiles_col], df[self.target_col])
+        X_train, X_test, y_train, y_test = self.splitter.split(
+            df[self.smiles_col], df[self.target_col]
+        )
 
         train_df = pd.DataFrame(
             {
@@ -355,7 +407,9 @@ class ProcessingPipeline:
 
     # --------------------- Small helpers --------------------- #
 
-    def _featurize_datasets(self, dataset_dfs: List[pd.DataFrame]) -> List[pd.DataFrame]:
+    def _featurize_datasets(
+        self, dataset_dfs: List[pd.DataFrame]
+    ) -> List[pd.DataFrame]:
         """Apply featurizer to each DataFrame, preserving row counts and adding feature column."""
         if not self.featurizer:
             return dataset_dfs
@@ -365,7 +419,9 @@ class ProcessingPipeline:
         for df in dataset_dfs:
             df_copy = df.copy()
             # featurize expects list input per original contract; preserve that behavior
-            df_copy[feature_name] = df_copy[self.smiles_col].apply(lambda s: self.featurizer.featurize([s]))
+            df_copy[feature_name] = df_copy[self.smiles_col].apply(
+                lambda s: self.featurizer.featurize([s])
+            )
             if len(df_copy) != len(df):
                 raise RuntimeError(
                     f"Featurization failed: {len(df) - len(df_copy)} samples lost using {self.featurizer.name}"
@@ -400,28 +456,36 @@ class ProcessingPipeline:
         if self.splitter:
             logging.info(f"Splitter: {self.splitter.name}")
         if self.sim_filter:
-            logging.info(f"Filtering augmented datasets with: {self.sim_filter.name} against {self.sim_filter.against}")
+            logging.info(
+                f"Filtering augmented datasets with: {self.sim_filter.name} against {self.sim_filter.against}"
+            )
         if self.featurizer:
             logging.info(f"Using featurizer: {self.featurizer.name}")
         if self.predictor:
             logging.info(f"Using predictor: {self.predictor.name}")
+        if self.hyperparams_source_sim_filter:
+            logging.info(
+                f"Loading hyperparameters filtered by: {self.hyperparams_source_sim_filter.name} against {self.hyperparams_source_sim_filter.against}"
+            )
         logging.info(f"Task setting: {self.task_setting}")
 
     # --------------------- Identification / caching --------------------- #
 
-    def _get_split_key(self, datasets: List[str],
-                       splitter: DataSplitterBase | None,
-                       sim_filter: SimilarityFilterBase | None,
-                       test_origin_dataset: str | None,
-                        task_setting: str
-                       ) -> str:
+    def _get_split_key(
+        self, datasets: List[str], custom_filter: SimilarityFilterBase | None = None
+    ) -> str:
         """Generate a compact, deterministic identifier for the split configuration."""
-        splitter_key = splitter.get_cache_key() if splitter else "nosplit"
-        filter_key = sim_filter.get_cache_key() if sim_filter else "nofilter"
+        splitter_key = self.splitter.get_cache_key() if self.splitter else "nosplit"
+        if custom_filter:
+            filter_key = custom_filter.get_cache_key()
+        else:
+            filter_key = (
+                self.sim_filter.get_cache_key() if self.sim_filter else "nofilter"
+            )
         datasets_params = (
             tuple(sorted(datasets)),
-            test_origin_dataset,
-            task_setting,
+            self.test_origin_dataset,
+            self.task_setting,
         )
         datasets_hash = hashlib.md5(str(datasets_params).encode()).hexdigest()[:5]
         return f"{splitter_key}_{filter_key}_{datasets_hash}"
@@ -434,20 +498,28 @@ class ProcessingPipeline:
 
     def _load_hyperparams_optimized_on_test_origin(self) -> None:
         if not self.test_origin_dataset:
-            raise ValueError("test_origin_dataset must be set to load optimized hyperparameters")
+            raise ValueError(
+                "test_origin_dataset must be set to load optimized hyperparameters"
+            )
         if not self.predictor:
-            raise ValueError("No predictor configured; cannot load or inject hyperparameters")
+            raise ValueError(
+                "No predictor configured; cannot load or inject hyperparameters"
+            )
 
-        test_origin_split_key = self._get_split_key([self.test_origin_dataset],
-                                                    self.splitter,
-                                                    self.sim_filter,
-                                                    self.test_origin_dataset,
-                                                    self.task_setting)
+        test_origin_split_key = self._get_split_key(
+            [self.test_origin_dataset], custom_filter=self.hyperparams_source_sim_filter
+        )
         model_key = self.predictor.get_cache_key()
-        self.optimized_hyperparameters = self.data_interface.load_hyperparams(model_key, test_origin_split_key)
-        logging.warning(f"Loaded hyperparameters optimized previously on {self.test_origin_dataset}")
+        self.optimized_hyperparameters = self.data_interface.load_hyperparams(
+            model_key, test_origin_split_key
+        )
+        logging.warning(
+            f"Loaded hyperparameters optimized previously on {self.test_origin_dataset}"
+        )
         logging.warning(f"Optimized hyperparameters: {self.optimized_hyperparameters}")
-        logging.warning("This configuration will override hyperparameters provided in the predictor config file.")
+        logging.warning(
+            "This configuration will override hyperparameters provided in the predictor config file."
+        )
         # Inject loaded hyperparameters into predictor
         self.predictor.set_hyperparameters(self.optimized_hyperparameters)
 
@@ -474,12 +546,11 @@ class ProcessingPipeline:
 
         self.predictor.train(X_train, y_train)
 
-        # Save trained model
-        self.data_interface.pickle_model(self.predictor, self.predictor_key, self.split_key)
-
         # Save hyperparameters
         hyperparams = self.predictor.get_hyperparameters()
-        self.data_interface.save_hyperparams(hyperparams, self.predictor_key, self.split_key)
+        self.data_interface.save_hyperparams(
+            hyperparams, self.predictor_key, self.split_key
+        )
 
         # Save model metadata
         metadata_dict = {
@@ -494,7 +565,18 @@ class ProcessingPipeline:
             "Predictor": self.predictor.name,
             "Optimized Hyperparameters": self.do_optimize_hyperparams,
         }
-        self.data_interface.save_model_metadata(metadata_dict, self.predictor_key, self.split_key)
+        self.data_interface.save_model_metadata(
+            metadata_dict, self.predictor_key, self.split_key
+        )
+
+    def _pickle_trained_model(self, as_refit=False) -> None:
+        """Save the trained model."""
+        if not self.predictor:
+            raise ValueError("No predictor configured; cannot pickle model")
+
+        self.data_interface.pickle_model(
+            self.predictor, self.predictor_key, self.split_key, save_as_refit=as_refit
+        )
 
     def _evaluate(self, test_df: pd.DataFrame) -> None:
         """Evaluate trained predictor, log metrics and persist them."""
@@ -520,11 +602,12 @@ class ProcessingPipeline:
         X_full = full_df[self.smiles_col].tolist()
         y_full = full_df[self.target_col].tolist()
         self.predictor.train(X_full, y_full)
-        self.data_interface.pickle_model(self.predictor, self.predictor_key, self.split_key, save_as_refit=True)
 
     def _dump_training_info(self) -> None:
         self.data_interface.dump_training_logs(self.predictor_key, self.split_key)
-        self.data_interface.dump_gin_config_to_model_dir(self.predictor_key, self.split_key)
+        self.data_interface.dump_gin_config_to_model_dir(
+            self.predictor_key, self.split_key
+        )
 
     # --------------------- Configuration validation --------------------- #
 
@@ -540,14 +623,22 @@ class ProcessingPipeline:
 
         if self.datasets and self.do_load_train_test and not self.test_origin_dataset:
             # If datasets is present and we're creating train/test automatically, require a test_origin_dataset
-            raise ValueError("Automatic splitting requested but `test_origin_dataset` is not set")
+            raise ValueError(
+                "Automatic splitting requested but `test_origin_dataset` is not set"
+            )
 
-        if self.do_load_train_test and not (self.datasets or self.manual_train_splits or self.manual_test_splits):
-            raise ValueError("do_load_train_test=True but no datasets or manual splits are configured")
+        if self.do_load_train_test and not (
+            self.datasets or self.manual_train_splits or self.manual_test_splits
+        ):
+            raise ValueError(
+                "do_load_train_test=True but no datasets or manual splits are configured"
+            )
 
         # splitter requirement only when automatic splitting will actually be used
         if self.datasets and self.do_load_train_test and not self.splitter:
-            raise ValueError("Automatic splitting requested but no splitter is configured")
+            raise ValueError(
+                "Automatic splitting requested but no splitter is configured"
+            )
 
         # Ensure data_interface is present
         if not self.data_interface:
