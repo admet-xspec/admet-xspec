@@ -1,0 +1,2 @@
+tanimoto_featurizer/gin.singleton.constructor = @MaccsFeaturizer
+tanimoto_featurizer = @tanimoto_featurizer/gin.singleton()

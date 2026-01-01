@@ -89,6 +89,7 @@ class DataInterface:
 
     # --- discovery helpers -------------------------------------------------
     def _find_dataset_dir(self, friendly_name: str) -> Path:
+        found_paths = []
         for yaml_path in self.dataset_dir.rglob("*.yaml"):
             with open(yaml_path, "r") as f:
                 data = yaml.safe_load(f) or {}
@@ -96,20 +97,35 @@ class DataInterface:
                     data.get("friendly_name") == friendly_name
                     and data.get("task_setting") == self.task_setting
                 ):
-                    return yaml_path.parent
-        raise FileNotFoundError(
-            f"No dataset directory with yaml containing friendly_name: `{friendly_name}` for the task of {self.task_setting} found"
-        )
+                    found_paths.append(yaml_path.parent)
+        if len(found_paths) == 1:
+            return found_paths[0]
+        elif len(found_paths) > 1:
+            raise RuntimeError(
+                f"Multiple dataset directories with yaml containing friendly_name: `{friendly_name}` for the task of {self.task_setting} found: {found_paths}"
+            )
+        else:
+            raise FileNotFoundError(
+                f"No dataset directory with yaml containing friendly_name: `{friendly_name}` for the task of {self.task_setting} found"
+            )
 
     def _find_split_dir(self, friendly_name: str) -> Path:
+        found_paths = []
         for yaml_path in self.splits_dir.rglob("*.yaml"):
             with open(yaml_path, "r") as f:
                 data = yaml.safe_load(f) or {}
                 if data.get("friendly_name") == friendly_name:
-                    return yaml_path.parent
-        raise FileNotFoundError(
-            f"No split directory with yaml containing friendly_name: `{friendly_name}` found"
-        )
+                    found_paths.append(yaml_path.parent)
+        if len(found_paths) == 1:
+            return found_paths[0]
+        elif len(found_paths) > 1:
+            raise RuntimeError(
+                f"Multiple split directories with yaml containing friendly_name: `{friendly_name}` found: {found_paths}"
+            )
+        else:
+            raise FileNotFoundError(
+                f"No split directory with yaml containing friendly_name: `{friendly_name}` found"
+            )
 
     def _check_prepared_dataset_exists(self, dataset_dir_path: Path) -> bool:
         return (dataset_dir_path / self.prepared_filename).exists()
@@ -540,6 +556,7 @@ class DataInterface:
 
     # --- registries ------------------------------------------------------
     def update_registries(self) -> None:
+        self.update_datasets_registry()
         self.update_splits_registry()
 
     def update_datasets_registry(self) -> None:
