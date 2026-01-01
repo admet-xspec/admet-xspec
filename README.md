@@ -67,4 +67,4 @@ python -m process --cfg configs/examples/train_optimize_rf_clf.gin
 
 ## Usage
 
-For usage and examples see the [admet-xscpec documentation](https://admet-xspec.readthedocs.io/en/latest/overview/index.html)
+For usage and examples see the [admet-xscpec documentation](https://admet-xspec.readthedocs.io/en/latest/index.html)
