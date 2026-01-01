@@ -21,6 +21,8 @@ data preprocessing steps. The repository is currently under active development.
 
 ## Quick start
 
+This is an extract from the [admet-xspec documentation](https://admet-xspec.readthedocs.io/en/latest/quick_start/index.html).
+
 ADMET-XSpec can be set up either using plain `uv` or by creating a conda environment.
 First, clone the repository:
 
@@ -30,7 +32,7 @@ cd admet-prediction
 ```
 
 ### 1. UV setup
-Follow the "Install uv" step at the [official docs](https://docs.astral.sh/uv/#__tabbed_1_1) to set up uv.
+Follow the "Install uv" step at the [official uv docs](https://docs.astral.sh/uv/#__tabbed_1_1) to set up uv.
 Then, have uv register a .venv within the current directory and install packages from the lockfile:
 ```bash
 uv init .
@@ -40,10 +42,6 @@ uv sync
 ```bash
 uv run process.py --cfg configs/examples/train_optimize_rf_clf.gin
 ```
-
-##### Optional, recommended: integrate uv with PyCharm
-In your Status Bar (bottom right corner of IDE), click on the button which gives a "Current Interpreter" hover.
-Select "Add New Interpreter" -> "Add Local Interpreter" -> "Select Existing".
 
 Change the type to 'uv'. The uv path should be that of your system uv installation, the Environment path should be
 that of the `.venv` that uv created inside of `./admet_prediction`.
@@ -67,6 +65,6 @@ conda activate admet_xspec
 python -m process --cfg configs/examples/train_optimize_rf_clf.gin
 ```
 
-##### Optional, recommended: integrate conda with PyCharm
-Follow the above steps for uv, but select conda. The procedure should be pretty straightforward and analogous.
-# TBA
+## Usage
+
+For usage and examples see the [admet-xscpec documentation](https://admet-xspec.readthedocs.io/en/latest/overview/index.html)
