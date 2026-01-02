@@ -19,6 +19,10 @@ and evaluation. ADMET-XSpec allows for the evaluation of predictive models train
 data points, leveraging a selection of machine learning algorithms, feature extraction techniques and additional
 data preprocessing steps. The repository is currently under active development.
 
+## ADNET-XSpec 1.0.0
+
+For usage and examples see the [admet-xscpec documentation](https://admet-xspec.readthedocs.io/en/latest/index.html)
+
 ## Quick start
 
 This is an extract from the [admet-xspec documentation](https://admet-xspec.readthedocs.io/en/latest/quick_start/index.html).
@@ -64,7 +68,3 @@ conda activate admet_xspec
 
 python -m process --cfg configs/examples/train_optimize_rf_clf.gin
 ```
-
-## Usage
-
-For usage and examples see the [admet-xscpec documentation](https://admet-xspec.readthedocs.io/en/latest/index.html)
