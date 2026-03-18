@@ -6,6 +6,8 @@ from sklearn import metrics
 import pandas as pd
 import logging
 from pathlib import Path
+import optuna
+from typing import Any, Dict
 import csv
 
 # disable RDKit warnings
@@ -210,3 +212,62 @@ def read_logfile(log_path) -> str | None:
         with open(log_path, "r") as f:
             return f.read()
     return None
+
+
+def sample_optuna_params(
+    trial: optuna.Trial, params_distribution: Dict[str, Any]
+) -> Dict[str, Any]:
+    """
+    Translate params_distribution entries into Optuna suggest_* calls.
+
+    Supported tuple formats:
+        ('int',          low, high)          -> suggest_int
+        ('int_log',      low, high)          -> suggest_int(..., log=True)
+        ('float',        low, high)          -> suggest_float
+        ('float_log',    low, high)          -> suggest_float(..., log=True)
+        ('categorical',  [v1, v2, ...])      -> suggest_categorical
+    """
+    sampled: Dict[str, Any] = {}
+    for name, spec in params_distribution.items():
+        kind, *args = spec
+        logging.debug(f"Sampling param '{name}' of kind '{kind}' with args {args}")
+        if kind == "int":
+            low, high = args
+            sampled[name] = trial.suggest_int(name, low, high)
+        elif kind == "int_log":
+            low, high = args
+            sampled[name] = trial.suggest_float(name, low, high, log=True)
+        elif kind == "float":
+            low, high = args
+            sampled[name] = trial.suggest_float(name, low, high)
+        elif kind == "float_log":
+            low, high = args
+            sampled[name] = trial.suggest_float(name, low, high, log=True)
+        elif kind == "categorical":
+            choices = args[0]
+            sampled[name] = trial.suggest_categorical(name, choices)
+        else:
+            raise ValueError(
+                f"Unknown distribution kind '{kind}' for param '{name}'. "
+                "Supported: 'int', 'int_log', 'float', 'float_log', 'categorical'."
+            )
+    return sampled
+
+
+def compute_sklearn_metric(metric_name: str):
+    metrics_dict = {
+        "accuracy": metrics.accuracy_score,
+        "roc_auc": metrics.roc_auc_score,
+        "f1": metrics.f1_score,
+        "precision": metrics.precision_score,
+        "recall": metrics.recall_score,
+        "mse": metrics.mean_squared_error,
+        "mae": metrics.mean_absolute_error,
+        "r2": metrics.r2_score,
+        "rmse": metrics.root_mean_squared_error,
+    }
+    if metric_name not in metrics_dict.keys():
+        raise ValueError(
+            f"Invalid metric name: '{metric_name}'. Supported metrics: {list(metrics_dict.keys())}"
+        )
+    return metrics_dict[metric_name]

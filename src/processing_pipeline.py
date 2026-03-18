@@ -5,10 +5,13 @@ import pandas as pd
 from datetime import datetime
 import logging
 from typing import List, Optional, Tuple
+import time
+import optuna
 
 from src.data.data_interface import DataInterface
 from src.data.featurizer import FeaturizerBase
 from src.data.reducer import ReducerBase
+from src.utils import sample_optuna_params
 from src.data.visualizer import VisualizerBase
 from src.data.split import DataSplitterBase
 from src.data.sim_filter import SimilarityFilterBase
@@ -59,6 +62,11 @@ class ProcessingPipeline:
         target_col: str = "y",
         logfile: str | None = None,
         override_cache: bool = False,
+        # Hyperparameter optimization
+        params_distribution: dict | None = None,
+        n_folds: int | None = None,
+        n_iter: int | None = None,
+        target_metric: str | None = None,
         ci_n_bootstraps: int = 1000,
         ci_percentiles: float = 95.0,
     ):
@@ -97,6 +105,12 @@ class ProcessingPipeline:
         self.override_cache = override_cache
         self.ci_n_bootstraps = ci_n_bootstraps
         self.ci_percentiles = ci_percentiles
+
+        # Hyperparameter optimization
+        self.params_distribution = params_distribution
+        self.n_folds = n_folds
+        self.n_iter = n_iter
+        self.target_metric = target_metric
 
         # Let the data interface know global settings
         self.data_interface.set_task_setting(task_setting)
@@ -152,7 +166,7 @@ class ProcessingPipeline:
 
         # Step 7: Optimize hyperparameters if requested
         if self.do_optimize_hyperparams:
-            self._optimize(train_df)
+            self._optimize_hyperparams(train_df)
 
         # Step 8: Train and evaluate the model if requested
         if self.do_train_model:
@@ -533,19 +547,6 @@ class ProcessingPipeline:
         # Inject loaded hyperparameters into predictor
         self.predictor.set_hyperparameters(self.optimized_hyperparameters)
 
-    def _optimize(self, train_df: pd.DataFrame) -> None:
-        """Optimize hyperparameters of the predictor on the training set."""
-        if not self.predictor:
-            raise ValueError("No predictor configured; cannot optimize hyperparameters")
-
-        X_train = train_df[self.smiles_col].tolist()
-        y_train = train_df[self.target_col].tolist()
-
-        logging.info("Optimizing hyperparameters on the training set")
-        self.predictor.optimize(X_train, y_train)
-        optimized_hyperparams = self.predictor.get_hyperparameters()
-        logging.info(f"Optimized hyperparameters: {optimized_hyperparams}")
-
     def _train(self, train_df: pd.DataFrame) -> None:
         """Train the predictor and persist model + hyperparams."""
         if not self.predictor:
@@ -649,6 +650,56 @@ class ProcessingPipeline:
         X_full = full_df[self.smiles_col].tolist()
         y_full = full_df[self.target_col].tolist()
         self.predictor.train(X_full, y_full)
+
+    def _optimize_hyperparams(self, train_df: pd.DataFrame) -> None:
+        """Optimize hyperparameters of the predictor."""
+
+        # TODO: move this somewhere else
+        _METRICS_TO_MAXIMIZE = {
+            "roc_auc",
+            "accuracy",
+            "f1",
+            "precision",
+            "recall",
+            "r2",
+        }
+        _METRICS_TO_MINIMIZE = {"rmse", "mae", "mse"}
+        if self.target_metric in _METRICS_TO_MAXIMIZE:
+            direction = "maximize"
+        elif self.target_metric in _METRICS_TO_MINIMIZE:
+            direction = "minimize"
+        else:
+            raise ValueError(
+                f"Unknown target metric {self.target_metric} for optimization"
+            )
+
+        # Extract features and labels for training
+        X, y = train_df[self.smiles_col].tolist(), train_df[self.target_col]
+
+        # Define an objective funcion for the optimization process
+        # Here it is a k-fold cross-validation on some target metric
+        def objective(trial: optuna.Trial) -> float:
+            params = sample_optuna_params(trial, self.params_distribution)
+            logging.debug(f"Trial {trial.number} sampled hyperparameters: {params}")
+            self.predictor.set_hyperparameters(params)
+            # k-fold CV
+            metrics = self.predictor.cross_validate(X, y, n_folds=self.n_folds)
+            # return the target metric
+            return metrics[self.target_metric]
+
+        start_time = time.time()
+
+        study = optuna.create_study(direction=direction)
+        study.optimize(objective, n_trials=self.n_iter)
+
+        elapsed_time = time.time() - start_time
+        logging.info(
+            f"Hyperparameter optimization completed in {elapsed_time/60:.2f} minutes"
+        )
+        logging.info(f"Saving best params: {study.best_params}")
+
+        # Retain best hyperparameters
+        self.predictor.set_hyperparameters(study.best_params)
 
     def _dump_training_info(self) -> None:
         self.data_interface.dump_training_logs(self.predictor_key, self.split_key)
