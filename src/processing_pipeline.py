@@ -587,10 +587,37 @@ class ProcessingPipeline:
         X_test = test_df[self.smiles_col].tolist()
         y_test = test_df[self.target_col].tolist()
         metrics = self.predictor.evaluate(X_test, y_test)
-        logging.info(f"Evaluation metrics: {metrics}")
+        # Estimate confidence intervals for metrics using bootstrapping
+        ci_lower, ci_upper = self._estimate_confidence_intervals(test_df)
+        confidence_intervals = {
+            metric: [ci_lower[metric], ci_upper[metric]]
+            for metric, value in metrics.items()
+        }
+        metrics_w_cis = {"metrics": metrics, "percentile_95_ci": confidence_intervals}
+        logging.info(f"Evaluation metrics: {metrics_w_cis}")
         logging.info("Metrics (markdown):")
         log_markdown_table(metrics)
-        self.data_interface.save_metrics(metrics, self.predictor_key, self.split_key)
+        self.data_interface.save_metrics(
+            metrics_w_cis, self.predictor_key, self.split_key
+        )
+
+    def _estimate_confidence_intervals(
+        self, test_df: pd.DataFrame, percentiles=95, n_bootstraps=1000
+    ) -> Tuple[dict, dict]:
+        """Estimate confidence intervals for evaluation metrics using bootstrapping."""
+        # sample with replacement from test_df, evaluate on each bootstrap sample, compute statistics
+        metrics_list = []
+        for i in range(n_bootstraps):
+            bootstrap_sample = test_df.sample(frac=1.0, replace=True)
+            X_bootstrap = bootstrap_sample[self.smiles_col].tolist()
+            y_bootstrap = bootstrap_sample[self.target_col].tolist()
+            metrics = self.predictor.evaluate(X_bootstrap, y_bootstrap)
+            metrics_list.append(metrics)
+        # Compute confidence intervals (percentile) for each metric
+        metrics = pd.DataFrame(metrics_list)
+        ci_lower = metrics.quantile((100 - percentiles) / 200)
+        ci_upper = metrics.quantile(1 - (100 - percentiles) / 200)
+        return ci_lower.to_dict(), ci_upper.to_dict()
 
     def _train_final_model(self, train_df: pd.DataFrame, test_df: pd.DataFrame) -> None:
         """Retrain the predictor on the combined train+test set and save as refit."""
