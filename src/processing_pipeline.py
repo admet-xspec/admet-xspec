@@ -151,7 +151,11 @@ class ProcessingPipeline:
         # Step 8: Train and evaluate the model if requested
         if self.do_train_model:
             self._train(train_df)
-            self._evaluate(test_df)
+
+            if self.do_get_metrics_confidence_interval:
+                self._evaluate(test_df, get_CIs=True)
+            else:
+                self._evaluate(test_df)
 
             # Pickle the trained model if requested
             if self.do_save_trained_model:
@@ -578,7 +582,7 @@ class ProcessingPipeline:
             self.predictor, self.predictor_key, self.split_key, save_as_refit=as_refit
         )
 
-    def _evaluate(self, test_df: pd.DataFrame) -> None:
+    def _evaluate(self, test_df: pd.DataFrame, get_CIs=False) -> None:
         """Evaluate trained predictor, log metrics and persist them."""
         if not self.predictor:
             raise ValueError("No predictor configured; cannot evaluate model")
@@ -586,19 +590,29 @@ class ProcessingPipeline:
         logging.info("Evaluating the model on test dataset")
         X_test = test_df[self.smiles_col].tolist()
         y_test = test_df[self.target_col].tolist()
+
+        # Evaluate the model on a holdout test set
         metrics = self.predictor.evaluate(X_test, y_test)
-        # Estimate confidence intervals for metrics using bootstrapping
-        ci_lower, ci_upper = self._estimate_confidence_intervals(test_df)
-        confidence_intervals = {
-            metric: [ci_lower[metric], ci_upper[metric]]
-            for metric, value in metrics.items()
-        }
-        metrics_w_cis = {"metrics": metrics, "percentile_95_ci": confidence_intervals}
-        logging.info(f"Evaluation metrics: {metrics_w_cis}")
+
+        if get_CIs:
+            # Estimate confidence intervals for metrics using bootstrapping
+            ci_lower, ci_upper = self._estimate_confidence_intervals(test_df)
+            confidence_intervals = {
+                metric: [ci_lower[metric], ci_upper[metric]]
+                for metric, value in metrics.items()
+            }
+            metrics_dict = {
+                "metrics": metrics,
+                "percentile_95_ci": confidence_intervals,
+            }
+        else:
+            metrics_dict = {"metrics": metrics}
+
+        logging.info(f"Evaluation metrics: {metrics_dict}")
         logging.info("Metrics (markdown):")
         log_markdown_table(metrics)
         self.data_interface.save_metrics(
-            metrics_w_cis, self.predictor_key, self.split_key
+            metrics_dict, self.predictor_key, self.split_key
         )
 
     def _estimate_confidence_intervals(
