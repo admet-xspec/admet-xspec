@@ -130,7 +130,7 @@ def log_markdown_table(dictionary: dict):
     )
 
     table = "\n".join([header, separator, values])
-    logging.info("\n" + table)
+    logging.info("\n" + table + "\n")
 
 
 def parse_smiles_from_messy_csv(path: str | Path) -> pd.Series:
@@ -230,7 +230,6 @@ def sample_optuna_params(
     sampled: Dict[str, Any] = {}
     for name, spec in params_distribution.items():
         kind, *args = spec
-        logging.debug(f"Sampling param '{name}' of kind '{kind}' with args {args}")
         if kind == "int":
             low, high = args
             sampled[name] = trial.suggest_int(name, low, high)
