@@ -10,3 +10,4 @@ filter_criteria:
       - "T1/2"
 threshold: null
 threshold_source: "liver_human_T12"
+onehot: "100"

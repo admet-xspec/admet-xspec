@@ -1,0 +1,10 @@
+# unfortunately i dont see a way to avoid duplication for now
+EcfpFeaturizer.radius = 2
+EcfpFeaturizer.n_bits = 2048
+EcfpFeaturizer.count = False
+
+pre_featurizer/gin.singleton.constructor = @EcfpFeaturizer
+MultitaskFeaturizer.pre_featurizer = @pre_featurizer/gin.singleton()
+
+featurizer/gin.singleton.constructor = @MultitaskFeaturizer
+featurizer = @featurizer/gin.singleton()

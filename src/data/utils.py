@@ -148,7 +148,7 @@ class TanimotoCalculator:
 
     def precompute_fingerprints(self, smiles_list: List[str]) -> List[ExplicitBitVect]:
         """Precompute fingerprints for the given list of SMILES strings."""
-        fps = self.featurizer.featurize(smiles_list)
+        fps = self.featurizer.get_internal_featurizer().featurize(smiles_list, [])
         return [self.numpy_to_bitvect(fp) for fp in fps]
 
     def numpy_to_bitvect(self, np_array: np.ndarray) -> ExplicitBitVect:

@@ -10,3 +10,4 @@ filter_criteria:
       - "IC50"
 threshold: null
 threshold_source: "AChE_human_IC50"
+onehot: "100"

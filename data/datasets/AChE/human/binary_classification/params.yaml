@@ -9,3 +9,4 @@ filter_criteria:
     Standard Type:
       - "IC50"
 threshold: "median"
+onehot: "001"

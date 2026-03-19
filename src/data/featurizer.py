@@ -18,8 +18,13 @@ class FeaturizerBase(abc.ABC):
     """Base class for molecular featurizers."""
 
     @abc.abstractmethod
-    def featurize(self, smiles_list: List[str]) -> np.ndarray:
-        """Convert SMILES strings to numerical feature arrays."""
+    def featurize(self, smiles_list: List[str], source_list: List[str]) -> np.ndarray:
+        """Convert SMILES strings to numerical feature arrays. Label_list is for Multitask, but remains elsewhere to maintain substitutability"""
+        pass
+
+    @abc.abstractmethod
+    def get_internal_featurizer(self) -> "FeaturizerBase":
+        """For Multitask return pre_featurizer, for others return self"""
         pass
 
     @property
@@ -59,8 +64,8 @@ class EcfpFeaturizer(FeaturizerBase):
         self.count = count
         self.generator = GetMorganGenerator(radius=radius, fpSize=n_bits)
 
-    def featurize(self, smiles_list: List[str]) -> np.ndarray:
-        """Generate ECFP fingerprints for given SMILES."""
+    def featurize(self, smiles_list: List[str], source_list: List[str]) -> np.ndarray:
+        """Generate ECFP fingerprints for given SMILES. label_list is not used."""
         mols = [Chem.MolFromSmiles(smi) for smi in smiles_list]
 
         # Log failed conversions
@@ -75,6 +80,9 @@ class EcfpFeaturizer(FeaturizerBase):
             fps = [self.generator.GetFingerprintAsNumPy(mol) for mol in mols]
 
         return np.stack(fps)
+
+    def get_internal_featurizer(self) -> "FeaturizerBase":
+        return self
 
     @property
     def feature_name(self) -> str:
@@ -107,7 +115,7 @@ class PropertyFeaturizer(FeaturizerBase):
         self.scaler = scaler
         self.is_fitted = False
 
-    def featurize(self, smiles_list: List[str]) -> np.ndarray:
+    def featurize(self, smiles_list: List[str], source_list: List[str]) -> np.ndarray:
         """Generate normalized molecular descriptors."""
         mols = [Chem.MolFromSmiles(smi) for smi in smiles_list]
 
@@ -134,6 +142,9 @@ class PropertyFeaturizer(FeaturizerBase):
             desc_array = np.nan_to_num(desc_array, nan=0.0, posinf=0.0, neginf=0.0)
 
         return np.array(desc_array, dtype=np.float32)
+
+    def get_internal_featurizer(self) -> "FeaturizerBase":
+        return self
 
     @staticmethod
     def _compute_descriptors(mol) -> dict:
@@ -162,8 +173,8 @@ class PropertyFeaturizer(FeaturizerBase):
 class MaccsFeaturizer(FeaturizerBase):
     """MACCS keys fingerprint featurizer."""
 
-    def featurize(self, smiles_list: List[str]) -> np.ndarray:
-        """Generate MACCS keys fingerprints for given SMILES."""
+    def featurize(self, smiles_list: List[str], source_list: List[str]) -> np.ndarray:
+        """Generate MACCS keys fingerprints for given SMILES. label_list is not used."""
         mols = [Chem.MolFromSmiles(smi) for smi in smiles_list]
 
         # Log failed conversions
@@ -176,6 +187,9 @@ class MaccsFeaturizer(FeaturizerBase):
         fps_array = np.array([np.array(fp) for fp in fps])
 
         return fps_array
+
+    def get_internal_featurizer(self) -> "FeaturizerBase":
+        return self
 
     @property
     def feature_name(self) -> str:
@@ -197,8 +211,8 @@ class KlekotaRothFeaturizer(FeaturizerBase):
         super().__init__()
         self.keys_mols = self._read_krfp_keys(keys_path)
 
-    def featurize(self, smiles_list: List[str]) -> np.ndarray:
-        """Generate Klekota-Roth fingerprints for given SMILES."""
+    def featurize(self, smiles_list: List[str], source_list: List[str]) -> np.ndarray:
+        """Generate Klekota-Roth fingerprints for given SMILES. label_list is not used."""
         mols = [Chem.MolFromSmiles(smi) for smi in smiles_list]
 
         # Log failed conversions
@@ -209,6 +223,9 @@ class KlekotaRothFeaturizer(FeaturizerBase):
         fps = [self._get_krfp_fingerprint(mol) for mol in mols]
         fps_array = np.array(fps)
         return fps_array
+
+    def get_internal_featurizer(self) -> "FeaturizerBase":
+        return self
 
     @property
     def feature_name(self) -> str:
@@ -255,11 +272,14 @@ class PropertyEcfpFeaturizer(FeaturizerBase):
         self.ecfp = EcfpFeaturizer(radius=radius, n_bits=n_bits, count=count)
         self.properties = PropertyFeaturizer()
 
-    def featurize(self, smiles_list: List[str]) -> np.ndarray:
-        """Generate combined ECFP and property features."""
+    def featurize(self, smiles_list: List[str], source_list: List[str]) -> np.ndarray:
+        """Generate combined ECFP and property features. label_list is not used."""
         ecfp_features = self.ecfp.featurize(smiles_list)
         property_features = self.properties.featurize(smiles_list)
         return np.hstack((ecfp_features, property_features))
+
+    def get_internal_featurizer(self) -> "FeaturizerBase":
+        return self
 
     @property
     def feature_name(self) -> str:
@@ -294,8 +314,8 @@ class Map4Featurizer(FeaturizerBase):
             include_duplicated_shingles=include_duplicated_shingles,
         )
 
-    def featurize(self, smiles_list: List[str]) -> np.ndarray:
-        """Generate MAP4 fingerprints for given SMILES."""
+    def featurize(self, smiles_list: List[str], source_list: List[str]) -> np.ndarray:
+        """Generate MAP4 fingerprints for given SMILES. label_list is not used."""
 
         mols = [Chem.MolFromSmiles(smi) for smi in smiles_list]
 
@@ -310,6 +330,9 @@ class Map4Featurizer(FeaturizerBase):
 
         return fps_array
 
+    def get_internal_featurizer(self) -> "FeaturizerBase":
+        return self
+
     @property
     def feature_name(self) -> str:
         return "fp_map4"
@@ -320,3 +343,37 @@ class Map4Featurizer(FeaturizerBase):
 
     def get_hashable_params_values(self) -> List[Hashable]:
         return [self.feature_name]
+
+
+@gin.configurable
+class MultitaskFeaturizer(FeaturizerBase):
+    """
+    Holds reference to real featurizer (ECFP, MACCS, etc.), appends one-hot endpoint
+    to that featurizers features
+    """
+
+    def __init__(self, pre_featurizer: FeaturizerBase):
+        self.featurizer = pre_featurizer
+
+    def featurize(self, smiles_list: List[str], encoding_list: List[str]) -> np.ndarray:
+        """Featurize SMILES and append a one-hot encoding from pre-mapped encoding strings."""
+        base_features = self.featurizer.featurize(smiles_list, encoding_list)
+        one_hot = self._get_one_hot_encoding(encoding_list)
+        return np.hstack((base_features, one_hot))
+
+    def get_internal_featurizer(self) -> "FeaturizerBase":
+        return self.featurizer
+
+    def _get_one_hot_encoding(self, encoding_list: List[str]) -> np.ndarray:
+        return np.array([[int(c) for c in s] for s in encoding_list], dtype=np.uint8)
+
+    @property
+    def feature_name(self) -> str:
+        return f"multitask_{self.featurizer.feature_name}"
+
+    @property
+    def name(self) -> str:
+        return f"multitask_{self.featurizer.name}"
+
+    def get_hashable_params_values(self) -> List[Hashable]:
+        return [self.name, *self.featurizer.get_hashable_params_values()]

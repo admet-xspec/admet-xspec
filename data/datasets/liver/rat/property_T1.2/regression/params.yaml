@@ -13,3 +13,4 @@ filter_criteria:
 label_transformations:
   - "log10"
   - "negate"
+onehot: "100"

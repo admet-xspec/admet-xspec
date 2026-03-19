@@ -127,6 +127,14 @@ class DataInterface:
                 f"No split directory with yaml containing friendly_name: `{friendly_name}` found"
             )
 
+    def get_onehot(self, friendly_name: str) -> str:
+        dataset_dir = self._find_dataset_dir(friendly_name)
+        config = self._read_data_config(dataset_dir)
+        onehot = config.get("onehot")
+        if onehot is None:
+            raise ValueError(f"No onehot field in config for dataset '{friendly_name}'")
+        return str(onehot)
+
     def _check_prepared_dataset_exists(self, dataset_dir_path: Path) -> bool:
         return (dataset_dir_path / self.prepared_filename).exists()
 

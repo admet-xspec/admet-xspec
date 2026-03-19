@@ -36,29 +36,23 @@ class PredictorBase(abc.ABC):
         pass
 
     @abc.abstractmethod
-    def predict(self, smiles_list: List[str]) -> List[float]:
-        """
-        Predict the target values for the given smiles list.
-        Returns a list of floats - either regression values or class probabilities.
-        """
+    def predict(self, X: np.ndarray) -> List[float]:
+        """Predict the target values for the given feature matrix."""
         pass
 
     @abc.abstractmethod
-    def train(self, smiles_list: List[str], target_list: List[float]):
+    def train(self, X: np.ndarray, y: np.ndarray):
         """Train the model with set hyperparameters."""
         pass
 
     @abc.abstractmethod
-    def optimize(self, smiles_list: List[str], target_list: List[float]):
+    def optimize(self, X: np.ndarray, y: np.ndarray):
         """Optimize hyperparameters of the model and set them internally."""
         pass
 
     @abc.abstractmethod
-    def evaluate(self, smiles_list: List[str], target_list: List[float]) -> dict:
-        """
-        Evaluate the model on the given smiles list and target list.
-        Returns a dictionary of metrics appropriate for the task.
-        """
+    def evaluate(self, X: np.ndarray, target_list: List[float]) -> dict:
+        """Evaluate the model on the given feature matrix and targets."""
         pass
 
     def get_featurizer(self) -> FeaturizerBase | None:
@@ -98,21 +92,24 @@ class PredictorBase(abc.ABC):
             "rmse": metrics.root_mean_squared_error,
         }
         if metric_name not in metrics_dict.keys():
-            raise ValueError(f"Invalid metric name: '{metric_name}'. Supported metrics: {list(metrics_dict.keys())}")
+            raise ValueError(
+                f"Invalid metric name: '{metric_name}'. Supported metrics: {list(metrics_dict.keys())}"
+            )
         return metrics_dict[metric_name]
+
 
 class BinaryClassifierBase(PredictorBase, ABC):
     evaluation_metrics = ["accuracy", "roc_auc", "f1", "precision", "recall"]
     """
-    Base class for binary classification predictors. Implements common evaluation metrics 
+    Base class for binary classification predictors. Implements common evaluation metrics
     and classification thresholding.
     """
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-    def evaluate(self, smiles_list: List[str], target_list: List[float]) -> dict:
-        preds = self.predict(smiles_list)
+    def evaluate(self, X: np.ndarray, target_list: List[float]) -> dict:
+        preds = self.predict(X)
         metrics_dict = {}
         for m in self.evaluation_metrics:
             if m == "roc_auc":
@@ -131,6 +128,7 @@ class BinaryClassifierBase(PredictorBase, ABC):
         """Return the classification threshold value. Default is 0.5."""
         return 0.5
 
+
 class RegressorBase(PredictorBase, ABC):
     evaluation_metrics = ["mse", "rmse", "mae", "r2"]
     """
@@ -140,8 +138,8 @@ class RegressorBase(PredictorBase, ABC):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-    def evaluate(self, smiles_list: List[str], target_list: List[float]) -> dict:
-        preds = self.predict(smiles_list)
+    def evaluate(self, X: np.ndarray, target_list: List[float]) -> dict:
+        preds = self.predict(X)
         metrics_dict = {}
         for m in self.evaluation_metrics:
             metrics_dict[m] = self.get_metric_callable(m)(target_list, preds)

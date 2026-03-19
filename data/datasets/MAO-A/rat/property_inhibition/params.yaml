@@ -4,3 +4,4 @@ category: "MAOA_inhibition"
 dataset_params:
   main_units:
     - "%"
+onehot: "100"

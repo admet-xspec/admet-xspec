@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import gin
+import numpy as np
 import pandas as pd
 from datetime import datetime
 import logging
@@ -143,6 +144,9 @@ class ProcessingPipeline:
         # Step 6: Load optimized hyperparameters if requested
         if self.do_load_optimized_hyperparams:
             self._load_hyperparams_optimized_on_test_origin()
+
+        # Build encoding map (maps friendly_name → onehot string) for featurization
+        self.source_encoding_map = self._build_source_encoding_map()
 
         # Step 7: Optimize hyperparameters if requested
         if self.do_optimize_hyperparams:
@@ -523,16 +527,27 @@ class ProcessingPipeline:
         # Inject loaded hyperparameters into predictor
         self.predictor.set_hyperparameters(self.optimized_hyperparameters)
 
+    def _build_source_encoding_map(self) -> dict:
+        """Build {friendly_name → onehot_str} map from dataset yamls."""
+        return {name: self.data_interface.get_onehot(name) for name in self.datasets}
+
+    def _df_to_scikit_form(self, df: pd.DataFrame) -> Tuple[np.ndarray, np.ndarray]:
+        """Featurize a dataframe into (X, y) ready for sklearn."""
+        smiles = df[self.smiles_col].tolist()
+        aux = df[self.source_col].map(self.source_encoding_map).tolist()
+        X = self.featurizer.featurize(smiles, aux)
+        X = np.atleast_2d(np.array(X, dtype=np.float32))
+        y = np.array(df[self.target_col].tolist(), dtype=np.float32)
+        return X, y
+
     def _optimize(self, train_df: pd.DataFrame) -> None:
         """Optimize hyperparameters of the predictor on the training set."""
         if not self.predictor:
             raise ValueError("No predictor configured; cannot optimize hyperparameters")
 
-        X_train = train_df[self.smiles_col].tolist()
-        y_train = train_df[self.target_col].tolist()
-
+        X, y = self._df_to_scikit_form(train_df)
         logging.info("Optimizing hyperparameters on the training set")
-        self.predictor.optimize(X_train, y_train)
+        self.predictor.optimize(X, y)
         optimized_hyperparams = self.predictor.get_hyperparameters()
         logging.info(f"Optimized hyperparameters: {optimized_hyperparams}")
 
@@ -541,10 +556,8 @@ class ProcessingPipeline:
         if not self.predictor:
             raise ValueError("No predictor configured; cannot train model")
 
-        X_train = train_df[self.smiles_col].tolist()
-        y_train = train_df[self.target_col].tolist()
-
-        self.predictor.train(X_train, y_train)
+        X, y = self._df_to_scikit_form(train_df)
+        self.predictor.train(X, y)
 
         # Save hyperparameters
         hyperparams = self.predictor.get_hyperparameters()
@@ -584,8 +597,7 @@ class ProcessingPipeline:
             raise ValueError("No predictor configured; cannot evaluate model")
 
         logging.info("Evaluating the model on test dataset")
-        X_test = test_df[self.smiles_col].tolist()
-        y_test = test_df[self.target_col].tolist()
+        X_test, y_test = self._df_to_scikit_form(test_df)
         metrics = self.predictor.evaluate(X_test, y_test)
         # Estimate confidence intervals for metrics using bootstrapping
         ci_lower, ci_upper = self._estimate_confidence_intervals(test_df)
@@ -602,15 +614,16 @@ class ProcessingPipeline:
         )
 
     def _estimate_confidence_intervals(
-        self, test_df: pd.DataFrame, percentiles=95, n_bootstraps=1000
+        self, test_df: pd.DataFrame, percentiles=95, n_bootstraps=10
     ) -> Tuple[dict, dict]:
         """Estimate confidence intervals for evaluation metrics using bootstrapping."""
         # sample with replacement from test_df, evaluate on each bootstrap sample, compute statistics
         metrics_list = []
         for i in range(n_bootstraps):
+            if i % (n_bootstraps / 10) == 0:
+                logging.info(f"Bootstrap loop {int(i / (n_bootstraps / 10)) + 1} / 10")
             bootstrap_sample = test_df.sample(frac=1.0, replace=True)
-            X_bootstrap = bootstrap_sample[self.smiles_col].tolist()
-            y_bootstrap = bootstrap_sample[self.target_col].tolist()
+            X_bootstrap, y_bootstrap = self._df_to_scikit_form(bootstrap_sample)
             metrics = self.predictor.evaluate(X_bootstrap, y_bootstrap)
             metrics_list.append(metrics)
         # Compute confidence intervals (percentile) for each metric
@@ -626,8 +639,7 @@ class ProcessingPipeline:
 
         logging.info("Retraining the final model on the full dataset (train + test)")
         full_df = pd.concat([train_df, test_df], ignore_index=True)
-        X_full = full_df[self.smiles_col].tolist()
-        y_full = full_df[self.target_col].tolist()
+        X_full, y_full = self._df_to_scikit_form(full_df)
         self.predictor.train(X_full, y_full)
 
     def _dump_training_info(self) -> None:
