@@ -1,27 +1,12 @@
-RfClassifier.target_metric = 'roc_auc'
-RfClassifier.optimization_iterations = 100
-RfClassifier.n_jobs = -1
-RfClassifier.n_folds = 5
-
-RfClassifier.params_distribution = {
-    'n_estimators': @n_estimators/QLogUniform(),
-    'criterion': ['gini', 'entropy'],
-    'max_depth': @max_depth/QUniform(),
-    'min_samples_split': @min_samples_split/QUniform(),
-    'min_samples_leaf': @min_samples_leaf/QUniform(),
-    'max_features': ['sqrt', 'log2']
+ProcessingPipeline.params_distribution = {
+    'n_estimators': ('int_log', 100, 2000),
+    'criterion': ('categorical', ['gini', 'entropy']),
+    'max_depth': ('int', 2, 100),
+    'min_samples_split': ('int', 2, 10),
+    'min_samples_leaf': ('int', 1, 10),
+    'max_features': ('categorical', ['sqrt', 'log2'])
     }
 
-#   Parametrizing the distribution functions:
-
-n_estimators/QLogUniform.min = 100
-n_estimators/QLogUniform.max = 2000
-
-max_depth/QUniform.min = 2
-max_depth/QUniform.max = 50
-
-min_samples_split/QUniform.min = 2
-min_samples_split/QUniform.max = 10
-
-min_samples_leaf/QUniform.min = 1
-min_samples_leaf/QUniform.max = 10
+ProcessingPipeline.n_optim_cv_folds = 5
+ProcessingPipeline.n_optim_iter = 10
+ProcessingPipeline.target_metric = 'roc_auc'

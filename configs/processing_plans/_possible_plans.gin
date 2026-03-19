@@ -6,5 +6,6 @@
 # ProcessingPipeline.do_load_optimized_hyperparams: bool
 # ProcessingPipeline.do_optimize_hyperparams: bool
 # ProcessingPipeline.do_train_model: bool
+# ProcessingPipeline.do_get_metrics_confidence_interval : bool
 # ProcessingPipeline.do_save_trained_model: bool
 # ProcessingPipeline.do_refit_final_model: bool

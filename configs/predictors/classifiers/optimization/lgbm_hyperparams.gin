@@ -1,26 +1,11 @@
-LightGbmClassifier.target_metric = 'roc_auc'
-LightGbmClassifier.optimization_iterations = 100
-LightGbmClassifier.n_jobs = -1
-LightGbmClassifier.n_folds = 5
-
-LightGbmClassifier.params_distribution = {
-    'n_estimators': @n_estimators/QLogUniform(),
-    'max_depth': @max_depth/QUniform(),
-    'num_leaves': @num_leaves/QUniform(),
-    'min_child_samples': @min_child_samples/QUniform(),
-    'learning_rate': [0.01, 0.05, 0.1],
+ProcessingPipeline.params_distribution = {
+    'n_estimators': ('int', 100, 2000),
+    'max_depth': ('int', 2, 50),
+    'num_leaves': ('int', 20, 200),
+    'min_child_samples': ('int', 10, 100),
+    'learning_rate': ('categorical', [0.01, 0.05, 0.1])
     }
 
-#   Parametrizing the distribution functions:
-
-n_estimators/QLogUniform.min = 100
-n_estimators/QLogUniform.max = 2000
-
-max_depth/QUniform.min = 2
-max_depth/QUniform.max = 50
-
-num_leaves/QUniform.min = 20
-num_leaves/QUniform.max = 200
-
-min_child_samples/QUniform.min = 10
-min_child_samples/QUniform.max = 100
+ProcessingPipeline.n_optim_cv_folds = 5
+ProcessingPipeline.n_optim_iter = 10
+ProcessingPipeline.target_metric = 'roc_auc'
