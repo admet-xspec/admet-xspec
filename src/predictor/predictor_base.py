@@ -20,6 +20,11 @@ class PredictorBase(abc.ABC):
         """Return the name of the predictor."""
         pass
 
+    @property
+    def uses_internal_featurizer(self) -> bool:
+        """Return True if the model uses a proprietary featurizer."""
+        return False
+
     @abc.abstractmethod
     def get_hyperparameters(self) -> dict:
         """Return the hyperparameters of the model."""
