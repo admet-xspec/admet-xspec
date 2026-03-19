@@ -5,10 +5,15 @@ import pandas as pd
 from datetime import datetime
 import logging
 from typing import List, Optional, Tuple
+import time
+import optuna
+from tqdm import tqdm
+from copy import deepcopy
 
 from src.data.data_interface import DataInterface
 from src.data.featurizer import FeaturizerBase
 from src.data.reducer import ReducerBase
+from src.utils import sample_optuna_params
 from src.data.visualizer import VisualizerBase
 from src.data.split import DataSplitterBase
 from src.data.sim_filter import SimilarityFilterBase
@@ -52,6 +57,14 @@ class ProcessingPipeline:
         manual_train_splits: List[str] | None = None,
         manual_test_splits: List[str] | None = None,
         test_origin_dataset: str | None = None,
+        # Hyperparameter optimization
+        params_distribution: dict | None = None,
+        n_optim_cv_folds: int | None = None,
+        n_optim_iter: int | None = None,
+        n_optim_jobs: int = -1,
+        target_metric: str | None = None,
+        ci_n_bootstraps: int = 20,
+        ci_percentiles: float = 95.0,
         # Other
         task_setting: str = "regression",  # "regression" or "binary_classification"
         smiles_col: str = "smiles",
@@ -59,6 +72,7 @@ class ProcessingPipeline:
         target_col: str = "y",
         logfile: str | None = None,
         override_cache: bool = False,
+        show_progress_bar: bool = True,
         ci_n_bootstraps: int = 1000,
         ci_percentiles: float = 95.0,
     ):
@@ -98,10 +112,20 @@ class ProcessingPipeline:
         self.ci_n_bootstraps = ci_n_bootstraps
         self.ci_percentiles = ci_percentiles
 
+        # Hyperparameter optimization
+        self.params_distribution = params_distribution
+        self.n_optim_cv_folds = n_optim_cv_folds
+        self.n_optim_iter = n_optim_iter
+        self.n_optim_jobs = n_optim_jobs
+        self.target_metric = target_metric
+        self.optuna_sampler = optuna.samplers.TPESampler(seed=42)
+
         # Let the data interface know global settings
         self.data_interface.set_task_setting(task_setting)
         self.data_interface.set_logfile(logfile)
         self.data_interface.set_override_cache(override_cache)
+
+        # TODO: Clean up that mess below
 
         # If the predictor object does not implement internal featurization,
         # inject the configured featurizer (only if predictor exists)
@@ -115,6 +139,9 @@ class ProcessingPipeline:
         self.split_key = self._get_split_key(self.datasets)
         self.predictor_key = self._get_predictor_key()
         self.optimized_hyperparameters = None
+
+        # Other
+        self.show_progress_bar = show_progress_bar
 
         # Validate configuration early
         self._validate_configuration()
@@ -152,7 +179,7 @@ class ProcessingPipeline:
 
         # Step 7: Optimize hyperparameters if requested
         if self.do_optimize_hyperparams:
-            self._optimize(train_df)
+            self._optimize_hyperparams(train_df)
 
         # Step 8: Train and evaluate the model if requested
         if self.do_train_model:
@@ -461,23 +488,28 @@ class ProcessingPipeline:
     def _log_pipeline_start(self) -> None:
         """Log initial pipeline configuration for easy debugging."""
         logging.info(datetime.now().strftime("%Y-%m-%d-%H-%M-%S"))
-        logging.info("# =================== Processing Pipeline ==================== #")
-        logging.info(f"Starting processing pipeline with datasets: {self.datasets}")
+        logging.info(
+            "# ================================ ADMET-XSpec ================================ #"
+        )
+        logging.info("Configuration summary:")
+        logging.info(f"* Datasets: {self.datasets}")
         if self.splitter:
-            logging.info(f"Splitter: {self.splitter.name}")
+            logging.info(f"* Splitter: {self.splitter.name}")
         if self.sim_filter:
             logging.info(
-                f"Filtering augmented datasets with: {self.sim_filter.name} against {self.sim_filter.against}"
+                f"* Filtering aug. data with {self.sim_filter.name} against {self.sim_filter.against}"
             )
         if self.featurizer:
-            logging.info(f"Using featurizer: {self.featurizer.name}")
+            logging.info(f"* Featurizer: {self.featurizer.name}")
+            logging.info(f"* Split key: {self.split_key}")
         if self.predictor:
-            logging.info(f"Using predictor: {self.predictor.name}")
+            logging.info(f"* Predictor: {self.predictor.name}")
+            logging.info(f"* Predictor key: {self.predictor_key}")
         if self.hyperparams_source_sim_filter:
             logging.info(
-                f"Loading hyperparameters filtered by: {self.hyperparams_source_sim_filter.name} against {self.hyperparams_source_sim_filter.against}"
+                f"* Loading hyperparams filtered by {self.hyperparams_source_sim_filter.name} against {self.hyperparams_source_sim_filter.against}"
             )
-        logging.info(f"Task setting: {self.task_setting}")
+        logging.info(f"* Task setting: {self.task_setting}")
 
     # --------------------- Identification / caching --------------------- #
 
@@ -507,14 +539,6 @@ class ProcessingPipeline:
     # --------------------- Model training / evaluation --------------------- #
 
     def _load_hyperparams_optimized_on_test_origin(self) -> None:
-        if not self.test_origin_dataset:
-            raise ValueError(
-                "test_origin_dataset must be set to load optimized hyperparameters"
-            )
-        if not self.predictor:
-            raise ValueError(
-                "No predictor configured; cannot load or inject hyperparameters"
-            )
 
         test_origin_split_key = self._get_split_key(
             [self.test_origin_dataset], custom_filter=self.hyperparams_source_sim_filter
@@ -526,34 +550,24 @@ class ProcessingPipeline:
         logging.warning(
             f"Loaded hyperparameters optimized previously on {self.test_origin_dataset}"
         )
-        logging.warning(f"Optimized hyperparameters: {self.optimized_hyperparameters}")
         logging.warning(
-            "This configuration will override hyperparameters provided in the predictor config file."
+            f"* Optimized hyperparameters: {self.optimized_hyperparameters}"
+        )
+        logging.warning(
+            "This configuration will override hyperparameters provided in the predictor config file!"
         )
         # Inject loaded hyperparameters into predictor
         self.predictor.set_hyperparameters(self.optimized_hyperparameters)
 
-    def _optimize(self, train_df: pd.DataFrame) -> None:
-        """Optimize hyperparameters of the predictor on the training set."""
-        if not self.predictor:
-            raise ValueError("No predictor configured; cannot optimize hyperparameters")
-
-        X_train = train_df[self.smiles_col].tolist()
-        y_train = train_df[self.target_col].tolist()
-
-        logging.info("Optimizing hyperparameters on the training set")
-        self.predictor.optimize(X_train, y_train)
-        optimized_hyperparams = self.predictor.get_hyperparameters()
-        logging.info(f"Optimized hyperparameters: {optimized_hyperparams}")
-
     def _train(self, train_df: pd.DataFrame) -> None:
         """Train the predictor and persist model + hyperparams."""
-        if not self.predictor:
-            raise ValueError("No predictor configured; cannot train model")
 
         X_train = train_df[self.smiles_col].tolist()
         y_train = train_df[self.target_col].tolist()
 
+        logging.info(f"* Training {self.predictor.__class__.__name__}")
+        logging.info(f" * Dataset size: {len(train_df)}")
+        logging.debug(f"* Hyperparameters: {self.predictor.get_hyperparameters()}")
         self.predictor.train(X_train, y_train)
 
         # Save hyperparameters
@@ -580,33 +594,37 @@ class ProcessingPipeline:
         )
 
     def _pickle_trained_model(self, as_refit=False) -> None:
-        """Save the trained model."""
-        if not self.predictor:
-            raise ValueError("No predictor configured; cannot pickle model")
-
         self.data_interface.pickle_model(
             self.predictor, self.predictor_key, self.split_key, save_as_refit=as_refit
         )
 
     def _evaluate(self, test_df: pd.DataFrame, get_CIs=False) -> None:
-        """Evaluate trained predictor, log metrics and persist them."""
-        if not self.predictor:
-            raise ValueError("No predictor configured; cannot evaluate model")
-
-        logging.info("Evaluating the model on test dataset")
+        logging.info("* Evaluating the model on a holdout test dataset")
         X_test = test_df[self.smiles_col].tolist()
         y_test = test_df[self.target_col].tolist()
 
         # Evaluate the model on a holdout test set
         metrics = self.predictor.evaluate(X_test, y_test)
+        logging.info("\nMetrics (markdown):")
+        log_markdown_table(metrics)
 
         if get_CIs:
             # Estimate confidence intervals for metrics using bootstrapping
+            logging.info(f"* Estimating confidence intervals")
+            logging.info(
+                f"* Bootstrap parameters: n={self.ci_n_bootstraps}, percentiles={self.ci_percentiles}"
+            )
             ci_lower, ci_upper = self._estimate_confidence_intervals(test_df)
             confidence_intervals = {
                 metric: [ci_lower[metric], ci_upper[metric]]
                 for metric, value in metrics.items()
             }
+            logging.info(f"\nConfidence intervals (markdown):")
+            logging.info("* lower")
+            log_markdown_table(ci_lower)
+            logging.info("* upper")
+            log_markdown_table(ci_upper)
+
             metrics_dict = {
                 "metrics": metrics,
                 "percentile_95_ci": confidence_intervals,
@@ -614,9 +632,6 @@ class ProcessingPipeline:
         else:
             metrics_dict = {"metrics": metrics}
 
-        logging.info(f"Evaluation metrics: {metrics_dict}")
-        logging.info("Metrics (markdown):")
-        log_markdown_table(metrics)
         self.data_interface.save_metrics(
             metrics_dict, self.predictor_key, self.split_key
         )
@@ -627,7 +642,9 @@ class ProcessingPipeline:
         """Estimate confidence intervals for evaluation metrics using bootstrapping."""
         # sample with replacement from test_df, evaluate on each bootstrap sample, compute statistics
         metrics_list = []
-        for i in range(self.ci_n_bootstraps):
+        for _ in tqdm(
+            range(self.ci_n_bootstraps), disable=(not self.show_progress_bar)
+        ):
             bootstrap_sample = test_df.sample(frac=1.0, replace=True)
             X_bootstrap = bootstrap_sample[self.smiles_col].tolist()
             y_bootstrap = bootstrap_sample[self.target_col].tolist()
@@ -644,11 +661,70 @@ class ProcessingPipeline:
         if not self.predictor:
             raise ValueError("No predictor configured; cannot retrain final model")
 
-        logging.info("Retraining the final model on the full dataset (train + test)")
+        logging.info("* Retraining the final model on the full dataset (train + test)")
         full_df = pd.concat([train_df, test_df], ignore_index=True)
         X_full = full_df[self.smiles_col].tolist()
         y_full = full_df[self.target_col].tolist()
         self.predictor.train(X_full, y_full)
+
+    def _optimize_hyperparams(self, train_df: pd.DataFrame) -> None:
+        """Optimize hyperparameters of the predictor."""
+
+        # TODO: move this somewhere else
+        _METRICS_TO_MAXIMIZE = {
+            "roc_auc",
+            "accuracy",
+            "f1",
+            "precision",
+            "recall",
+            "r2",
+        }
+        _METRICS_TO_MINIMIZE = {"rmse", "mae", "mse"}
+        if self.target_metric in _METRICS_TO_MAXIMIZE:
+            direction = "maximize"
+        elif self.target_metric in _METRICS_TO_MINIMIZE:
+            direction = "minimize"
+        else:
+            raise ValueError(
+                f"Unknown target metric {self.target_metric} for optimization"
+            )
+
+        # Extract features and labels for training
+        X, y = train_df[self.smiles_col].tolist(), train_df[self.target_col]
+
+        # Define an objective funcion for the optimization process
+        # Here it is a k-fold cross-validation on some target metric
+        def objective(trial: optuna.Trial) -> float:
+            # Instantiate a fresh predictor for the trial
+            trial_predictor = deepcopy(self.predictor)
+            # Inject hyperparams
+            params = sample_optuna_params(trial, self.params_distribution)
+            logging.debug(f"Trial {trial.number} sampled hyperparameters: {params}")
+            trial_predictor.set_hyperparameters(params)
+            trial_predictor.train(X, y)
+            # Evaluate with cross-validation
+            scores = trial_predictor.cross_validate(X, y, n_folds=self.n_optim_cv_folds)
+            mean_score = scores[self.target_metric].mean()
+            return mean_score
+
+        start_time = time.time()
+
+        # Set up optuna study and run optimization
+        study = optuna.create_study(
+            direction=direction,
+            study_name="_".join([self.predictor_key, self.split_key]),
+            sampler=self.optuna_sampler,
+        )
+        study.optimize(objective, n_trials=self.n_optim_iter, n_jobs=self.n_optim_jobs)
+        elapsed_time = time.time() - start_time
+        logging.info(
+            f"Hyperparameter optimization completed in {elapsed_time/60:.2f} minutes"
+        )
+        logging.info(f"* Retaining best hyperparams:")
+        logging.info(study.best_params)
+
+        # Retain best hyperparameters
+        self.predictor.set_hyperparameters(study.best_params)
 
     def _dump_training_info(self) -> None:
         self.data_interface.dump_training_logs(self.predictor_key, self.split_key)

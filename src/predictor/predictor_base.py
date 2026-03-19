@@ -1,9 +1,9 @@
 from abc import ABC
-from typing import List
 import abc
+from src.utils import compute_sklearn_metric
 import numpy as np
-from sklearn import metrics
-
+from sklearn.model_selection import KFold
+from typing import Dict, List, Any
 from src.data.featurizer import FeaturizerBase
 
 
@@ -49,12 +49,9 @@ class PredictorBase(abc.ABC):
         pass
 
     @abc.abstractmethod
-    def optimize(self, smiles_list: List[str], target_list: List[float]):
-        """Optimize hyperparameters of the model and set them internally."""
-        pass
-
-    @abc.abstractmethod
-    def evaluate(self, smiles_list: List[str], target_list: List[float]) -> dict:
+    def evaluate(
+        self, smiles_list: List[str], target_list: List[float]
+    ) -> Dict[str, Any]:
         """
         Evaluate the model on the given smiles list and target list.
         Returns a dictionary of metrics appropriate for the task.
@@ -84,27 +81,39 @@ class PredictorBase(abc.ABC):
         )
         return f"{self.name}_{feturizer_key}"
 
-    @staticmethod
-    def get_metric_callable(metric_name: str):
-        metrics_dict = {
-            "accuracy": metrics.accuracy_score,
-            "roc_auc": metrics.roc_auc_score,
-            "f1": metrics.f1_score,
-            "precision": metrics.precision_score,
-            "recall": metrics.recall_score,
-            "mse": metrics.mean_squared_error,
-            "mae": metrics.mean_absolute_error,
-            "r2": metrics.r2_score,
-            "rmse": metrics.root_mean_squared_error,
-        }
-        if metric_name not in metrics_dict.keys():
-            raise ValueError(f"Invalid metric name: '{metric_name}'. Supported metrics: {list(metrics_dict.keys())}")
-        return metrics_dict[metric_name]
+    def cross_validate(
+        self, smiles_list: List[str], target_list: List[float], n_folds: int = 1
+    ) -> Dict[str, Any]:
+        """Perform a k-fold cross-validation on the given dataset and return the average metrics across folds."""
+        metrics_dicts = []
+        kf = KFold(n_splits=n_folds, shuffle=True, random_state=self.random_state)
+        kf.get_n_splits(smiles_list, target_list)
+        for train_index, test_index in kf.split(smiles_list, target_list):
+            X_train, X_test = [smiles_list[i] for i in train_index], [
+                smiles_list[i] for i in test_index
+            ]
+            y_train, y_test = [target_list[i] for i in train_index], [
+                target_list[i] for i in test_index
+            ]
+            self.train(X_train, y_train)
+            fold_metrics = self.evaluate(X_test, y_test)
+            metrics_dicts.append(fold_metrics)
+        # Average metrics across folds
+        out_dict = {}
+        for dict in metrics_dicts:
+            for k, v in dict.items():
+                if k not in out_dict:
+                    out_dict[k] = []
+                out_dict[k].append(v)
+        for k, v in out_dict.items():
+            out_dict[k] = np.mean(v)
+        return out_dict
+
 
 class BinaryClassifierBase(PredictorBase, ABC):
     evaluation_metrics = ["accuracy", "roc_auc", "f1", "precision", "recall"]
     """
-    Base class for binary classification predictors. Implements common evaluation metrics 
+    Base class for binary classification predictors. Implements common evaluation metrics
     and classification thresholding.
     """
 
@@ -117,10 +126,10 @@ class BinaryClassifierBase(PredictorBase, ABC):
         for m in self.evaluation_metrics:
             if m == "roc_auc":
                 # roc_auc needs class probabilities
-                metrics_dict[m] = self.get_metric_callable(m)(target_list, preds)
+                metrics_dict[m] = compute_sklearn_metric(m)(target_list, preds)
             else:
                 binary_preds = self.classify(preds)
-                metrics_dict[m] = self.get_metric_callable(m)(target_list, binary_preds)
+                metrics_dict[m] = compute_sklearn_metric(m)(target_list, binary_preds)
         return metrics_dict
 
     def classify(self, preds):
@@ -130,6 +139,7 @@ class BinaryClassifierBase(PredictorBase, ABC):
     def class_threshold(self) -> float:
         """Return the classification threshold value. Default is 0.5."""
         return 0.5
+
 
 class RegressorBase(PredictorBase, ABC):
     evaluation_metrics = ["mse", "rmse", "mae", "r2"]
@@ -144,5 +154,5 @@ class RegressorBase(PredictorBase, ABC):
         preds = self.predict(smiles_list)
         metrics_dict = {}
         for m in self.evaluation_metrics:
-            metrics_dict[m] = self.get_metric_callable(m)(target_list, preds)
+            metrics_dict[m] = compute_sklearn_metric(m)(target_list, preds)
         return metrics_dict
