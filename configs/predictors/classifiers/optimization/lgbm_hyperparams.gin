@@ -6,6 +6,6 @@ ProcessingPipeline.params_distribution = {
     'learning_rate': ('categorical', [0.01, 0.05, 0.1])
     }
 
-ProcessingPipeline.n_folds = 5
-ProcessingPipeline.n_iter = 10
+ProcessingPipeline.n_optim_cv_folds = 5
+ProcessingPipeline.n_optim_iter = 10
 ProcessingPipeline.target_metric = 'roc_auc'
