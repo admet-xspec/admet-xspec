@@ -68,7 +68,7 @@ class TanimotoCalculator:
         Returns:
             Dictionary containing max, min, mean, and quartiles of Tanimoto distances
         """
-        query_fp = self.featurizer.featurize([query], [])[0]
+        query_fp = self.featurizer.get_internal_featurizer().featurize([query], [])[0]
         similarities = self._calculate_similarities(query_fp)
         distances = 1 - similarities
 
