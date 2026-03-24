@@ -2,6 +2,7 @@ import pandas as pd
 import gin
 import logging
 import pickle
+import numpy as np
 from src.utils import (
     get_clean_smiles,
     get_nice_class_name,
@@ -37,7 +38,8 @@ class InferencePipeline:
         valid_data = self.data[self.data["is_valid"]]
 
         # Inference
-        y_pred = self.model.predict(valid_data["smiles"].tolist())
+        X = self._featurize(valid_data["smiles"].tolist())
+        y_pred = self.model.predict(X)
         if hasattr(self.model, "classify"):
             y_class = self.model.classify(y_pred)
         else:
@@ -61,9 +63,8 @@ class InferencePipeline:
 
     def evaluate(self):
         valid_data = self.data[self.data["is_valid"]]
-        X = valid_data["smiles"].tolist()
+        X = self._featurize(valid_data["smiles"].tolist())
         y_true = valid_data["y"].tolist()
-        # TODO: Make this more robust, as model.evaluate() method uses predict() internally
         metrics = self.model.evaluate(X, y_true)
         logging.info(f"Evaluation metrics: {metrics}")
 
@@ -81,6 +82,19 @@ class InferencePipeline:
             logging.debug("No target column 'y' in the data - cannot compute metrics.")
             return False
         return True
+
+    def _featurize(self, smiles_list: list) -> np.ndarray:
+        """Convert SMILES to a feature matrix using the model's attached featurizer."""
+        featurizer = self.model.get_featurizer()
+        if featurizer is None:
+            raise ValueError(
+                "Model has no featurizer attached. Ensure the model was trained with an "
+                "external featurizer (i.e. uses_internal_featurizer=False)."
+            )
+        # source_list is only used by MultitaskFeaturizer; pass empty strings for single-endpoint inference
+        source_list = [""] * len(smiles_list)
+        X = featurizer.featurize(smiles_list, source_list)
+        return np.atleast_2d(np.array(X, dtype=np.float32))
 
     def _load_model(self, model_path):
         """

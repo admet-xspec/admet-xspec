@@ -19,7 +19,7 @@ class FeaturizerBase(abc.ABC):
 
     @abc.abstractmethod
     def featurize(self, smiles_list: List[str], source_list: List[str]) -> np.ndarray:
-        """Convert SMILES strings to numerical feature arrays. Label_list is for Multitask, but remains elsewhere to maintain substitutability"""
+        """Convert SMILES strings to numerical feature arrays. source_list is for Multitask, but remains elsewhere to maintain substitutability"""
         pass
 
     @abc.abstractmethod
@@ -274,8 +274,8 @@ class PropertyEcfpFeaturizer(FeaturizerBase):
 
     def featurize(self, smiles_list: List[str], source_list: List[str]) -> np.ndarray:
         """Generate combined ECFP and property features. label_list is not used."""
-        ecfp_features = self.ecfp.featurize(smiles_list)
-        property_features = self.properties.featurize(smiles_list)
+        ecfp_features = self.ecfp.featurize(smiles_list, source_list)
+        property_features = self.properties.featurize(smiles_list, source_list)
         return np.hstack((ecfp_features, property_features))
 
     def get_internal_featurizer(self) -> "FeaturizerBase":

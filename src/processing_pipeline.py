@@ -146,7 +146,12 @@ class ProcessingPipeline:
             self._load_hyperparams_optimized_on_test_origin()
 
         # Build encoding map (maps friendly_name → onehot string) for featurization
-        self.source_encoding_map = self._build_source_encoding_map()
+        if self.datasets:
+            source_names = self.datasets
+        else:
+            combined = pd.concat([train_df, test_df], ignore_index=True)
+            source_names = combined[self.source_col].dropna().unique().tolist()
+        self.source_encoding_map = self._build_source_encoding_map(source_names)
 
         # Step 7: Optimize hyperparameters if requested
         if self.do_optimize_hyperparams:
@@ -424,7 +429,7 @@ class ProcessingPipeline:
             df_copy = df.copy()
             # featurize expects list input per original contract; preserve that behavior
             df_copy[feature_name] = df_copy[self.smiles_col].apply(
-                lambda s: self.featurizer.featurize([s])
+                lambda s: self.featurizer.featurize([s], [])
             )
             if len(df_copy) != len(df):
                 raise RuntimeError(
@@ -527,9 +532,9 @@ class ProcessingPipeline:
         # Inject loaded hyperparameters into predictor
         self.predictor.set_hyperparameters(self.optimized_hyperparameters)
 
-    def _build_source_encoding_map(self) -> dict:
+    def _build_source_encoding_map(self, names: List[str]) -> dict:
         """Build {friendly_name → onehot_str} map from dataset yamls."""
-        return {name: self.data_interface.get_onehot(name) for name in self.datasets}
+        return {name: self.data_interface.get_onehot(name) for name in names}
 
     def _df_to_scikit_form(self, df: pd.DataFrame) -> Tuple[np.ndarray, np.ndarray]:
         """Featurize a dataframe into (X, y) ready for sklearn."""
@@ -619,9 +624,13 @@ class ProcessingPipeline:
         """Estimate confidence intervals for evaluation metrics using bootstrapping."""
         # sample with replacement from test_df, evaluate on each bootstrap sample, compute statistics
         metrics_list = []
+        # Determine how often to log progress (up to 10 steps, but not more than n_bootstraps)
+        n_log_steps = min(10, n_bootstraps)
+        step = max(1, n_bootstraps // n_log_steps)
         for i in range(n_bootstraps):
-            if i % (n_bootstraps / 10) == 0:
-                logging.info(f"Bootstrap loop {int(i / (n_bootstraps / 10)) + 1} / 10")
+            if i % step == 0:
+                current_step = min(i // step + 1, n_log_steps)
+                logging.info(f"Bootstrap loop {current_step} / {n_log_steps}")
             bootstrap_sample = test_df.sample(frac=1.0, replace=True)
             X_bootstrap, y_bootstrap = self._df_to_scikit_form(bootstrap_sample)
             metrics = self.predictor.evaluate(X_bootstrap, y_bootstrap)
