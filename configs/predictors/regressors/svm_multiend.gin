@@ -1,0 +1,13 @@
+predictor/gin.singleton.constructor = @SvmRegressor
+predictor = @predictor/gin.singleton()
+
+SvmRegressor.params = {
+    'C': 1,
+    'kernel': 'rbf',
+    'gamma': 'scale',
+    }
+
+SvmRegressor.multi_endpoint = True
+
+# Include hyperparameter optimization config
+include 'configs/predictors/regressors/optimization/svm_hyperparams.gin'
