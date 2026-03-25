@@ -3,8 +3,8 @@ import logging
 from typing import List, Dict, Optional, Any
 
 import numpy as np
+import pandas as pd
 from sklearn.utils.validation import check_array
-from sklearn.model_selection import RandomizedSearchCV
 from sklearn.base import BaseEstimator
 
 from src.data.featurizer import FeaturizerBase
@@ -22,11 +22,13 @@ class ScikitPredictorBase(abc.ABC):
     def __init__(
         self,
         params: Optional[Dict[str, Any]] = None,
+        multi_endpoint: bool = False,
         **kwargs,
     ):
         # Let other bases initialize (RegressorBase/BinaryClassifierBase -> PredictorBase)
         super().__init__(**kwargs)
         self.featurizer: Optional[FeaturizerBase] = getattr(self, "featurizer", None)
+        self.multi_endpoint: bool = multi_endpoint
         self.model: Optional[BaseEstimator] = None
         self.params: Dict[str, Any] = params or {}
 
@@ -35,32 +37,60 @@ class ScikitPredictorBase(abc.ABC):
         """Return an uninitialized sklearn estimator (subclass must implement)."""
         ...
 
-    def _featurize(self, smiles_list: List[str]) -> np.ndarray:
+    def _featurize(self, df: pd.DataFrame) -> np.ndarray:
+        """
+        Accepts dataframe with columns: smiles, y, source.
+        Returns a numpy array of shape (n_samples, n_features).
+        If multi-endpoint training, concatenates OHE endpoint encoding to features.
+        """
         if self.featurizer is None:
             raise ValueError(
-                "Featurizer is not set. Inject a FeaturizerBase before calling this method."
+                "Featurizer is not set. Inject a FeaturizerBase object before calling this method."
             )
-        X = self.featurizer.featurize(smiles_list)
-        arr = np.array(X, dtype=np.float32)
-        arr = np.atleast_2d(arr)
-        return arr
+        X = self.featurizer.featurize(df[self.smiles_col].tolist())
+        # If multi-endpoint, concatenate OHE endpoint encoding to features
+        if self.multi_endpoint:
+            endpoint_ohe = np.array(
+                [self.endpoint_ohe_map[src] for src in df[self.source_col]]
+            )
+            X = np.hstack([X, endpoint_ohe])
+        return X.astype(np.float32)
 
-    def train(self, smiles_list: List[str], target_list: List[float]) -> None:
+    def _create_endpoint_map(self, endpoints: pd.Series):
+        # count unique endpoints, sort them and create a mapping to OHE arrays
+        map = {}
+        unique_endpoints = sorted(endpoints.unique())
+        for i, endpoint in enumerate(unique_endpoints):
+            ohe = np.zeros(len(unique_endpoints), dtype=np.float32)
+            ohe[i] = 1.0
+            map[endpoint] = ohe
+        # log the map
+        logging.info(f"Mapped endpoints:")
+        for name, encoding in map.items():
+            logging.info(f"{name}: {encoding.tolist()}")
+        self.endpoint_ohe_map = map
+
+    def train(self, df: pd.DataFrame) -> None:
+        """
+        Accepts dataframe with columns: smiles, y, source.
+        """
+        # Initialize model
         self.model = self._init_model()
+        # For multi-endpoint tasks, create endpoint map for OHE encoding
+        if self.endpoint_ohe_map is None and self.multi_endpoint:
+            self._create_endpoint_map(df[self.source_col])
         if self.params:
             self.set_hyperparameters(self.params)
-
-        X = self._featurize(smiles_list)
-        y = np.array(target_list, dtype=np.float32)
-
+        X = self._featurize(df)
+        y = np.array(df[self.target_col], dtype=np.float32)
         self.model.fit(X, y)
 
-    def predict(self, smiles_list: List[str]) -> List[float]:
+    def predict(self, df: pd.DataFrame) -> List[float]:
         if self.model is None:
             raise ValueError(
                 "Model is not initialized. Call `train` or `optimize` first."
             )
-        X = self._featurize(smiles_list)
+        X = self._featurize(df)
 
         if np.isnan(X).any() or np.isinf(X).any():
             num_nan = int(np.sum(np.isnan(X)))

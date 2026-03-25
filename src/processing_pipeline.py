@@ -12,9 +12,7 @@ from copy import deepcopy
 
 from src.data.data_interface import DataInterface
 from src.data.featurizer import FeaturizerBase
-from src.data.reducer import ReducerBase
 from src.utils import sample_optuna_params
-from src.data.visualizer import VisualizerBase
 from src.data.split import DataSplitterBase
 from src.data.sim_filter import SimilarityFilterBase
 from src.predictor.predictor_base import PredictorBase
@@ -34,10 +32,8 @@ class ProcessingPipeline:
         self,
         # Execution flags
         do_load_datasets: bool,
-        do_visualize_datasets: bool,
         do_load_train_test: bool,
         do_dump_train_test: bool,
-        do_visualize_train_test: bool,
         do_load_optimized_hyperparams: bool,
         do_optimize_hyperparams: bool,
         do_train_model: bool,
@@ -48,7 +44,6 @@ class ProcessingPipeline:
         data_interface: DataInterface,
         predictor: PredictorBase | None = None,
         featurizer: FeaturizerBase | None = None,
-        reducer: ReducerBase | None = None,
         splitter: DataSplitterBase | None = None,
         sim_filter: SimilarityFilterBase | None = None,
         hyperparams_source_sim_filter: SimilarityFilterBase | None = None,
@@ -76,10 +71,8 @@ class ProcessingPipeline:
     ):
         # Execution flags
         self.do_load_datasets = do_load_datasets
-        self.do_visualize_datasets = do_visualize_datasets
         self.do_load_train_test = do_load_train_test
         self.do_dump_train_test = do_dump_train_test
-        self.do_visualize_train_test = do_visualize_train_test
         self.do_load_optimized_hyperparams = do_load_optimized_hyperparams
         self.do_optimize_hyperparams = do_optimize_hyperparams
         self.do_train_model = do_train_model
@@ -91,10 +84,13 @@ class ProcessingPipeline:
         self.data_interface = data_interface
         self.predictor = predictor
         self.featurizer = featurizer
-        self.reducer = reducer
         self.splitter = splitter
         self.sim_filter = sim_filter
         self.hyperparams_source_sim_filter = hyperparams_source_sim_filter
+
+        self.predictor.inject_smiles_col_ID(smiles_col)
+        self.predictor.inject_source_col_ID(source_col)
+        self.predictor.inject_target_col_ID(target_col)
 
         # Dataset & column config
         self.datasets = datasets or []
@@ -123,15 +119,8 @@ class ProcessingPipeline:
         self.data_interface.set_logfile(logfile)
         self.data_interface.set_override_cache(override_cache)
 
-        # TODO: Clean up that mess below
-
-        # If the predictor object does not implement internal featurization,
-        # inject the configured featurizer (only if predictor exists)
-        if self.predictor and not getattr(
-            self.predictor, "uses_internal_featurizer", False
-        ):
-            if self.featurizer is not None:
-                self.predictor.set_featurizer(self.featurizer)
+        # Inject featurizer into the model
+        self.predictor.set_featurizer(self.featurizer)
 
         # Derived identifiers / caches
         self.split_key = self._get_split_key(self.datasets)
@@ -151,35 +140,27 @@ class ProcessingPipeline:
         # Step 1: Load datasets
         augmentation_dfs, origin_df = self._load_all_datasets()
 
-        # Step 2: Visualize raw datasets if requested
-        if self.do_visualize_datasets:
-            self._visualize_raw_datasets(augmentation_dfs, origin_df)
-
-        # Step 3: Create train/test splits if requested
+        # Step 2: Create train/test splits if requested
         train_df, test_df = pd.DataFrame(), pd.DataFrame()
         if self.do_load_train_test:
             train_df, test_df = self._get_train_test_splits(augmentation_dfs, origin_df)
 
-            # Step 4: Save train/test splits if requested
+            # Step 3: Save train/test splits if requested
             if self.do_dump_train_test:
                 self._save_splits(train_df, test_df)
-
-            # Step 5: Visualize train/test splits if requested
-            if self.do_visualize_train_test:
-                self._visualize_splits(train_df, test_df)
 
         # Update registries
         self._update_registries()
 
-        # Step 6: Load optimized hyperparameters if requested
+        # Step 4: Load optimized hyperparameters if requested
         if self.do_load_optimized_hyperparams:
             self._load_hyperparams_optimized_on_test_origin()
 
-        # Step 7: Optimize hyperparameters if requested
+        # Step 5: Optimize hyperparameters if requested
         if self.do_optimize_hyperparams:
             self._optimize_hyperparams(train_df)
 
-        # Step 8: Train and evaluate the model if requested
+        # Step 6: Train and evaluate the model if requested
         if self.do_train_model:
             self._train(train_df)
 
@@ -250,54 +231,6 @@ class ProcessingPipeline:
             logging.info(f"Loaded split-origin dataset: {self.test_origin_dataset}")
 
         return augmentation_dfs, origin_df
-
-    def _visualize_raw_datasets(
-        self, augmentation_dfs: List[pd.DataFrame], origin_df: Optional[pd.DataFrame]
-    ) -> None:
-        """Featurize and visualize loaded datasets before splitting (if reducer is available)."""
-        if not self.reducer:
-            return
-
-        dataset_names = [n for n in self.datasets if n != self.test_origin_dataset]
-        dfs: List[pd.DataFrame] = []
-
-        if augmentation_dfs:
-            dfs.extend(self._featurize_datasets(augmentation_dfs))
-
-        if origin_df is not None:
-            dfs.extend(self._featurize_datasets([origin_df]))
-            dataset_names.append(self.test_origin_dataset)
-
-        if dfs:
-            self._visualize_and_save(dfs, dataset_names, "datasets")
-
-    def _visualize_splits(self, train_df: pd.DataFrame, test_df: pd.DataFrame) -> None:
-        """Featurize (if configured) and visualize train/test splits."""
-        if not self.reducer:
-            return
-
-        train_feat = (
-            self._featurize_datasets([train_df])[0] if self.featurizer else train_df
-        )
-        test_feat = (
-            self._featurize_datasets([test_df])[0] if self.featurizer else test_df
-        )
-        self._visualize_and_save([train_feat, test_feat], ["train", "test"], "split")
-
-    def _visualize_and_save(
-        self, dfs: List[pd.DataFrame], names: List[str], suffix: str
-    ) -> None:
-        """Delegate to reducer/visualizer to create an image and persist it."""
-        if not self.reducer:
-            return
-
-        visualizer: VisualizerBase = self.reducer.get_associated_visualizer()
-        df_map = {name: df for name, df in zip(names, dfs)}
-        img = visualizer.get_visualization(df_map)
-        timestamp = datetime.now().strftime("%d_%H_%M_%S")
-        save_path = self.data_interface.save_visualization(f"{timestamp}_{suffix}", img)
-        img.save(save_path)
-        logging.info(f"Saved visualization to: {save_path}")
 
     # --------------------- Splitting logic --------------------- #
 
@@ -442,28 +375,6 @@ class ProcessingPipeline:
 
     # --------------------- Small helpers --------------------- #
 
-    def _featurize_datasets(
-        self, dataset_dfs: List[pd.DataFrame]
-    ) -> List[pd.DataFrame]:
-        """Apply featurizer to each DataFrame, preserving row counts and adding feature column."""
-        if not self.featurizer:
-            return dataset_dfs
-
-        feature_name = self.featurizer.feature_name
-        featurized: List[pd.DataFrame] = []
-        for df in dataset_dfs:
-            df_copy = df.copy()
-            # featurize expects list input per original contract; preserve that behavior
-            df_copy[feature_name] = df_copy[self.smiles_col].apply(
-                lambda s: self.featurizer.featurize([s])
-            )
-            if len(df_copy) != len(df):
-                raise RuntimeError(
-                    f"Featurization failed: {len(df) - len(df_copy)} samples lost using {self.featurizer.name}"
-                )
-            featurized.append(df_copy)
-        return featurized
-
     def _aggregate_dataframes(
         self, dfs: List[pd.DataFrame], empty_if_none: bool = False
     ) -> pd.DataFrame:
@@ -560,13 +471,10 @@ class ProcessingPipeline:
     def _train(self, train_df: pd.DataFrame) -> None:
         """Train the predictor and persist model + hyperparams."""
 
-        X_train = train_df[self.smiles_col].tolist()
-        y_train = train_df[self.target_col].tolist()
-
         logging.info(f"* Training {self.predictor.__class__.__name__}")
-        logging.info(f" * Dataset size: {len(train_df)}")
+        logging.info(f"* Dataset size: {len(train_df)}")
         logging.debug(f"* Hyperparameters: {self.predictor.get_hyperparameters()}")
-        self.predictor.train(X_train, y_train)
+        self.predictor.train(train_df)
 
         # Save hyperparameters
         hyperparams = self.predictor.get_hyperparameters()
@@ -598,11 +506,9 @@ class ProcessingPipeline:
 
     def _evaluate(self, test_df: pd.DataFrame, get_CIs=False) -> None:
         logging.info("* Evaluating the model on a holdout test dataset")
-        X_test = test_df[self.smiles_col].tolist()
-        y_test = test_df[self.target_col].tolist()
 
         # Evaluate the model on a holdout test set
-        metrics = self.predictor.evaluate(X_test, y_test)
+        metrics = self.predictor.evaluate(test_df)
         logging.info("\nMetrics (markdown):")
         log_markdown_table(metrics)
 
@@ -644,9 +550,7 @@ class ProcessingPipeline:
             range(self.ci_n_bootstraps), disable=(not self.show_progress_bar)
         ):
             bootstrap_sample = test_df.sample(frac=1.0, replace=True)
-            X_bootstrap = bootstrap_sample[self.smiles_col].tolist()
-            y_bootstrap = bootstrap_sample[self.target_col].tolist()
-            metrics = self.predictor.evaluate(X_bootstrap, y_bootstrap)
+            metrics = self.predictor.evaluate(bootstrap_sample)
             metrics_list.append(metrics)
         # Compute confidence intervals (percentile) for each metric
         metrics = pd.DataFrame(metrics_list)
@@ -661,9 +565,7 @@ class ProcessingPipeline:
 
         logging.info("* Retraining the final model on the full dataset (train + test)")
         full_df = pd.concat([train_df, test_df], ignore_index=True)
-        X_full = full_df[self.smiles_col].tolist()
-        y_full = full_df[self.target_col].tolist()
-        self.predictor.train(X_full, y_full)
+        self.predictor.train(full_df)
 
     def _optimize_hyperparams(self, train_df: pd.DataFrame) -> None:
         """Optimize hyperparameters of the predictor."""
@@ -687,9 +589,6 @@ class ProcessingPipeline:
                 f"Unknown target metric {self.target_metric} for optimization"
             )
 
-        # Extract features and labels for training
-        X, y = train_df[self.smiles_col].tolist(), train_df[self.target_col]
-
         # Define an objective funcion for the optimization process
         # Here it is a k-fold cross-validation on some target metric
         def objective(trial: optuna.Trial) -> float:
@@ -699,9 +598,11 @@ class ProcessingPipeline:
             params = sample_optuna_params(trial, self.params_distribution)
             logging.debug(f"Trial {trial.number} sampled hyperparameters: {params}")
             trial_predictor.set_hyperparameters(params)
-            trial_predictor.train(X, y)
+            trial_predictor.train(train_df)
             # Evaluate with cross-validation
-            scores = trial_predictor.cross_validate(X, y, n_folds=self.n_optim_cv_folds)
+            scores = trial_predictor.cross_validate(
+                train_df, n_folds=self.n_optim_cv_folds
+            )
             mean_score = scores[self.target_metric].mean()
             return mean_score
 

@@ -5,12 +5,17 @@ import numpy as np
 from sklearn.model_selection import KFold
 from typing import Dict, List, Any
 from src.data.featurizer import FeaturizerBase
+import pandas as pd
 
 
 class PredictorBase(abc.ABC):
     def __init__(self, random_state: int = 42):
         self.featurizer: FeaturizerBase | None = None  # will be set if applicable
         self.random_state = random_state
+        self.smiles_col = "smiles"
+        self.source_col = "source"
+        self.target_col = "y"
+        self.endpoint_ohe_map = None
         # Set random seed for reproducibility
         np.random.seed(random_state)
 
@@ -19,11 +24,6 @@ class PredictorBase(abc.ABC):
     def name(self) -> str:
         """Return the name of the predictor."""
         pass
-
-    @property
-    def uses_internal_featurizer(self) -> bool:
-        """Return True if the model uses a proprietary featurizer."""
-        return False
 
     @abc.abstractmethod
     def get_hyperparameters(self) -> dict:
@@ -36,22 +36,20 @@ class PredictorBase(abc.ABC):
         pass
 
     @abc.abstractmethod
-    def predict(self, smiles_list: List[str]) -> List[float]:
+    def predict(self, df: pd.DataFrame) -> pd.Series:
         """
-        Predict the target values for the given smiles list.
-        Returns a list of floats - either regression values or class probabilities.
+        Predict the target values for the given dataset.
+        Returns a series of floats - either regression values or class probabilities.
         """
         pass
 
     @abc.abstractmethod
-    def train(self, smiles_list: List[str], target_list: List[float]):
+    def train(self, df: pd.DataFrame):
         """Train the model with set hyperparameters."""
         pass
 
     @abc.abstractmethod
-    def evaluate(
-        self, smiles_list: List[str], target_list: List[float]
-    ) -> Dict[str, Any]:
+    def evaluate(self, df: pd.DataFrame) -> Dict[str, Any]:
         """
         Evaluate the model on the given smiles list and target list.
         Returns a dictionary of metrics appropriate for the task.
@@ -81,22 +79,16 @@ class PredictorBase(abc.ABC):
         )
         return f"{self.name}_{feturizer_key}"
 
-    def cross_validate(
-        self, smiles_list: List[str], target_list: List[float], n_folds: int = 1
-    ) -> Dict[str, Any]:
+    def cross_validate(self, df: pd.DataFrame, n_folds: int = 1) -> Dict[str, Any]:
         """Perform a k-fold cross-validation on the given dataset and return the average metrics across folds."""
         metrics_dicts = []
         kf = KFold(n_splits=n_folds, shuffle=True, random_state=self.random_state)
-        kf.get_n_splits(smiles_list, target_list)
-        for train_index, test_index in kf.split(smiles_list, target_list):
-            X_train, X_test = [smiles_list[i] for i in train_index], [
-                smiles_list[i] for i in test_index
-            ]
-            y_train, y_test = [target_list[i] for i in train_index], [
-                target_list[i] for i in test_index
-            ]
-            self.train(X_train, y_train)
-            fold_metrics = self.evaluate(X_test, y_test)
+        kf.get_n_splits(df)
+        for train_index, test_index in kf.split(df):
+            train_df = df.iloc[train_index]
+            test_df = df.iloc[test_index]
+            self.train(train_df)
+            fold_metrics = self.evaluate(test_df)
             metrics_dicts.append(fold_metrics)
         # Average metrics across folds
         out_dict = {}
@@ -109,6 +101,15 @@ class PredictorBase(abc.ABC):
             out_dict[k] = np.mean(v)
         return out_dict
 
+    def inject_smiles_col_ID(self, name: str):
+        self.smiles_col = name
+
+    def inject_source_col_ID(self, name: str):
+        self.source_col = name
+
+    def inject_target_col_ID(self, name: str):
+        self.target_col = name
+
 
 class BinaryClassifierBase(PredictorBase, ABC):
     evaluation_metrics = ["accuracy", "roc_auc", "f1", "precision", "recall"]
@@ -120,16 +121,18 @@ class BinaryClassifierBase(PredictorBase, ABC):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-    def evaluate(self, smiles_list: List[str], target_list: List[float]) -> dict:
-        preds = self.predict(smiles_list)
+    def evaluate(self, df: pd.DataFrame) -> dict:
+        preds = self.predict(df)
         metrics_dict = {}
         for m in self.evaluation_metrics:
             if m == "roc_auc":
                 # roc_auc needs class probabilities
-                metrics_dict[m] = compute_sklearn_metric(m)(target_list, preds)
+                metrics_dict[m] = compute_sklearn_metric(m)(df[self.target_col], preds)
             else:
                 binary_preds = self.classify(preds)
-                metrics_dict[m] = compute_sklearn_metric(m)(target_list, binary_preds)
+                metrics_dict[m] = compute_sklearn_metric(m)(
+                    df[self.target_col], binary_preds
+                )
         return metrics_dict
 
     def classify(self, preds):
@@ -150,9 +153,9 @@ class RegressorBase(PredictorBase, ABC):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-    def evaluate(self, smiles_list: List[str], target_list: List[float]) -> dict:
-        preds = self.predict(smiles_list)
+    def evaluate(self, df: pd.DataFrame) -> dict:
+        preds = self.predict(df)
         metrics_dict = {}
         for m in self.evaluation_metrics:
-            metrics_dict[m] = compute_sklearn_metric(m)(target_list, preds)
+            metrics_dict[m] = compute_sklearn_metric(m)(df[self.target_col], preds)
         return metrics_dict

@@ -13,10 +13,12 @@ class RfRegressor(ScikitPredictorBase, RegressorBase):
         self,
         params: dict | None = None,
         random_state: int = 42,
+        multi_endpoint: bool = False,
     ):
         super().__init__(
             params=params,
             random_state=random_state,
+            multi_endpoint=multi_endpoint,
         )
 
     def _init_model(self):
@@ -33,10 +35,12 @@ class RfClassifier(ScikitPredictorBase, BinaryClassifierBase):
         self,
         params: dict | None = None,
         random_state: int = 42,
+        multi_endpoint: bool = False,
     ):
         super().__init__(
             params=params,
             random_state=random_state,
+            multi_endpoint=multi_endpoint,
         )
 
     def _init_model(self):
@@ -53,10 +57,12 @@ class SvmRegressor(ScikitPredictorBase, RegressorBase):
         self,
         params: dict | None = None,
         random_state: int = 42,
+        multi_endpoint: bool = False,
     ):
         super().__init__(
             params=params,
             random_state=random_state,
+            multi_endpoint=multi_endpoint,
         )
 
     def _init_model(self):
@@ -73,10 +79,12 @@ class SvmClassifier(ScikitPredictorBase, BinaryClassifierBase):
         self,
         params: dict | None = None,
         random_state: int = 42,
+        multi_endpoint: bool = False,
     ):
         super().__init__(
             params=params,
             random_state=random_state,
+            multi_endpoint=multi_endpoint,
         )
 
     def _init_model(self):
@@ -94,10 +102,12 @@ class XGBoostRegressor(ScikitPredictorBase, RegressorBase):
         self,
         params: dict | None = None,
         random_state: int = 42,
+        multi_endpoint: bool = False,
     ):
         super().__init__(
             params=params,
-            random_state=42,
+            random_state=random_state,
+            multi_endpoint=multi_endpoint,
         )
 
     def _init_model(self):
@@ -115,10 +125,12 @@ class XGBoostClassifier(ScikitPredictorBase, BinaryClassifierBase):
         self,
         params: dict | None = None,
         random_state: int = 42,
+        multi_endpoint: bool = False,
     ):
         super().__init__(
             params=params,
             random_state=random_state,
+            multi_endpoint=multi_endpoint,
         )
 
     def _init_model(self):
@@ -136,11 +148,12 @@ class LightGbmClassifier(ScikitPredictorBase, BinaryClassifierBase):
         self,
         params: dict | None = None,
         random_state: int = 42,
+        multi_endpoint: bool = False,
     ):
-        validate_lgbm_specific_params(params)
         super().__init__(
             params=params,
             random_state=random_state,
+            multi_endpoint=multi_endpoint,
         )
 
     def _init_model(self):
@@ -158,11 +171,12 @@ class LightGbmRegressor(ScikitPredictorBase, RegressorBase):
         self,
         params: dict | None = None,
         random_state: int = 42,
+        multi_endpoint: bool = False,
     ):
-        validate_lgbm_specific_params(params)
         super().__init__(
             params=params,
             random_state=random_state,
+            multi_endpoint=multi_endpoint,
         )
 
     def _init_model(self):
