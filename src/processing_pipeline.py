@@ -73,8 +73,6 @@ class ProcessingPipeline:
         logfile: str | None = None,
         override_cache: bool = False,
         show_progress_bar: bool = True,
-        ci_n_bootstraps: int = 1000,
-        ci_percentiles: float = 95.0,
     ):
         # Execution flags
         self.do_load_datasets = do_load_datasets
