@@ -12,20 +12,10 @@ class RfRegressor(ScikitPredictorBase, RegressorBase):
     def __init__(
         self,
         params: dict | None = None,
-        params_distribution: dict | None = None,
-        target_metric: str | None = None,
-        optimization_iterations: int | None = None,
-        n_folds: int | None = None,
-        n_jobs: int | None = None,
         random_state: int = 42,
     ):
         super().__init__(
             params=params,
-            params_distribution=params_distribution,
-            optimization_iterations=optimization_iterations,
-            target_metric=target_metric,
-            n_folds=n_folds,
-            n_jobs=n_jobs,
             random_state=random_state,
         )
 
@@ -42,20 +32,10 @@ class RfClassifier(ScikitPredictorBase, BinaryClassifierBase):
     def __init__(
         self,
         params: dict | None = None,
-        target_metric: str | None = None,
-        params_distribution: dict | None = None,
-        optimization_iterations: int | None = None,
-        n_folds: int | None = None,
-        n_jobs: int | None = None,
         random_state: int = 42,
     ):
         super().__init__(
             params=params,
-            target_metric=target_metric,
-            params_distribution=params_distribution,
-            optimization_iterations=optimization_iterations,
-            n_folds=n_folds,
-            n_jobs=n_jobs,
             random_state=random_state,
         )
 
@@ -72,20 +52,10 @@ class SvmRegressor(ScikitPredictorBase, RegressorBase):
     def __init__(
         self,
         params: dict | None = None,
-        target_metric: str | None = None,
-        params_distribution: dict | None = None,
-        optimization_iterations: int | None = None,
-        n_folds: int | None = None,
-        n_jobs: int | None = None,
         random_state: int = 42,
     ):
         super().__init__(
             params=params,
-            target_metric=target_metric,
-            params_distribution=params_distribution,
-            optimization_iterations=optimization_iterations,
-            n_folds=n_folds,
-            n_jobs=n_jobs,
             random_state=random_state,
         )
 
@@ -102,20 +72,10 @@ class SvmClassifier(ScikitPredictorBase, BinaryClassifierBase):
     def __init__(
         self,
         params: dict | None = None,
-        target_metric: str | None = None,
-        params_distribution: dict | None = None,
-        optimization_iterations: int | None = None,
-        n_folds: int | None = None,
-        n_jobs: int | None = None,
         random_state: int = 42,
     ):
         super().__init__(
             params=params,
-            target_metric=target_metric,
-            params_distribution=params_distribution,
-            optimization_iterations=optimization_iterations,
-            n_folds=n_folds,
-            n_jobs=n_jobs,
             random_state=random_state,
         )
 
@@ -133,20 +93,10 @@ class XGBoostRegressor(ScikitPredictorBase, RegressorBase):
     def __init__(
         self,
         params: dict | None = None,
-        target_metric: str | None = None,
-        params_distribution: dict | None = None,
-        optimization_iterations: int | None = None,
-        n_folds: int | None = None,
-        n_jobs: int | None = None,
         random_state: int = 42,
     ):
         super().__init__(
             params=params,
-            target_metric=target_metric,
-            params_distribution=params_distribution,
-            optimization_iterations=optimization_iterations,
-            n_folds=n_folds,
-            n_jobs=n_jobs,
             random_state=42,
         )
 
@@ -164,20 +114,10 @@ class XGBoostClassifier(ScikitPredictorBase, BinaryClassifierBase):
     def __init__(
         self,
         params: dict | None = None,
-        target_metric: str | None = None,
-        params_distribution: dict | None = None,
-        optimization_iterations: int | None = None,
-        n_folds: int | None = None,
-        n_jobs: int | None = None,
         random_state: int = 42,
     ):
         super().__init__(
             params=params,
-            target_metric=target_metric,
-            params_distribution=params_distribution,
-            optimization_iterations=optimization_iterations,
-            n_folds=n_folds,
-            n_jobs=n_jobs,
             random_state=random_state,
         )
 
@@ -188,27 +128,18 @@ class XGBoostClassifier(ScikitPredictorBase, BinaryClassifierBase):
     def name(self) -> str:
         return "XGB_clf"
 
+
 @gin.configurable()
 class LightGbmClassifier(ScikitPredictorBase, BinaryClassifierBase):
 
     def __init__(
         self,
         params: dict | None = None,
-        target_metric: str | None = None,
-        params_distribution: dict | None = None,
-        optimization_iterations: int | None = None,
-        n_folds: int | None = None,
-        n_jobs: int | None = None,
         random_state: int = 42,
     ):
         validate_lgbm_specific_params(params)
         super().__init__(
             params=params,
-            target_metric=target_metric,
-            params_distribution=params_distribution,
-            optimization_iterations=optimization_iterations,
-            n_folds=n_folds,
-            n_jobs=n_jobs,
             random_state=random_state,
         )
 
@@ -219,37 +150,18 @@ class LightGbmClassifier(ScikitPredictorBase, BinaryClassifierBase):
     def name(self) -> str:
         return "LightGBM_clf"
 
-    @staticmethod
-    def _validate_predictor_specific_params(params: dict):
-        if 'max_depth' in params and 'num_leaves' in params:
-            max_depth = params['max_depth']
-            num_leaves = params['num_leaves']
-            if num_leaves > 2 ** max_depth:
-                logging.warning(
-                    f"WARNING: num_leaves ({num_leaves}) should not be greater than 2^max_depth ({2 ** max_depth}). Adjusting num_leaves to {2 ** max_depth}."
-                )
 
 @gin.configurable()
 class LightGbmRegressor(ScikitPredictorBase, RegressorBase):
 
     def __init__(
-            self,
-            params: dict | None = None,
-            target_metric: str | None = None,
-            params_distribution: dict | None = None,
-            optimization_iterations: int | None = None,
-            n_folds: int | None = None,
-            n_jobs: int | None = None,
-            random_state: int = 42,
+        self,
+        params: dict | None = None,
+        random_state: int = 42,
     ):
         validate_lgbm_specific_params(params)
         super().__init__(
             params=params,
-            target_metric=target_metric,
-            params_distribution=params_distribution,
-            optimization_iterations=optimization_iterations,
-            n_folds=n_folds,
-            n_jobs=n_jobs,
             random_state=random_state,
         )
 
@@ -261,15 +173,13 @@ class LightGbmRegressor(ScikitPredictorBase, RegressorBase):
         return "LightGBM_reg"
 
 
-# Helper function to validate LightGBM parameters
-
 def validate_lgbm_specific_params(params: dict):
     if params is None:
         return
-    if 'max_depth' in params and 'num_leaves' in params and params['max_depth'] != -1:
-        max_depth = params['max_depth']
-        num_leaves = params['num_leaves']
-        if num_leaves > 2 ** max_depth:
+    if "max_depth" in params and "num_leaves" in params and params["max_depth"] != -1:
+        max_depth = params["max_depth"]
+        num_leaves = params["num_leaves"]
+        if num_leaves > 2**max_depth:
             logging.warning(
                 f"WARNING: num_leaves ({num_leaves}) should not be greater than 2^max_depth ({2 ** max_depth}). Adjusting num_leaves to {2 ** max_depth}."
             )
