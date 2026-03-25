@@ -22,11 +22,6 @@ class ScikitPredictorBase(abc.ABC):
     def __init__(
         self,
         params: Optional[Dict[str, Any]] = None,
-        target_metric: Optional[str] = None,
-        params_distribution: Optional[Dict[str, Any]] = None,
-        optimization_iterations: Optional[int] = None,
-        n_folds: Optional[int] = None,
-        n_jobs: Optional[int] = None,
         **kwargs,
     ):
         # Let other bases initialize (RegressorBase/BinaryClassifierBase -> PredictorBase)
@@ -34,13 +29,6 @@ class ScikitPredictorBase(abc.ABC):
         self.featurizer: Optional[FeaturizerBase] = getattr(self, "featurizer", None)
         self.model: Optional[BaseEstimator] = None
         self.params: Dict[str, Any] = params or {}
-        self.target_metric = target_metric
-        self.hyper_opt = {
-            "n_iter": optimization_iterations or 10,
-            "n_folds": n_folds or 3,
-            "n_jobs": n_jobs or 1,
-            "params_distribution": params_distribution,
-        }
 
     @abc.abstractmethod
     def _init_model(self) -> BaseEstimator:
