@@ -463,8 +463,12 @@ class ProcessingPipeline:
         for df in dataset_dfs:
             df_copy = df.copy()
             # featurize expects list input per original contract; preserve that behavior
-            df_copy[feature_name] = df_copy[self.smiles_col].apply(
-                lambda s: self.featurizer.get_internal_featurizer().featurize([s], [])
+            df_copy[feature_name] = df_copy.apply(
+                lambda row: self.featurizer.featurize(
+                    [row[self.smiles_col]],
+                    [self.data_interface.get_onehot(row[self.source_col])],
+                ),
+                axis=1,
             )
             if len(df_copy) != len(df):
                 raise RuntimeError(
