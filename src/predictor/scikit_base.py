@@ -56,33 +56,6 @@ class ScikitPredictorBase(abc.ABC):
             f"Training {self.model.__class__.__name__} with hyperparameters: {self.get_hyperparameters()}"
         )
         self.model.fit(X, y)
-        logging.info(f"Training complete for {self.model.__class__.__name__}")
-
-    def optimize(self, X: np.ndarray, y: np.ndarray) -> None:
-        if not self.hyper_opt["params_distribution"]:
-            raise ValueError(
-                "params_distribution must be provided to run optimization."
-            )
-        self.model = self._init_model()
-
-        logging.info(
-            f"Starting hyperparameter optimization for {self.model.__class__.__name__}"
-        )
-        rs = RandomizedSearchCV(
-            estimator=self.model,
-            param_distributions=self.hyper_opt["params_distribution"],
-            n_iter=self.hyper_opt["n_iter"],
-            cv=self.hyper_opt["n_folds"],
-            verbose=1,
-            n_jobs=self.hyper_opt["n_jobs"],
-            refit=True,
-            scoring=self.target_metric,
-        )
-        rs.fit(X, y)
-
-        self.params = rs.best_params_.copy()
-        self.model = rs.best_estimator_
-        logging.info(f"Optimization complete. Best params: {self.params}")
 
     def predict(self, X: np.ndarray) -> List[float]:
         if self.model is None:
