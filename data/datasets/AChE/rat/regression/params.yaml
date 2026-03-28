@@ -1,4 +1,4 @@
-friendly_name: "AChE_rat_IC50"
+friendly_name: "AChE_rat_pIC50"
 raw_or_derived: "raw"
 category: "AChE_IC50"
 is_chembl: true

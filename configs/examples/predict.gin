@@ -1,0 +1,21 @@
+include 'configs/data_interface/data_interface.gin'
+
+InferencePipeline.data_interface = %data_interface
+
+# Inference input dataset path (CSV)
+InferencePipeline.dataset_path = 'data/datasets/MAO-A/human/property_ic50/binary_classification/prepared_data.csv'
+
+# Cache keys identifying the trained model in data/cache/models/<model_cache_key>/<data_cache_key>/model.pkl
+InferencePipeline.model_cache_key = 'AChE_human_pIC50_RF_reg_ecfp_featurizer_4b52a'
+InferencePipeline.data_cache_key = 'scaffold_e4737_tanimoto_5p_filter_c2805_44323'
+
+# Task/column settings
+InferencePipeline.task_setting = 'regression'
+InferencePipeline.smiles_col = 'smiles'
+InferencePipeline.source_col = 'source'
+InferencePipeline.target_col = 'y'
+
+# Runtime behavior
+InferencePipeline.do_evaluate = False
+InferencePipeline.override_cache = False
+

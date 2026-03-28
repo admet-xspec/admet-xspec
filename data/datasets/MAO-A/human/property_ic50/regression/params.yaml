@@ -1,4 +1,4 @@
-friendly_name: "MAOA_human_IC50"
+friendly_name: "MAOA_human_pIC50"
 raw_or_derived: "raw"
 category: "MAOA_IC50"
 is_chembl: true

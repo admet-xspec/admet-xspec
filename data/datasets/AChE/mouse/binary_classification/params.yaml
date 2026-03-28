@@ -1,4 +1,4 @@
-friendly_name: "AChE_mouse_IC50"
+friendly_name: "AChE_mouse_pIC50"
 raw_or_derived: "raw"
 category: "AChE_IC50"
 is_chembl: true
@@ -10,3 +10,6 @@ filter_criteria:
       - "IC50"
 threshold: null
 threshold_source: "AChE_human_IC50"
+label_transformations:
+  - "log10"
+  - "negate"
