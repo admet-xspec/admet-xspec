@@ -1,4 +1,4 @@
-friendly_name: "liver_human_T12"
+friendly_name: "liver_human_pT12"
 raw_or_derived: "raw"
 category: "liver_T12"
 is_chembl: true
@@ -9,3 +9,6 @@ filter_criteria:
     Standard Type:
       - "T1/2"
 threshold: "median"
+label_transformations:
+  - "log10"
+  - "negate"

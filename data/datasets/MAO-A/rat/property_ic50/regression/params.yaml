@@ -1,4 +1,4 @@
-friendly_name: "MAOA_rat_IC50"
+friendly_name: "MAOA_rat_pIC50"
 raw_or_derived: "raw"
 category: "MAOA_IC50"
 task_setting: "regression"
