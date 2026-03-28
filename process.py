@@ -6,6 +6,10 @@ import argparse
 import gin
 import pathlib
 
+import warnings
+
+warnings.filterwarnings("ignore", category=UserWarning)
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument(

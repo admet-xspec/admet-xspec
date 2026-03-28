@@ -1,26 +1,64 @@
-import sklearn
-import gin
-from src.predictor.scikit_base import ScikitPredictorBase
-from src.predictor.predictor_base import RegressorBase, BinaryClassifierBase
-import xgboost as xgb
-import lightgbm as lgb
 import logging
+from typing import Any, Type
+
+import gin
+import lightgbm as lgb
+import sklearn
+import xgboost as xgb
+
+from src.predictor.predictor_base import BinaryClassifierBase, RegressorBase
+from src.predictor.scikit_base import ScikitPredictorBase
 
 
-@gin.configurable()
-class RfRegressor(ScikitPredictorBase, RegressorBase):
+class _ScikitRegressorBase(ScikitPredictorBase, RegressorBase):
+    """Shared init for sklearn regressors."""
+
+    estimator_cls: Type[Any] | None = None
+
     def __init__(
         self,
         params: dict | None = None,
         random_state: int = 42,
+        multi_endpoint: bool = False,
     ):
         super().__init__(
             params=params,
             random_state=random_state,
+            multi_endpoint=multi_endpoint,
         )
 
     def _init_model(self):
-        return sklearn.ensemble.RandomForestRegressor()
+        if self.estimator_cls is None:
+            raise NotImplementedError("Subclasses must define estimator_cls")
+        return self.estimator_cls()
+
+
+class _ScikitClassifierBase(ScikitPredictorBase, BinaryClassifierBase):
+    """Shared init for sklearn binary classifiers."""
+
+    estimator_cls: Type[Any] | None = None
+
+    def __init__(
+        self,
+        params: dict | None = None,
+        random_state: int = 42,
+        multi_endpoint: bool = False,
+    ):
+        super().__init__(
+            params=params,
+            random_state=random_state,
+            multi_endpoint=multi_endpoint,
+        )
+
+    def _init_model(self):
+        if self.estimator_cls is None:
+            raise NotImplementedError("Subclasses must define estimator_cls")
+        return self.estimator_cls()
+
+
+@gin.configurable()
+class RfRegressor(_ScikitRegressorBase):
+    estimator_cls = sklearn.ensemble.RandomForestRegressor
 
     @property
     def name(self) -> str:
@@ -28,19 +66,8 @@ class RfRegressor(ScikitPredictorBase, RegressorBase):
 
 
 @gin.configurable()
-class RfClassifier(ScikitPredictorBase, BinaryClassifierBase):
-    def __init__(
-        self,
-        params: dict | None = None,
-        random_state: int = 42,
-    ):
-        super().__init__(
-            params=params,
-            random_state=random_state,
-        )
-
-    def _init_model(self):
-        return sklearn.ensemble.RandomForestClassifier()
+class RfClassifier(_ScikitClassifierBase):
+    estimator_cls = sklearn.ensemble.RandomForestClassifier
 
     @property
     def name(self) -> str:
@@ -48,19 +75,8 @@ class RfClassifier(ScikitPredictorBase, BinaryClassifierBase):
 
 
 @gin.configurable()
-class SvmRegressor(ScikitPredictorBase, RegressorBase):
-    def __init__(
-        self,
-        params: dict | None = None,
-        random_state: int = 42,
-    ):
-        super().__init__(
-            params=params,
-            random_state=random_state,
-        )
-
-    def _init_model(self):
-        return sklearn.svm.SVR()
+class SvmRegressor(_ScikitRegressorBase):
+    estimator_cls = sklearn.svm.SVR
 
     @property
     def name(self) -> str:
@@ -68,17 +84,7 @@ class SvmRegressor(ScikitPredictorBase, RegressorBase):
 
 
 @gin.configurable()
-class SvmClassifier(ScikitPredictorBase, BinaryClassifierBase):
-    def __init__(
-        self,
-        params: dict | None = None,
-        random_state: int = 42,
-    ):
-        super().__init__(
-            params=params,
-            random_state=random_state,
-        )
-
+class SvmClassifier(_ScikitClassifierBase):
     def _init_model(self):
         return sklearn.svm.SVC(probability=True)
 
@@ -88,18 +94,8 @@ class SvmClassifier(ScikitPredictorBase, BinaryClassifierBase):
 
 
 @gin.configurable()
-class XGBoostRegressor(ScikitPredictorBase, RegressorBase):
+class XGBoostRegressor(_ScikitRegressorBase):
     # TODO: What hyperparameters does this accept?
-    def __init__(
-        self,
-        params: dict | None = None,
-        random_state: int = 42,
-    ):
-        super().__init__(
-            params=params,
-            random_state=42,
-        )
-
     def _init_model(self):
         return xgb.XGBRegressor()
 
@@ -109,18 +105,8 @@ class XGBoostRegressor(ScikitPredictorBase, RegressorBase):
 
 
 @gin.configurable()
-class XGBoostClassifier(ScikitPredictorBase, BinaryClassifierBase):
+class XGBoostClassifier(_ScikitClassifierBase):
     # TODO: What hyperparameters does this accept?
-    def __init__(
-        self,
-        params: dict | None = None,
-        random_state: int = 42,
-    ):
-        super().__init__(
-            params=params,
-            random_state=random_state,
-        )
-
     def _init_model(self):
         return xgb.XGBClassifier()
 
@@ -130,21 +116,10 @@ class XGBoostClassifier(ScikitPredictorBase, BinaryClassifierBase):
 
 
 @gin.configurable()
-class LightGbmClassifier(ScikitPredictorBase, BinaryClassifierBase):
-
-    def __init__(
-        self,
-        params: dict | None = None,
-        random_state: int = 42,
-    ):
-        validate_lgbm_specific_params(params)
-        super().__init__(
-            params=params,
-            random_state=random_state,
-        )
+class LightGbmClassifier(_ScikitClassifierBase):
 
     def _init_model(self):
-        return lgb.LGBMClassifier()
+        return lgb.LGBMClassifier(random_state=self.random_state, verbosity=-1)
 
     @property
     def name(self) -> str:
@@ -152,21 +127,10 @@ class LightGbmClassifier(ScikitPredictorBase, BinaryClassifierBase):
 
 
 @gin.configurable()
-class LightGbmRegressor(ScikitPredictorBase, RegressorBase):
-
-    def __init__(
-        self,
-        params: dict | None = None,
-        random_state: int = 42,
-    ):
-        validate_lgbm_specific_params(params)
-        super().__init__(
-            params=params,
-            random_state=random_state,
-        )
+class LightGbmRegressor(_ScikitRegressorBase):
 
     def _init_model(self):
-        return lgb.LGBMRegressor(random_state=self.random_state)
+        return lgb.LGBMRegressor(random_state=self.random_state, verbosity=-1)
 
     @property
     def name(self) -> str:
