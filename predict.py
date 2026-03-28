@@ -1,13 +1,4 @@
-"""
-Script to run inference using a pre-trained model and save predictions and metrics.
-
-It is configured via a gin configuration file (see configs/predict.gin for an example).
-The inference pipeline includes:
-- Loading the pre-trained model
-- Making predictions on the provided dataset
-- Saving the predictions to an output CSV file
-- Optionally computing and saving evaluation metrics if true labels are available
-"""
+"""Run inference from a gin configuration."""
 
 import gin
 import logging
@@ -16,6 +7,10 @@ import tempfile
 import argparse
 import pathlib
 import time
+
+import warnings
+
+warnings.filterwarnings("ignore", category=UserWarning)
 
 if __name__ == "__main__":
 
@@ -53,16 +48,12 @@ if __name__ == "__main__":
         ],
     )
 
-    # Initialize the inference pipeline
+    # Route pipeline log dumping to this runtime log file.
+    gin.bind_parameter("InferencePipeline.logfile", temp_log_file.name)
+
+    # Initialize and run the inference pipeline
     pipeline = InferencePipeline()
-
-    # Run the prediction
-    results = pipeline.predict()
-
-    # Compute and save metrics if possible
-    if pipeline.can_compute_metrics():
-        logging.info("Labels detected in the data file, computing metrics")
-        metrics = pipeline.evaluate()
+    results = pipeline.run()
 
     # Log time
     time_elapsed = time.time() - time_start
@@ -72,17 +63,14 @@ if __name__ == "__main__":
         else f"Prediction completed in {round(time_elapsed / 60, 2)} minutes."
     )
 
-    # Dump operative config
-    gin_path = pipeline.out_dir / "operative_config.gin"
-    with open(gin_path, "w") as f:
-        f.write(gin.operative_config_str())
-    logging.info(f"Config saved to {gin_path}")
+    logging.info(f"Predictions file: {results}")
 
-    # Move the temporary log file to the output directory
+    # Refresh dumped logs so runtime timing above is included in the persisted log file.
+    pipeline.data_interface.dump_logs(pipeline.out_dir)
+
     temp_log_file.close()
     root_logger = logging.getLogger()
     handlers = root_logger.handlers[:]
     for handler in handlers:
         handler.close()
         root_logger.removeHandler(handler)
-    pathlib.Path(temp_log_file.name).rename(pipeline.out_dir / "predict.log")
