@@ -1,6 +1,6 @@
 import abc
 import logging
-from typing import List, Dict, Optional, Any
+from typing import Any, Dict, List, Optional, cast
 
 import numpy as np
 import pandas as pd
@@ -19,6 +19,12 @@ class ScikitPredictorBase(abc.ABC):
       class MyClassifier(ScikitPredictorBase, BinaryClassifierBase): ...
     """
 
+    # Attributes are provided by PredictorBase in cooperative multiple inheritance.
+    smiles_col: str = "smiles"
+    source_col: str = "source"
+    target_col: str = "y"
+    endpoint_ohe_map: Dict[str, np.ndarray] | None = None
+
     def __init__(
         self,
         params: Optional[Dict[str, Any]] = None,
@@ -27,8 +33,14 @@ class ScikitPredictorBase(abc.ABC):
     ):
         # Let other bases initialize (RegressorBase/BinaryClassifierBase -> PredictorBase)
         super().__init__(**kwargs)
+        # Structural attributes are normally populated by PredictorBase.
+        self.smiles_col = getattr(self, "smiles_col", "smiles")
+        self.source_col = getattr(self, "source_col", "source")
+        self.target_col = getattr(self, "target_col", "y")
+        self.endpoint_ohe_map = getattr(self, "endpoint_ohe_map", None)
         self.featurizer: Optional[FeaturizerBase] = getattr(self, "featurizer", None)
-        self.multi_endpoint: bool = multi_endpoint
+        # Keep local flag in sync with PredictorBase initialization.
+        self.multi_endpoint: bool = bool(multi_endpoint)
         self.model: Optional[BaseEstimator] = None
         self.params: Dict[str, Any] = params or {}
 
@@ -47,28 +59,27 @@ class ScikitPredictorBase(abc.ABC):
             raise ValueError(
                 "Featurizer is not set. Inject a FeaturizerBase object before calling this method."
             )
+        if self.smiles_col not in df.columns:
+            raise ValueError(
+                f"Missing required smiles column `{self.smiles_col}` in input dataframe."
+            )
+
         X = self.featurizer.featurize(df[self.smiles_col].tolist())
         # If multi-endpoint, concatenate OHE endpoint encoding to features
         if self.multi_endpoint:
+            if self.source_col not in df.columns:
+                raise ValueError(
+                    f"Missing required source column `{self.source_col}` for multi-endpoint prediction."
+                )
+            if self.endpoint_ohe_map is None:
+                raise ValueError(
+                    "Endpoint OHE map is not initialized. Train first or load a model with endpoint metadata."
+                )
             endpoint_ohe = np.array(
                 [self.endpoint_ohe_map[src] for src in df[self.source_col]]
             )
             X = np.hstack([X, endpoint_ohe])
         return X.astype(np.float32)
-
-    def _create_endpoint_map(self, endpoints: pd.Series):
-        # count unique endpoints, sort them and create a mapping to OHE arrays
-        map = {}
-        unique_endpoints = sorted(endpoints.unique())
-        for i, endpoint in enumerate(unique_endpoints):
-            ohe = np.zeros(len(unique_endpoints), dtype=np.float32)
-            ohe[i] = 1.0
-            map[endpoint] = ohe
-        # log the map
-        logging.info(f"Mapped endpoints:")
-        for name, encoding in map.items():
-            logging.info(f"{name}: {encoding.tolist()}")
-        self.endpoint_ohe_map = map
 
     def train(self, df: pd.DataFrame) -> None:
         """
@@ -78,12 +89,13 @@ class ScikitPredictorBase(abc.ABC):
         self.model = self._init_model()
         # For multi-endpoint tasks, create endpoint map for OHE encoding
         if self.endpoint_ohe_map is None and self.multi_endpoint:
-            self._create_endpoint_map(df[self.source_col])
+            cast(Any, self)._create_endpoint_map(df[self.source_col])
         if self.params:
             self.set_hyperparameters(self.params)
         X = self._featurize(df)
         y = np.array(df[self.target_col], dtype=np.float32)
-        self.model.fit(X, y)
+        estimator = cast(Any, self.model)
+        estimator.fit(X, y)
 
     def predict(self, df: pd.DataFrame) -> List[float]:
         if self.model is None:
@@ -109,7 +121,8 @@ class ScikitPredictorBase(abc.ABC):
             else:
                 preds = proba.ravel()
         else:
-            preds = self.model.predict(X)
+            estimator = cast(Any, self.model)
+            preds = estimator.predict(X)
         return list(map(float, np.asarray(preds)))
 
     def get_hyperparameters(self) -> Dict[str, Any]:
@@ -134,4 +147,6 @@ class ScikitPredictorBase(abc.ABC):
                 raise ValueError(
                     f"Model {self.model.__class__.__name__} does not accept hyperparameter `{key}`. Supported hyperparameters: {list(model_params.keys())}"
                 )
+        # Persist validated params so they survive before/after model initialization.
+        self.params = dict(params)
         self.model.set_params(**params)
