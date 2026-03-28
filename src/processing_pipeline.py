@@ -9,6 +9,7 @@ import time
 import optuna
 from tqdm import tqdm
 from copy import deepcopy
+import numpy as np
 
 from src.data.data_interface import DataInterface
 from src.data.featurizer import FeaturizerBase
@@ -58,7 +59,7 @@ class ProcessingPipeline:
         n_optim_iter: int | None = None,
         n_optim_jobs: int = -1,
         target_metric: str | None = None,
-        ci_n_bootstraps: int = 20,
+        ci_n_bootstraps: int = 100,
         ci_percentiles: float = 95.0,
         # Other
         task_setting: str = "regression",  # "regression" or "binary_classification"
@@ -91,6 +92,7 @@ class ProcessingPipeline:
         self.predictor.inject_smiles_col_ID(smiles_col)
         self.predictor.inject_source_col_ID(source_col)
         self.predictor.inject_target_col_ID(target_col)
+        self.predictor.set_task_name(test_origin_dataset)
 
         # Dataset & column config
         self.datasets = datasets or []
@@ -221,7 +223,7 @@ class ProcessingPipeline:
         augmentation_names = [n for n in self.datasets if n != self.test_origin_dataset]
         augmentation_dfs = self._load_datasets(augmentation_names)
         logging.info(
-            f"Loaded {len(augmentation_dfs)} augmentation datasets: {augmentation_names}"
+            f"\nLoaded {len(augmentation_dfs)} augmentation datasets: {augmentation_names}"
         )
 
         origin_df: Optional[pd.DataFrame] = None
@@ -397,9 +399,7 @@ class ProcessingPipeline:
     def _log_pipeline_start(self) -> None:
         """Log initial pipeline configuration for easy debugging."""
         logging.info(datetime.now().strftime("%Y-%m-%d-%H-%M-%S"))
-        logging.info(
-            "# ================================ ADMET-XSpec ================================ #"
-        )
+        self.log_bar(w_text="ADMET-XSpec")
         logging.info("Configuration summary:")
         logging.info(f"* Datasets: {self.datasets}")
         if self.splitter:
@@ -474,7 +474,13 @@ class ProcessingPipeline:
         logging.info(f"* Training {self.predictor.__class__.__name__}")
         logging.info(f"* Dataset size: {len(train_df)}")
         logging.debug(f"* Hyperparameters: {self.predictor.get_hyperparameters()}")
+
         self.predictor.train(train_df)
+
+        if self.predictor.is_multi_endpoint:
+            logging.info(f"* Endpoint OHE encoding:")
+            for key, value in self.predictor.get_endpoint_OHE_map().items():
+                logging.info(f"  - {key}: {np.array2string(value.astype(int))}")
 
         # Save hyperparameters
         hyperparams = self.predictor.get_hyperparameters()
@@ -495,6 +501,10 @@ class ProcessingPipeline:
             "Predictor": self.predictor.name,
             "Optimized Hyperparameters": self.do_optimize_hyperparams,
         }
+
+        if self.predictor.is_multi_endpoint:
+            metadata_dict["Endpoints"] = self.predictor.get_endpoint_OHE_map()
+
         self.data_interface.save_model_metadata(
             metadata_dict, self.predictor_key, self.split_key
         )
@@ -505,11 +515,11 @@ class ProcessingPipeline:
         )
 
     def _evaluate(self, test_df: pd.DataFrame, get_CIs=False) -> None:
-        logging.info("* Evaluating the model on a holdout test dataset")
+        self.log_bar(w_text="Evaluation")
 
         # Evaluate the model on a holdout test set
         metrics = self.predictor.evaluate(test_df)
-        logging.info("\nMetrics (markdown):")
+        logging.info("Metrics (markdown):")
         log_markdown_table(metrics)
 
         if get_CIs:
@@ -569,6 +579,13 @@ class ProcessingPipeline:
 
     def _optimize_hyperparams(self, train_df: pd.DataFrame) -> None:
         """Optimize hyperparameters of the predictor."""
+        self.log_bar()
+        logging.info(
+            f"\nOptimizing hyperparameters with Optuna for target metric: {self.target_metric}"
+        )
+        logging.info(f"* Optimization CV folds: {self.n_optim_cv_folds}")
+        logging.info(f"* Optimization iterations: {self.n_optim_iter}")
+        logging.info(f"* Hyperparameter search space: {self.params_distribution}")
 
         # TODO: move this somewhere else
         _METRICS_TO_MAXIMIZE = {
@@ -630,6 +647,13 @@ class ProcessingPipeline:
         self.data_interface.dump_gin_config_to_model_dir(
             self.predictor_key, self.split_key
         )
+
+    def log_bar(self, w_text: str = "") -> None:
+        """Log a horizontal bar with optional centered text for visual separation."""
+        if w_text:
+            w_text = " " + w_text + " "
+        bar = f"\n# ================================{w_text}================================ #\n"
+        logging.info(bar)
 
     # --------------------- Configuration validation --------------------- #
 
