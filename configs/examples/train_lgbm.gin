@@ -4,6 +4,7 @@ include 'configs/splitters/scaffold.gin'
 include 'configs/featurizers/ecfp.gin'
 include 'configs/sim_filters/tanimoto_5p_to_whole.gin'
 include 'configs/predictors/classifiers/lgbm.gin'
+
 ProcessingPipeline.data_interface = %data_interface
 ProcessingPipeline.splitter = %splitter
 ProcessingPipeline.featurizer = %featurizer
@@ -13,9 +14,12 @@ ProcessingPipeline.predictor = %predictor
 #========================================================#
 
 ProcessingPipeline.datasets = [
-    'MAOA_human_IC50',
-    'MAOA_rat_IC50'
+    'AChE_human_pIC50',
+    'AChE_rat_pIC50',
+    'AChE_mouse_pIC50'
 ]
 
-ProcessingPipeline.test_origin_dataset = 'MAOA_human_IC50'
+ProcessingPipeline.test_origin_dataset = 'AChE_human_pIC50'
 ProcessingPipeline.task_setting = 'binary_classification'
+
+ProcessingPipeline.hyperparams_source_sim_filter = None
