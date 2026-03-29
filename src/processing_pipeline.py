@@ -611,7 +611,7 @@ class ProcessingPipeline:
             trial_predictor = deepcopy(self.predictor)
             # Inject hyperparams
             params = sample_optuna_params(trial, self.params_distribution)
-            logging.debug(f"Trial {trial.number} sampled hyperparameters: {params}")
+            logging.debug(f"Trial {trial.number}: {params}")
             trial_predictor.set_hyperparameters(params)
             trial_predictor.train(train_df)
             # Evaluate with cross-validation
@@ -619,6 +619,9 @@ class ProcessingPipeline:
                 train_df, n_folds=self.n_optim_cv_folds
             )
             mean_score = scores[self.target_metric].mean()
+            logging.debug(
+                f"Trial {trial.number} {self.target_metric} score: {mean_score}"
+            )
             return mean_score
 
         start_time = time.time()
