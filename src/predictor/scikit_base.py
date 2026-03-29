@@ -1,6 +1,6 @@
 import abc
 import logging
-from typing import Any, Dict, List, Optional, cast
+from typing import Any, cast
 
 import numpy as np
 import pandas as pd
@@ -23,37 +23,35 @@ class ScikitPredictorBase(abc.ABC):
     smiles_col: str = "smiles"
     source_col: str = "source"
     target_col: str = "y"
-    endpoint_ohe_map: Dict[str, np.ndarray] | None = None
+    featurizer: FeaturizerBase | None = None
+    endpoint_ohe_map: dict[str, np.ndarray] | None = None
 
     def __init__(
         self,
-        params: Optional[Dict[str, Any]] = None,
+        params: dict[str, Any] | None = None,
         multi_endpoint: bool = False,
         **kwargs,
-    ):
+    ) -> None:
         # Let other bases initialize (RegressorBase/BinaryClassifierBase -> PredictorBase)
         super().__init__(**kwargs)
-        # Structural attributes are normally populated by PredictorBase.
-        self.smiles_col = getattr(self, "smiles_col", "smiles")
-        self.source_col = getattr(self, "source_col", "source")
-        self.target_col = getattr(self, "target_col", "y")
-        self.endpoint_ohe_map = getattr(self, "endpoint_ohe_map", None)
-        self.featurizer: Optional[FeaturizerBase] = getattr(self, "featurizer", None)
-        # Keep local flag in sync with PredictorBase initialization.
+        # PredictorBase usually initializes this; keep explicit for type checkers.
+        self.featurizer: FeaturizerBase | None = getattr(self, "featurizer", None)
+        # Keep local flag in sync with PredictorBase in multiple inheritance.
         self.multi_endpoint: bool = bool(multi_endpoint)
-        self.model: Optional[BaseEstimator] = None
-        self.params: Dict[str, Any] = params or {}
+        self.model: BaseEstimator | None = None
+        self.params: dict[str, Any] = params or {}
 
     @abc.abstractmethod
     def _init_model(self) -> BaseEstimator:
-        """Return an uninitialized sklearn estimator (subclass must implement)."""
+        """Return a fresh, untrained sklearn estimator (subclass must implement)."""
         ...
 
     def _featurize(self, df: pd.DataFrame) -> np.ndarray:
         """
-        Accepts dataframe with columns: smiles, y, source.
-        Returns a numpy array of shape (n_samples, n_features).
-        If multi-endpoint training, concatenates OHE endpoint encoding to features.
+        Convert model input dataframe into a numerical feature matrix.
+
+        If ``multi_endpoint`` is enabled, append endpoint one-hot vectors to molecule
+        features so a single estimator can distinguish endpoint context.
         """
         if self.featurizer is None:
             raise ValueError(
@@ -65,27 +63,40 @@ class ScikitPredictorBase(abc.ABC):
             )
 
         X = self.featurizer.featurize(df[self.smiles_col].tolist())
-        # If multi-endpoint, concatenate OHE endpoint encoding to features
+        # Multi-endpoint predictors append endpoint identity to molecular features.
         if self.multi_endpoint:
-            if self.source_col not in df.columns:
-                raise ValueError(
-                    f"Missing required source column `{self.source_col}` for multi-endpoint prediction."
-                )
-            if self.endpoint_ohe_map is None:
-                raise ValueError(
-                    "Endpoint OHE map is not initialized. Train first or load a model with endpoint metadata."
-                )
-            endpoint_ohe = np.array(
-                [self.endpoint_ohe_map[src] for src in df[self.source_col]]
-            )
-            X = np.hstack([X, endpoint_ohe])
+            X = np.hstack([X, self._endpoint_features(df)])
         return X.astype(np.float32)
 
+    def _endpoint_features(self, df: pd.DataFrame) -> np.ndarray:
+        """Return endpoint one-hot features aligned with ``df`` row order."""
+        if self.source_col not in df.columns:
+            raise ValueError(
+                f"Missing required source column `{self.source_col}` for multi-endpoint prediction."
+            )
+        if self.endpoint_ohe_map is None:
+            raise ValueError(
+                "Endpoint OHE map is not initialized. Train first or load a model with endpoint metadata."
+            )
+
+        missing_sources = sorted(
+            set(df[self.source_col].unique()) - set(self.endpoint_ohe_map.keys())
+        )
+        if missing_sources:
+            raise ValueError(
+                f"Unknown source values not seen during training: {missing_sources}"
+            )
+
+        return np.array([self.endpoint_ohe_map[src] for src in df[self.source_col]])
+
     def train(self, df: pd.DataFrame) -> None:
-        """
-        Accepts dataframe with columns: smiles, y, source.
-        """
-        # Initialize model
+        """Fit the estimator on a dataframe containing features and targets."""
+        if self.target_col not in df.columns:
+            raise ValueError(
+                f"Missing required target column `{self.target_col}` in training dataframe."
+            )
+
+        # Always create a fresh estimator for each train call.
         self.model = self._init_model()
         # For multi-endpoint tasks, create endpoint map for OHE encoding
         if self.endpoint_ohe_map is None and self.multi_endpoint:
@@ -97,7 +108,8 @@ class ScikitPredictorBase(abc.ABC):
         estimator = cast(Any, self.model)
         estimator.fit(X, y)
 
-    def predict(self, df: pd.DataFrame) -> List[float]:
+    def predict(self, df: pd.DataFrame) -> list[float]:
+        """Predict scores/values for every input row in ``df``."""
         if self.model is None:
             raise ValueError(
                 "Model is not initialized. Call `train` or `optimize` first."
@@ -114,18 +126,19 @@ class ScikitPredictorBase(abc.ABC):
 
         X = check_array(X, ensure_all_finite=True, dtype=np.float32)
 
-        if hasattr(self.model, "predict_proba"):
-            proba = self.model.predict_proba(X)
+        model = cast(Any, self.model)
+        if hasattr(model, "predict_proba"):
+            proba = model.predict_proba(X)
             if proba.ndim == 2 and proba.shape[1] >= 2:
                 preds = proba[:, 1]
             else:
                 preds = proba.ravel()
         else:
-            estimator = cast(Any, self.model)
-            preds = estimator.predict(X)
+            preds = model.predict(X)
         return list(map(float, np.asarray(preds)))
 
-    def get_hyperparameters(self) -> Dict[str, Any]:
+    def get_hyperparameters(self) -> dict[str, Any]:
+        """Return estimator hyperparameters with numpy scalar values normalized."""
         if self.model is None:
             return {
                 k: (v.item() if isinstance(v, np.generic) else v)
@@ -137,16 +150,17 @@ class ScikitPredictorBase(abc.ABC):
                 hyperparams[k] = v.item()
         return hyperparams
 
-    def set_hyperparameters(self, params: Dict[str, Any]) -> None:
+    def set_hyperparameters(self, params: dict[str, Any]) -> None:
+        """Validate and apply estimator hyperparameters."""
         if self.model is None:
             self.model = self._init_model()
         # Validate supported params against model.get_params()
         model_params = self.model.get_params()
-        for key in params:
-            if key not in model_params:
-                raise ValueError(
-                    f"Model {self.model.__class__.__name__} does not accept hyperparameter `{key}`. Supported hyperparameters: {list(model_params.keys())}"
-                )
+        unknown = [key for key in params if key not in model_params]
+        if unknown:
+            raise ValueError(
+                f"Model {self.model.__class__.__name__} does not accept hyperparameter(s) {unknown}."
+            )
         # Persist validated params so they survive before/after model initialization.
         self.params = dict(params)
         self.model.set_params(**params)
