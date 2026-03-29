@@ -9,7 +9,7 @@ filter_criteria:
     Standard Type:
       - "IC50"
 threshold: null
-threshold_source: "AChE_human_IC50"
+threshold_source: "AChE_human_pIC50"
 label_transformations:
   - "log10"
   - "negate"
