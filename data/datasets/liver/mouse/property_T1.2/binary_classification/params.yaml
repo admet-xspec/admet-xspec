@@ -9,7 +9,7 @@ filter_criteria:
     Standard Type:
       - "T1/2"
 threshold: null
-threshold_source: "liver_human_T12"
+threshold_source: "liver_human_pT12"
 label_transformations:
   - "log10"
   - "negate"
