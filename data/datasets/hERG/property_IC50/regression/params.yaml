@@ -1,0 +1,17 @@
+friendly_name: "hERG_IC50"
+raw_or_derived: "raw"
+category: "hERG_IC50"
+is_chembl: true
+task_setting: "regression"
+filter_criteria:
+    Standard Units:
+      - "nM"
+    Standard Type:
+      - "IC50"
+    Standard Relation:
+      - "'='"
+label_transformations:
+  - "log10"
+  - "negate"
+
+#https://srijitseal.com/DILI_Predictor/datasets.html
