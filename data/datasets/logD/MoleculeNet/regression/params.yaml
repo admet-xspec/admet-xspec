@@ -1,0 +1,7 @@
+friendly_name: "LogD_MoleculeNet"
+raw_or_derived: "raw"
+category: "physicochemical"
+is_chembl: false
+task_setting: "regression"
+
+#https://moleculenet.org/datasets-1
