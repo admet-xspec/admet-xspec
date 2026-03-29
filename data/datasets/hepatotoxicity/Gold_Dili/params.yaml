@@ -1,0 +1,7 @@
+friendly_name: "GoldDili_hepato"
+raw_or_derived: "raw"
+category: "hepatotoxicity"
+is_chembl: false
+task_setting: "binary_classification"
+
+#https://srijitseal.com/DILI_Predictor/datasets.html
