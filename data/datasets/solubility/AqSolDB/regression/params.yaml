@@ -1,0 +1,7 @@
+friendly_name: "AqSolDB"
+raw_or_derived: "raw"
+category: "solubility"
+is_chembl: false
+task_setting: "regression"
+
+#https://github.com/mcsorkun/AqSolDB
