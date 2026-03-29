@@ -10,54 +10,46 @@ from src.predictor.predictor_base import BinaryClassifierBase, RegressorBase
 from src.predictor.scikit_base import ScikitPredictorBase
 
 
-class _ScikitRegressorBase(ScikitPredictorBase, RegressorBase):
-    """Shared init for sklearn regressors."""
+class _ScikitEstimatorBase(ScikitPredictorBase):
+    """Common estimator-construction logic for sklearn-style predictors."""
 
     estimator_cls: Type[Any] | None = None
 
     def __init__(
         self,
-        params: dict | None = None,
+        params: dict[str, Any] | None = None,
         random_state: int = 42,
         multi_endpoint: bool = False,
-    ):
+    ) -> None:
         super().__init__(
             params=params,
             random_state=random_state,
             multi_endpoint=multi_endpoint,
         )
 
-    def _init_model(self):
+    def _base_estimator_kwargs(self) -> dict[str, Any]:
+        """Default constructor kwargs for the underlying estimator class."""
+        return {}
+
+    def _init_model(self) -> Any:
+        """Instantiate the configured estimator class."""
         if self.estimator_cls is None:
             raise NotImplementedError("Subclasses must define estimator_cls")
-        return self.estimator_cls()
+        return self.estimator_cls(**self._base_estimator_kwargs())
 
 
-class _ScikitClassifierBase(ScikitPredictorBase, BinaryClassifierBase):
-    """Shared init for sklearn binary classifiers."""
+class _ScikitRegressorBase(_ScikitEstimatorBase, RegressorBase):
+    """Shared behavior for sklearn regressors."""
 
-    estimator_cls: Type[Any] | None = None
 
-    def __init__(
-        self,
-        params: dict | None = None,
-        random_state: int = 42,
-        multi_endpoint: bool = False,
-    ):
-        super().__init__(
-            params=params,
-            random_state=random_state,
-            multi_endpoint=multi_endpoint,
-        )
-
-    def _init_model(self):
-        if self.estimator_cls is None:
-            raise NotImplementedError("Subclasses must define estimator_cls")
-        return self.estimator_cls()
+class _ScikitClassifierBase(_ScikitEstimatorBase, BinaryClassifierBase):
+    """Shared behavior for sklearn binary classifiers."""
 
 
 @gin.configurable()
 class RfRegressor(_ScikitRegressorBase):
+    """RandomForest regressor wrapper."""
+
     estimator_cls = sklearn.ensemble.RandomForestRegressor
 
     @property
@@ -67,6 +59,8 @@ class RfRegressor(_ScikitRegressorBase):
 
 @gin.configurable()
 class RfClassifier(_ScikitClassifierBase):
+    """RandomForest classifier wrapper."""
+
     estimator_cls = sklearn.ensemble.RandomForestClassifier
 
     @property
@@ -76,6 +70,8 @@ class RfClassifier(_ScikitClassifierBase):
 
 @gin.configurable()
 class SvmRegressor(_ScikitRegressorBase):
+    """SVM regressor wrapper."""
+
     estimator_cls = sklearn.svm.SVR
 
     @property
@@ -85,8 +81,13 @@ class SvmRegressor(_ScikitRegressorBase):
 
 @gin.configurable()
 class SvmClassifier(_ScikitClassifierBase):
-    def _init_model(self):
-        return sklearn.svm.SVC(probability=True)
+    """SVM classifier wrapper with probability output enabled."""
+
+    estimator_cls = sklearn.svm.SVC
+
+    def _base_estimator_kwargs(self) -> dict[str, Any]:
+        # Needed so inference can output probabilities, not only labels.
+        return {"probability": True}
 
     @property
     def name(self) -> str:
@@ -95,9 +96,9 @@ class SvmClassifier(_ScikitClassifierBase):
 
 @gin.configurable()
 class XGBoostRegressor(_ScikitRegressorBase):
-    # TODO: What hyperparameters does this accept?
-    def _init_model(self):
-        return xgb.XGBRegressor()
+    """XGBoost regressor wrapper."""
+
+    estimator_cls = xgb.XGBRegressor
 
     @property
     def name(self) -> str:
@@ -106,9 +107,9 @@ class XGBoostRegressor(_ScikitRegressorBase):
 
 @gin.configurable()
 class XGBoostClassifier(_ScikitClassifierBase):
-    # TODO: What hyperparameters does this accept?
-    def _init_model(self):
-        return xgb.XGBClassifier()
+    """XGBoost classifier wrapper."""
+
+    estimator_cls = xgb.XGBClassifier
 
     @property
     def name(self) -> str:
@@ -117,9 +118,12 @@ class XGBoostClassifier(_ScikitClassifierBase):
 
 @gin.configurable()
 class LightGbmClassifier(_ScikitClassifierBase):
+    """LightGBM classifier wrapper."""
 
-    def _init_model(self):
-        return lgb.LGBMClassifier(random_state=self.random_state, verbosity=-1)
+    estimator_cls = lgb.LGBMClassifier
+
+    def _base_estimator_kwargs(self) -> dict[str, Any]:
+        return {"random_state": self.random_state, "verbosity": -1}
 
     @property
     def name(self) -> str:
@@ -128,16 +132,20 @@ class LightGbmClassifier(_ScikitClassifierBase):
 
 @gin.configurable()
 class LightGbmRegressor(_ScikitRegressorBase):
+    """LightGBM regressor wrapper."""
 
-    def _init_model(self):
-        return lgb.LGBMRegressor(random_state=self.random_state, verbosity=-1)
+    estimator_cls = lgb.LGBMRegressor
+
+    def _base_estimator_kwargs(self) -> dict[str, Any]:
+        return {"random_state": self.random_state, "verbosity": -1}
 
     @property
     def name(self) -> str:
         return "LightGBM_reg"
 
 
-def validate_lgbm_specific_params(params: dict):
+def validate_lgbm_specific_params(params: dict[str, Any] | None) -> None:
+    """Warn about potentially inconsistent LightGBM depth/leaf combinations."""
     if params is None:
         return
     if "max_depth" in params and "num_leaves" in params and params["max_depth"] != -1:
@@ -145,5 +153,5 @@ def validate_lgbm_specific_params(params: dict):
         num_leaves = params["num_leaves"]
         if num_leaves > 2**max_depth:
             logging.warning(
-                f"WARNING: num_leaves ({num_leaves}) should not be greater than 2^max_depth ({2 ** max_depth}). Adjusting num_leaves to {2 ** max_depth}."
+                f"num_leaves ({num_leaves}) should not be greater than 2^max_depth ({2 ** max_depth})."
             )
