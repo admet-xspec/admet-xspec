@@ -89,9 +89,7 @@ class ProcessingPipeline:
         self.sim_filter = sim_filter
         self.hyperparams_source_sim_filter = hyperparams_source_sim_filter
 
-        self.predictor.inject_smiles_col_ID(smiles_col)
-        self.predictor.inject_source_col_ID(source_col)
-        self.predictor.inject_target_col_ID(target_col)
+        self.predictor.set_column_ids(smiles_col, source_col, target_col)
         self.predictor.set_task_name(test_origin_dataset)
 
         # Dataset & column config

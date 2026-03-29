@@ -136,9 +136,7 @@ class InferencePipeline:
                 f"Loaded object is not PredictorBase: {type(predictor).__name__}"
             )
         self.label_name = predictor.task
-        predictor.inject_smiles_col_ID(self.smiles_col)
-        predictor.inject_source_col_ID(self.source_col)
-        predictor.inject_target_col_ID(self.target_col)
+        predictor.set_column_ids(self.smiles_col, self.source_col, self.target_col)
         return predictor
 
     def _align_source_labels(
