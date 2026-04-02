@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import argparse
 import subprocess
+from datetime import datetime
 from pathlib import Path
 from typing import Iterable
 
@@ -106,6 +107,9 @@ def write_scripts(
     cpus_per_task: int,
     job_prefix: str,
 ) -> list[Path]:
+    # append the date to jobs_dir to avoid overwriting previous runs
+    today_is = datetime.today().strftime("%Y-%m-%d")
+    jobs_dir = jobs_dir / today_is
     jobs_dir.mkdir(parents=True, exist_ok=True)
 
     script_paths: list[Path] = []

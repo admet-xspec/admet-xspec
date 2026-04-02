@@ -59,7 +59,7 @@ class ProcessingPipeline:
         n_optim_iter: int | None = None,
         n_optim_jobs: int = -1,
         target_metric: str | None = None,
-        ci_n_bootstraps: int = 100,
+        ci_n_bootstraps: int = 1000,
         ci_percentiles: float = 95.0,
         # Other
         task_setting: str = "regression",  # "regression" or "binary_classification"
