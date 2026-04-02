@@ -12,7 +12,7 @@ PROJECT_ROOT = Path(__file__).resolve().parents[1]
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
-from gin_config_builder import (
+from src.gin_config.gin_config_builder import (
     ExperimentSelection,
     GinOptions,
     build_experiment_filename,
@@ -147,14 +147,14 @@ def main() -> None:
     )
 
     invalid_output_name = (
-        not output_dir_name.strip()
-        or "/" in output_dir_name
-        or "\\" in output_dir_name
+        not output_dir_name.strip() or "/" in output_dir_name or "\\" in output_dir_name
     )
     output_dir = Path(output_root_input) / output_dir_name.strip()
     st.caption(f"Final output directory: `{output_dir}`")
     if invalid_output_name:
-        st.error("Output directory name must be non-empty and cannot contain path separators.")
+        st.error(
+            "Output directory name must be non-empty and cannot contain path separators."
+        )
 
     overwrite = st.checkbox("Overwrite existing files", value=False)
 
@@ -206,15 +206,9 @@ def main() -> None:
         missing_inputs.append("training datasets")
 
     if missing_inputs:
-        st.warning(
-            "Complete required selections: " + ", ".join(missing_inputs) + "."
-        )
+        st.warning("Complete required selections: " + ", ".join(missing_inputs) + ".")
 
-    generate_disabled = (
-        not selections
-        or not selected_datasets
-        or invalid_output_name
-    )
+    generate_disabled = not selections or not selected_datasets or invalid_output_name
     if st.button("Generate configs", disabled=generate_disabled, type="primary"):
         try:
             written = write_batch_configs(
@@ -235,4 +229,3 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
-
