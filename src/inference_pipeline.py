@@ -30,6 +30,7 @@ class InferencePipeline:
         source_col: str = "source",
         target_col: str = "y",
         do_evaluate: bool = True,
+        do_append_to_input_file: bool = False,
         logfile: str | None = None,
         override_cache: bool = False,
     ):
@@ -38,11 +39,11 @@ class InferencePipeline:
         self.dataset_file_name = self.dataset_path.stem
         self.model_cache_key = model_cache_key
         self.data_cache_key = data_cache_key
-        self.task_setting = task_setting
         self.smiles_col = smiles_col
         self.source_col = source_col
         self.target_col = target_col
         self.do_evaluate = do_evaluate
+        self.do_append_to_input_file = do_append_to_input_file
 
         self.data_interface.set_task_setting(task_setting)
         if logfile is not None:
@@ -62,6 +63,7 @@ class InferencePipeline:
 
         self.data: Optional[pd.DataFrame] = None
         self.predictor: Optional[PredictorBase] = None
+        self.task_setting = self._detect_task_setting()
 
         self._validate_configuration()
 
@@ -107,8 +109,8 @@ class InferencePipeline:
         return metrics
 
     def _load_dataset(self) -> pd.DataFrame:
-        delimiter = detect_csv_delimiter(self.dataset_path)
-        dataset = pd.read_csv(self.dataset_path, delimiter=delimiter).copy()
+        # delimiter = detect_csv_delimiter(self.dataset_path)
+        dataset = pd.read_csv(self.dataset_path)
 
         if self.smiles_col not in dataset.columns:
             raw_smiles_col = DataInterface.get_smiles_col_in_raw(dataset)
@@ -121,9 +123,6 @@ class InferencePipeline:
             except ValueError:
                 pass
 
-        if self.source_col not in dataset.columns:
-            # Keep prediction input schema consistent with training/evaluation paths.
-            dataset[self.source_col] = self.dataset_path.stem
         return dataset
 
     def _load_predictor(self) -> PredictorBase:
@@ -183,18 +182,25 @@ class InferencePipeline:
                 raise TypeError(
                     "Classification task requires predictor to implement `classify`."
                 )
-            classifier = cast(BinaryClassifierBase, predictor)
-            df[f"{self.label_name}_class"] = classifier.classify(preds)
+            df[f"{self.label_name}_class"] = predictor.classify(preds)
         return df
 
     def _save_predictions(self, results: pd.DataFrame) -> None:
         self.out_dir.mkdir(parents=True, exist_ok=True)
+        if self.do_append_to_input_file:
+            results.to_csv(self.dataset_path, index=False)
         results.to_csv(self.predictions_path, index=False)
 
     def _save_metrics(self, metrics: dict) -> None:
         self.out_dir.mkdir(parents=True, exist_ok=True)
         with open(self.metrics_path, "w") as fh:
             yaml.safe_dump({"metrics": metrics}, fh)
+
+    def _detect_task_setting(self) -> str:
+        # TODO: make this more robust
+        if hasattr(self.predictor, "classify"):
+            return "binary_classification"
+        return "regression"
 
     def _validate_configuration(self) -> None:
         if not self.data_interface:
