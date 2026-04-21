@@ -12,5 +12,3 @@ threshold: "median"
 label_transformations:
   - "log10"
   - "negate"
-
-#https://srijitseal.com/DILI_Predictor/datasets.html
