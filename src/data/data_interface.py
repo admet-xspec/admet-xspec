@@ -660,3 +660,9 @@ class DataInterface:
         # keep continuous label in `y_cont`, classification in `y`
         df = df.rename(columns={"y": "y_cont", "class": "y"})
         return df
+
+    def save_bootstrap_metrics(self, metrics_dict, predictor_key, split_key):
+        path = self.models_dir / predictor_key / split_key / "bootstrap_data.yaml"
+        Path(path).parent.mkdir(parents=True, exist_ok=True)
+        with open(path, "w") as fh:
+            yaml.dump(metrics_dict, fh)
