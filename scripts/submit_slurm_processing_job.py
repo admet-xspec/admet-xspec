@@ -7,7 +7,6 @@ from datetime import datetime
 from pathlib import Path
 from typing import Iterable
 
-
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description=(
@@ -35,7 +34,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--nodes", type=int, default=1)
     parser.add_argument("--ntasks-per-node", type=int, default=4)
     parser.add_argument("--cpus-per-task", type=int, default=16)
-    parser.add_argument("--conda-env-name", type=str, default="conda")
+    parser.add_argument("--conda-env-name", type=str, default="admet")
     parser.add_argument(
         "--job-prefix",
         default="training",
@@ -90,13 +89,13 @@ def render_slurm_script(
             f"#SBATCH --output={output_path}",
             f"#SBATCH --partition={partition}",
             f"#SBATCH --nodes={nodes}",
-            f"#SBATCH --account={account}"
+            f"#SBATCH --account={account}",
             f"#SBATCH --ntasks-per-node={ntasks_per_node}",
             f"#SBATCH --cpus-per-task={cpus_per_task}",
             "",
             f'cd "{repo_root}"',
-            'module load Miniconda3/25.7.0-2'
-            f'conda activate {conda_env_name}'
+            'module load Miniconda3/25.7.0-2',
+            f'conda activate {conda_env_name}',
             f'python process.py -c "{config_path}"',
             "",
         ]
@@ -113,6 +112,8 @@ def write_scripts(
     ntasks_per_node: int,
     cpus_per_task: int,
     job_prefix: str,
+    account: str,
+    conda_env_name: str,
 ) -> list[Path]:
     # append the date to jobs_dir to avoid overwriting previous runs
     today_is = datetime.today().strftime("%Y-%m-%d")
@@ -135,6 +136,8 @@ def write_scripts(
             nodes=nodes,
             ntasks_per_node=ntasks_per_node,
             cpus_per_task=cpus_per_task,
+            account=account,
+            conda_env_name=conda_env_name,
         )
         script_path.write_text(script_text, encoding="utf-8")
         script_paths.append(script_path)
@@ -169,6 +172,8 @@ def main() -> None:
         ntasks_per_node=args.ntasks_per_node,
         cpus_per_task=args.cpus_per_task,
         job_prefix=args.job_prefix,
+        account=args.account,
+        conda_env_name=args.conda_env_name,
     )
 
     print(f"Found {len(gin_files)} config file(s).")
