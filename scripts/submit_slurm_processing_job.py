@@ -29,11 +29,13 @@ def parse_args() -> argparse.Namespace:
         help="Directory where generated Slurm scripts will be stored.",
     )
     parser.add_argument(
-        "--partition", default="dgx_regular", help="Slurm partition/queue name."
+        "--partition", default="plgrid", help="Slurm partition/queue name."
     )
+    parser.add_argument("--account", default="plgadmetxpec-cpu", help="Slurm account name.")
     parser.add_argument("--nodes", type=int, default=1)
     parser.add_argument("--ntasks-per-node", type=int, default=4)
     parser.add_argument("--cpus-per-task", type=int, default=16)
+    parser.add_argument("--conda-env-name", type=str, default="conda")
     parser.add_argument(
         "--job-prefix",
         default="training",
@@ -76,9 +78,10 @@ def render_slurm_script(
     output_path: Path,
     partition: str,
     nodes: int,
+    account: str,
     ntasks_per_node: int,
     cpus_per_task: int,
-    conda_env_name: str = 'admet',
+    conda_env_name: str,
 ) -> str:
     return "\n".join(
         [
@@ -87,6 +90,7 @@ def render_slurm_script(
             f"#SBATCH --output={output_path}",
             f"#SBATCH --partition={partition}",
             f"#SBATCH --nodes={nodes}",
+            f"#SBATCH --account={account}"
             f"#SBATCH --ntasks-per-node={ntasks_per_node}",
             f"#SBATCH --cpus-per-task={cpus_per_task}",
             "",
