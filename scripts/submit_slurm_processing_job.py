@@ -78,6 +78,7 @@ def render_slurm_script(
     nodes: int,
     ntasks_per_node: int,
     cpus_per_task: int,
+    conda_env_name: str = 'admet',
 ) -> str:
     return "\n".join(
         [
@@ -90,7 +91,9 @@ def render_slurm_script(
             f"#SBATCH --cpus-per-task={cpus_per_task}",
             "",
             f'cd "{repo_root}"',
-            f'uv run process.py -c "{config_path}"',
+            'module load Miniconda3/25.7.0-2'
+            f'conda activate {conda_env_name}'
+            f'python process.py -c "{config_path}"',
             "",
         ]
     )
