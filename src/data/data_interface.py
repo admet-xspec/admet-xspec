@@ -631,6 +631,7 @@ class DataInterface:
             logging.info(f"Using median {threshold_value} as threshold.")
         else:
             threshold_value = float(threshold_value)
+            logging.info(f"Using value {threshold_value} as threshold.")
 
         initial_len = len(df)
         if is_chembl:
