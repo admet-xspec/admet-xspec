@@ -8,7 +8,7 @@ filter_criteria:
       - "hr"
     Standard Type:
       - "T1/2"
-threshold: "median"
+threshold: 0.3
 label_transformations:
   - "log10"
   - "negate"

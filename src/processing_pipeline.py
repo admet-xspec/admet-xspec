@@ -564,6 +564,10 @@ class ProcessingPipeline:
         metrics = pd.DataFrame(metrics_list)
         ci_lower = metrics.quantile((100 - self.ci_percentiles) / 200)
         ci_upper = metrics.quantile(1 - (100 - self.ci_percentiles) / 200)
+        # Dump raw bootstrap metrics into a yaml
+        self.data_interface.save_bootstrap_metrics(
+            metrics.to_dict(orient="list"), self.predictor_key, self.split_key
+        )
         return ci_lower.to_dict(), ci_upper.to_dict()
 
     def _train_final_model(self, train_df: pd.DataFrame, test_df: pd.DataFrame) -> None:
