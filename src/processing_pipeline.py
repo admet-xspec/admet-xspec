@@ -608,7 +608,7 @@ class ProcessingPipeline:
                 f"Unknown target metric {self.target_metric} for optimization"
             )
 
-        # Define an objective funcion for the optimization process
+        # Define an objective function for the optimization process
         # Here it is a k-fold cross-validation on some target metric
         def objective(trial: optuna.Trial) -> float:
             # Instantiate a fresh predictor for the trial
