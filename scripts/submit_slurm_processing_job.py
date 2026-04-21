@@ -95,8 +95,7 @@ def render_slurm_script(
             "",
             f'cd "{repo_root}"',
             'module load Miniconda3/25.7.0-2',
-            f'conda activate {conda_env_name}',
-            f'python process.py -c "{config_path}"',
+            f'conda run -n {conda_env_name} python process.py -c "{config_path}"',
             "",
         ]
     )
