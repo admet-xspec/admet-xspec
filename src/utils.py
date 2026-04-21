@@ -236,7 +236,7 @@ def sample_optuna_params(
             sampled[name] = trial.suggest_int(name, low, high)
         elif kind == "int_log":
             low, high = args
-            sampled[name] = trial.suggest_float(name, low, high, log=True)
+            sampled[name] = trial.suggest_int(name, low, high, log=True)
         elif kind == "float":
             low, high = args
             sampled[name] = trial.suggest_float(name, low, high)
