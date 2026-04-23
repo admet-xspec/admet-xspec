@@ -1,7 +1,7 @@
 ProcessingPipeline.params_distribution = {
     'C': ('float_log', 100, 2000),
     'gamma': ('float_log', 0.001, 1),
-    'kernel': ['rbf']
+    'kernel': ('categorical', ['rbf'])
     }
 
 ProcessingPipeline.n_optim_cv_folds = 5
