@@ -324,16 +324,11 @@ class ProcessingPipeline:
 
     def _save_splits(self, train_df: pd.DataFrame, test_df: pd.DataFrame) -> None:
         """Persist train/test split using the data interface."""
-        friendly = (
-            self.splitter.get_friendly_name(self.datasets)
-            if self.splitter
-            else "manual_split"
-        )
         self.data_interface.save_train_test_split(
             train_df,
             test_df,
             cache_key=self.split_key,
-            split_friendly_name=friendly,
+            split_friendly_name=self.split_key,
             classification_or_regression=self.task_setting,
         )
         logging.info(f"Saved split with cache key: {self.split_key}")
