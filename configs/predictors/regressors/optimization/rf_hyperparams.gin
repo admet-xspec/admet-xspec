@@ -1,6 +1,5 @@
 ProcessingPipeline.params_distribution = {
     'n_estimators': ('int_log', 100, 2000),
-    'criterion': ('categorical', ['gini', 'entropy']),
     'max_depth': ('int', 2, 100),
     'min_samples_split': ('int', 2, 10),
     'min_samples_leaf': ('int', 1, 10),
@@ -8,5 +7,5 @@ ProcessingPipeline.params_distribution = {
     }
 
 ProcessingPipeline.n_optim_cv_folds = 5
-ProcessingPipeline.n_optim_iter = 20
+ProcessingPipeline.n_optim_iter = 100
 ProcessingPipeline.target_metric = 'mse'
