@@ -445,7 +445,7 @@ class ProcessingPipeline:
         test_origin_split_key = self._get_split_key(
             [self.test_origin_dataset], custom_filter=self.hyperparams_source_sim_filter
         )
-        model_key = self.predictor.get_cache_key()
+        model_key = self.predictor.get_cache_key_for_hyperparameter_parsing()
         self.optimized_hyperparameters = self.data_interface.load_hyperparams(
             model_key, test_origin_split_key
         )

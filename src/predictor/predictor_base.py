@@ -5,6 +5,7 @@ from typing import Any
 import numpy as np
 import pandas as pd
 from sklearn.model_selection import KFold
+from torch import return_types
 
 from src.data.featurizer import FeaturizerBase
 from src.utils import get_metric_callable
@@ -110,6 +111,13 @@ class PredictorBase(abc.ABC):
         if self.is_multi_endpoint:
             key = "multiend_" + key
         return key
+
+    def get_cache_key_for_hyperparameter_parsing(self) -> str:
+        # TODO: clean this mess
+        if self.is_multi_endpoint:
+            return self.get_cache_key().replace("multiend_", "")
+        else:
+            return self.get_cache_key()
 
     def cross_validate(self, df: pd.DataFrame, n_folds: int = 1) -> MetricsDict:
         """Run k-fold cross-validation and average the resulting metrics."""
