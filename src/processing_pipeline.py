@@ -424,7 +424,7 @@ class ProcessingPipeline:
             filter_key = custom_filter.get_cache_key()
         else:
             filter_key = (
-                self.sim_filter.get_cache_key() if self.sim_filter else "nofilter"
+                "nofilter"
             )
         datasets_params = (
             tuple(sorted(datasets)),
