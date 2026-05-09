@@ -222,7 +222,7 @@ def main() -> None:
             st.success(f"Generated {len(written)} config files in {output_dir}")
             st.dataframe(
                 {"file": [str(path) for path in written]},
-                use_container_width=True,
+                width="stretch",
                 hide_index=True,
             )
 
