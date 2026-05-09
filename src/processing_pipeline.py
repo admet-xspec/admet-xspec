@@ -68,7 +68,7 @@ class ProcessingPipeline:
         target_col: str = "y",
         logfile: str | None = None,
         override_cache: bool = False,
-        show_progress_bar: bool = True,
+        show_progress_bar: bool = False,
     ):
         # Execution flags
         self.do_load_datasets = do_load_datasets
@@ -123,7 +123,7 @@ class ProcessingPipeline:
         self.predictor.set_featurizer(self.featurizer)
 
         # Derived identifiers / caches
-        self.split_key = self._get_split_key(self.datasets)
+        self.split_key = self._get_split_key(self.datasets, self.sim_filter)
         self.predictor_key = self._get_predictor_key()
         self.optimized_hyperparameters = None
 
@@ -416,16 +416,14 @@ class ProcessingPipeline:
     # --------------------- Identification / caching --------------------- #
 
     def _get_split_key(
-        self, datasets: List[str], custom_filter: SimilarityFilterBase | None = None
+        self, datasets: List[str], filter: SimilarityFilterBase | None = None
     ) -> str:
         """Generate a compact, deterministic identifier for the split configuration."""
         splitter_key = self.splitter.get_cache_key() if self.splitter else "nosplit"
-        if custom_filter:
-            filter_key = custom_filter.get_cache_key()
+        if filter:
+            filter_key = filter.get_cache_key()
         else:
-            filter_key = (
-                "nofilter"
-            )
+            filter_key = "nofilter"
         datasets_params = (
             tuple(sorted(datasets)),
             self.test_origin_dataset,
