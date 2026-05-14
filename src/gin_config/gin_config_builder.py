@@ -166,9 +166,10 @@ def build_experiment_filename(selection: ExperimentSelection, index: int) -> str
 
     dataset_token = selection.test_origin_dataset.replace("_", "-")
     return (
-        f"exp_{index:03d}_{stem(selection.processing_plan)}_"
+        f"exp_{index:03d}_{stem(selection.processing_plan)}_{selection.task_setting}_"
         f"{stem(selection.predictor)}_{stem(selection.featurizer)}_"
         f"{stem(selection.splitter)}_{stem(selection.sim_filter)}_"
+        f"{'-'.join([stem(dataset) for dataset in selection.datasets])}_"
         f"{dataset_token}.gin"
     )
 
