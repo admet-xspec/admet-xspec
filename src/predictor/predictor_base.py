@@ -5,9 +5,10 @@ from typing import Any
 import numpy as np
 import pandas as pd
 from sklearn.model_selection import KFold
+from torch import return_types
 
 from src.data.featurizer import FeaturizerBase
-from src.utils import compute_sklearn_metric
+from src.utils import get_metric_callable
 
 
 HyperParams = dict[str, Any]
@@ -111,6 +112,13 @@ class PredictorBase(abc.ABC):
             key = "multiend_" + key
         return key
 
+    def get_cache_key_for_hyperparameter_parsing(self) -> str:
+        # TODO: clean this mess
+        if self.is_multi_endpoint:
+            return self.get_cache_key().replace("multiend_", "")
+        else:
+            return self.get_cache_key()
+
     def cross_validate(self, df: pd.DataFrame, n_folds: int = 1) -> MetricsDict:
         """Run k-fold cross-validation and average the resulting metrics."""
         if n_folds < 2:
@@ -181,7 +189,7 @@ class BinaryClassifierBase(PredictorBase, abc.ABC):
     and classification thresholding.
     """
 
-    evaluation_metrics = ["accuracy", "roc_auc", "f1", "precision", "recall"]
+    evaluation_metrics = ["accuracy", "roc_auc", "f1", "precision", "recall", "pr_auc"]
 
     def evaluate(self, df: pd.DataFrame) -> MetricsDict:
         """Evaluate binary predictions using a fixed metric set."""
@@ -190,11 +198,11 @@ class BinaryClassifierBase(PredictorBase, abc.ABC):
         binary_preds = self.classify(preds)
         metrics_dict: MetricsDict = {}
         for m in self.evaluation_metrics:
-            if m == "roc_auc":
+            if m in ["roc_auc", "pr_auc"]:
                 # roc_auc needs class probabilities
-                metrics_dict[m] = compute_sklearn_metric(m)(df[self.target_col], preds)
+                metrics_dict[m] = get_metric_callable(m)(df[self.target_col], preds)
             else:
-                metrics_dict[m] = compute_sklearn_metric(m)(
+                metrics_dict[m] = get_metric_callable(m)(
                     df[self.target_col], binary_preds
                 )
         return metrics_dict
@@ -214,14 +222,13 @@ class RegressorBase(PredictorBase, abc.ABC):
     Base class for regression predictors. Implements common evaluation metrics.
     """
 
-    evaluation_metrics = ["mse", "rmse", "mae", "r2"]
+    evaluation_metrics = ["mse", "rmse", "mae", "r2", "spearman"]
 
     def evaluate(self, df: pd.DataFrame) -> MetricsDict:
         """Evaluate regression predictions using a fixed metric set."""
         self._require_columns(df, [self.target_col])
         preds = self.predict(df)
         return {
-            m: compute_sklearn_metric(m)(df[self.target_col], preds)
+            m: get_metric_callable(m)(df[self.target_col], preds)
             for m in self.evaluation_metrics
         }
-

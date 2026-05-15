@@ -68,7 +68,7 @@ class ProcessingPipeline:
         target_col: str = "y",
         logfile: str | None = None,
         override_cache: bool = False,
-        show_progress_bar: bool = True,
+        show_progress_bar: bool = False,
     ):
         # Execution flags
         self.do_load_datasets = do_load_datasets
@@ -123,7 +123,7 @@ class ProcessingPipeline:
         self.predictor.set_featurizer(self.featurizer)
 
         # Derived identifiers / caches
-        self.split_key = self._get_split_key(self.datasets, self.sim_filter)
+        self.split_key = self._get_split_key(datasets=self.datasets, sim_filter=self.sim_filter)
         self.predictor_key = self._get_predictor_key()
         self.optimized_hyperparameters = None
 
@@ -324,16 +324,11 @@ class ProcessingPipeline:
 
     def _save_splits(self, train_df: pd.DataFrame, test_df: pd.DataFrame) -> None:
         """Persist train/test split using the data interface."""
-        friendly = (
-            self.splitter.get_friendly_name(self.datasets)
-            if self.splitter
-            else "manual_split"
-        )
         self.data_interface.save_train_test_split(
             train_df,
             test_df,
             cache_key=self.split_key,
-            split_friendly_name=friendly,
+            split_friendly_name=self.split_key,
             classification_or_regression=self.task_setting,
         )
         logging.info(f"Saved split with cache key: {self.split_key}")
@@ -430,7 +425,10 @@ class ProcessingPipeline:
     ) -> str:
         """Generate a compact, deterministic identifier for the split configuration."""
         splitter_key = self.splitter.get_cache_key() if self.splitter else "nosplit"
-        filter_key = sim_filter.get_cache_key() if sim_filter else "nofilter"
+        if sim_filter:
+            filter_key = sim_filter.get_cache_key()
+        else:
+            filter_key = "nofilter"
         datasets_params = (
             tuple(sorted(datasets)),
             self.test_origin_dataset,
@@ -450,7 +448,7 @@ class ProcessingPipeline:
         test_origin_split_key = self._get_split_key(
             [self.test_origin_dataset], sim_filter=self.hyperparams_source_sim_filter
         )
-        model_key = self.predictor.get_cache_key()
+        model_key = self.predictor.get_cache_key_for_hyperparameter_parsing()
         self.optimized_hyperparameters = self.data_interface.load_hyperparams(
             model_key, test_origin_split_key
         )
@@ -564,6 +562,10 @@ class ProcessingPipeline:
         metrics = pd.DataFrame(metrics_list)
         ci_lower = metrics.quantile((100 - self.ci_percentiles) / 200)
         ci_upper = metrics.quantile(1 - (100 - self.ci_percentiles) / 200)
+        # Dump raw bootstrap metrics into a yaml
+        self.data_interface.save_bootstrap_metrics(
+            metrics.to_dict(orient="list"), self.predictor_key, self.split_key
+        )
         return ci_lower.to_dict(), ci_upper.to_dict()
 
     def _train_final_model(self, train_df: pd.DataFrame, test_df: pd.DataFrame) -> None:
@@ -604,7 +606,7 @@ class ProcessingPipeline:
                 f"Unknown target metric {self.target_metric} for optimization"
             )
 
-        # Define an objective funcion for the optimization process
+        # Define an objective function for the optimization process
         # Here it is a k-fold cross-validation on some target metric
         def objective(trial: optuna.Trial) -> float:
             # Instantiate a fresh predictor for the trial
