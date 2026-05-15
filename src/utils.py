@@ -3,6 +3,7 @@ from rdkit.Chem.SaltRemover import SaltRemover
 from rdkit.Chem.MolStandardize.rdMolStandardize import Uncharger
 from rdkit import RDLogger
 from sklearn import metrics
+import scipy.stats as stats
 import pandas as pd
 import logging
 from pathlib import Path
@@ -235,7 +236,7 @@ def sample_optuna_params(
             sampled[name] = trial.suggest_int(name, low, high)
         elif kind == "int_log":
             low, high = args
-            sampled[name] = trial.suggest_float(name, low, high, log=True)
+            sampled[name] = trial.suggest_int(name, low, high, log=True)
         elif kind == "float":
             low, high = args
             sampled[name] = trial.suggest_float(name, low, high)
@@ -253,7 +254,13 @@ def sample_optuna_params(
     return sampled
 
 
-def compute_sklearn_metric(metric_name: str):
+def pr_auc_score(y_true, y_pred):
+    precision, recall, _ = metrics.precision_recall_curve(y_true, y_pred)
+    pr_auc = metrics.auc(recall, precision)
+    return pr_auc
+
+
+def get_metric_callable(metric_name: str):
     metrics_dict = {
         "accuracy": metrics.accuracy_score,
         "roc_auc": metrics.roc_auc_score,
@@ -264,6 +271,8 @@ def compute_sklearn_metric(metric_name: str):
         "mae": metrics.mean_absolute_error,
         "r2": metrics.r2_score,
         "rmse": metrics.root_mean_squared_error,
+        "spearman": lambda y_true, y_pred: stats.spearmanr(y_true, y_pred).correlation,
+        "pr_auc": pr_auc_score,
     }
     if metric_name not in metrics_dict.keys():
         raise ValueError(
