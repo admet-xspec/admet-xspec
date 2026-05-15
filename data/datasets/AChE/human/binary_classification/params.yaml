@@ -8,7 +8,7 @@ filter_criteria:
       - "nM"
     Standard Type:
       - "IC50"
-threshold: "median"
+threshold: -3
 label_transformations:
   - "log10"
   - "negate"
