@@ -407,10 +407,15 @@ class ProcessingPipeline:
         if self.predictor:
             logging.info(f"* Predictor: {self.predictor.name}")
             logging.info(f"* Predictor key: {self.predictor_key}")
-        if self.hyperparams_source_sim_filter:
-            logging.info(
-                f"* Loading hyperparams filtered by {self.hyperparams_source_sim_filter.name} against {self.hyperparams_source_sim_filter.against}"
-            )
+        if self.do_load_optimized_hyperparams:
+            if self.hyperparams_source_sim_filter:
+                logging.info(
+                    f"* Loading hyperparams filtered by {self.hyperparams_source_sim_filter.name} against {self.hyperparams_source_sim_filter.against}"
+                )
+            else:
+                logging.info(
+                    f"* Loading hyperparams optimized on {self.test_origin_dataset}"
+                )
         logging.info(f"* Task setting: {self.task_setting}")
 
     # --------------------- Identification / caching --------------------- #
