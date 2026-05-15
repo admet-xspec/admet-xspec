@@ -1,5 +1,7 @@
 import abc
 import logging
+import pickle
+import tempfile
 from typing import List, Hashable
 import hashlib
 
@@ -17,9 +19,55 @@ from sklearn.preprocessing import StandardScaler
 class FeaturizerBase(abc.ABC):
     """Base class for molecular featurizers."""
 
-    @abc.abstractmethod
+    _DEFAULT_CACHE_DIR = pathlib.Path(tempfile.gettempdir()) / "admet_fp_cache"
+    # Subclasses with a fitted scaler (whose output varies between runs) should set False
+    # so the cache never leaks stale scaled values across runs.
+    _use_disk_cache: bool = True
+    # Set to False (per instance) to bypass caching entirely, e.g. in tests.
+    cache_enabled: bool = True
+
+    def _ensure_cache(self) -> None:
+        """Lazy-init the in-memory cache, loading from disk when _use_disk_cache is True."""
+        if hasattr(self, "_cache_initialized"):
+            return
+        self._smiles_cache: dict[str, np.ndarray] = {}
+        if self._use_disk_cache:
+            cache_file = self._DEFAULT_CACHE_DIR / f"{self.get_cache_key()}.pkl"
+            self._disk_cache_path: pathlib.Path = cache_file
+            if cache_file.exists():
+                with open(cache_file, "rb") as f:
+                    self._smiles_cache = pickle.load(f)
+                logging.debug(
+                    f"{self.name}: loaded {len(self._smiles_cache)} cached entries from {cache_file}"
+                )
+        self._cache_initialized = True
+
+    def _persist_cache(self) -> None:
+        """Write the in-memory cache to disk (no-op when _use_disk_cache is False)."""
+        if not self._use_disk_cache:
+            return
+        self._disk_cache_path.parent.mkdir(parents=True, exist_ok=True)
+        with open(self._disk_cache_path, "wb") as f:
+            pickle.dump(self._smiles_cache, f)
+
     def featurize(self, smiles_list: List[str]) -> np.ndarray:
-        """Convert SMILES strings to numerical feature arrays."""
+        """Return feature matrix, computing only SMILES absent from cache."""
+        if not self.cache_enabled:
+            return self._compute_features(smiles_list)
+        self._ensure_cache()
+        unique_uncached = list(
+            dict.fromkeys(s for s in smiles_list if s not in self._smiles_cache)
+        )
+        if unique_uncached:
+            new_features = self._compute_features(unique_uncached)
+            for smi, feat in zip(unique_uncached, new_features):
+                self._smiles_cache[smi] = feat
+            self._persist_cache()
+        return np.stack([self._smiles_cache[smi] for smi in smiles_list])
+
+    @abc.abstractmethod
+    def _compute_features(self, smiles_list: List[str]) -> np.ndarray:
+        """Compute features from scratch for the given SMILES (no caching)."""
         pass
 
     @property
@@ -59,7 +107,7 @@ class EcfpFeaturizer(FeaturizerBase):
         self.count = count
         self.generator = GetMorganGenerator(radius=radius, fpSize=n_bits)
 
-    def featurize(self, smiles_list: List[str]) -> np.ndarray:
+    def _compute_features(self, smiles_list: List[str]) -> np.ndarray:
         """Generate ECFP fingerprints for given SMILES."""
         mols = [Chem.MolFromSmiles(smi) for smi in smiles_list]
 
@@ -103,11 +151,14 @@ class EcfpFeaturizer(FeaturizerBase):
 class PropertyFeaturizer(FeaturizerBase):
     """RDKit molecular property descriptor featurizer with normalization."""
 
+    # Scaled output depends on a fitted scaler; disk-caching would serve stale values on re-runs.
+    _use_disk_cache = False
+
     def __init__(self, scaler=StandardScaler()):
         self.scaler = scaler
         self.is_fitted = False
 
-    def featurize(self, smiles_list: List[str]) -> np.ndarray:
+    def _compute_features(self, smiles_list: List[str]) -> np.ndarray:
         """Generate normalized molecular descriptors."""
         mols = [Chem.MolFromSmiles(smi) for smi in smiles_list]
 
@@ -162,7 +213,7 @@ class PropertyFeaturizer(FeaturizerBase):
 class MaccsFeaturizer(FeaturizerBase):
     """MACCS keys fingerprint featurizer."""
 
-    def featurize(self, smiles_list: List[str]) -> np.ndarray:
+    def _compute_features(self, smiles_list: List[str]) -> np.ndarray:
         """Generate MACCS keys fingerprints for given SMILES."""
         mols = [Chem.MolFromSmiles(smi) for smi in smiles_list]
 
@@ -197,7 +248,7 @@ class KlekotaRothFeaturizer(FeaturizerBase):
         super().__init__()
         self.keys_mols = self._read_krfp_keys(keys_path)
 
-    def featurize(self, smiles_list: List[str]) -> np.ndarray:
+    def _compute_features(self, smiles_list: List[str]) -> np.ndarray:
         """Generate Klekota-Roth fingerprints for given SMILES."""
         mols = [Chem.MolFromSmiles(smi) for smi in smiles_list]
 
@@ -251,11 +302,14 @@ class PropertyEcfpFeaturizer(FeaturizerBase):
 
     # TODO: Remove this class and implement an union featurizer that can combine any n featurizers
 
+    # Output depends on PropertyFeaturizer's fitted scaler; disk caching would give stale values.
+    _use_disk_cache = False
+
     def __init__(self, radius: int = 2, n_bits: int = 2048, count: bool = False):
         self.ecfp = EcfpFeaturizer(radius=radius, n_bits=n_bits, count=count)
         self.properties = PropertyFeaturizer()
 
-    def featurize(self, smiles_list: List[str]) -> np.ndarray:
+    def _compute_features(self, smiles_list: List[str]) -> np.ndarray:
         """Generate combined ECFP and property features."""
         ecfp_features = self.ecfp.featurize(smiles_list)
         property_features = self.properties.featurize(smiles_list)
@@ -294,7 +348,7 @@ class Map4Featurizer(FeaturizerBase):
             include_duplicated_shingles=include_duplicated_shingles,
         )
 
-    def featurize(self, smiles_list: List[str]) -> np.ndarray:
+    def _compute_features(self, smiles_list: List[str]) -> np.ndarray:
         """Generate MAP4 fingerprints for given SMILES."""
 
         mols = [Chem.MolFromSmiles(smi) for smi in smiles_list]

@@ -123,7 +123,7 @@ class ProcessingPipeline:
         self.predictor.set_featurizer(self.featurizer)
 
         # Derived identifiers / caches
-        self.split_key = self._get_split_key(self.datasets)
+        self.split_key = self._get_split_key(self.datasets, self.sim_filter)
         self.predictor_key = self._get_predictor_key()
         self.optimized_hyperparameters = None
 
@@ -412,25 +412,25 @@ class ProcessingPipeline:
         if self.predictor:
             logging.info(f"* Predictor: {self.predictor.name}")
             logging.info(f"* Predictor key: {self.predictor_key}")
-        if self.hyperparams_source_sim_filter:
-            logging.info(
-                f"* Loading hyperparams filtered by {self.hyperparams_source_sim_filter.name} against {self.hyperparams_source_sim_filter.against}"
-            )
+        if self.do_load_optimized_hyperparams:
+            if self.hyperparams_source_sim_filter:
+                logging.info(
+                    f"* Loading hyperparams filtered by {self.hyperparams_source_sim_filter.name} against {self.hyperparams_source_sim_filter.against}"
+                )
+            else:
+                logging.info(
+                    f"* Loading hyperparams optimized on {self.test_origin_dataset}"
+                )
         logging.info(f"* Task setting: {self.task_setting}")
 
     # --------------------- Identification / caching --------------------- #
 
     def _get_split_key(
-        self, datasets: List[str], custom_filter: SimilarityFilterBase | None = None
+        self, datasets: List[str], sim_filter: SimilarityFilterBase | None = None
     ) -> str:
         """Generate a compact, deterministic identifier for the split configuration."""
         splitter_key = self.splitter.get_cache_key() if self.splitter else "nosplit"
-        if custom_filter:
-            filter_key = custom_filter.get_cache_key()
-        else:
-            filter_key = (
-                self.sim_filter.get_cache_key() if self.sim_filter else "nofilter"
-            )
+        filter_key = sim_filter.get_cache_key() if sim_filter else "nofilter"
         datasets_params = (
             tuple(sorted(datasets)),
             self.test_origin_dataset,
@@ -448,7 +448,7 @@ class ProcessingPipeline:
     def _load_hyperparams_optimized_on_test_origin(self) -> None:
 
         test_origin_split_key = self._get_split_key(
-            [self.test_origin_dataset], custom_filter=self.hyperparams_source_sim_filter
+            [self.test_origin_dataset], sim_filter=self.hyperparams_source_sim_filter
         )
         model_key = self.predictor.get_cache_key()
         self.optimized_hyperparameters = self.data_interface.load_hyperparams(
