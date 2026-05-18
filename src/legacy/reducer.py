@@ -5,7 +5,7 @@ import pandas as pd
 from sklearn.decomposition import PCA
 from sklearn.manifold import TSNE
 from umap import UMAP
-from src.data.visualizer import ProjectionVisualizer
+from legacy.visualizer import ProjectionVisualizer
 from typing import Dict, Any
 
 
