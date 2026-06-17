@@ -1,6 +1,12 @@
 # Find every 'prepared_data.csv' file in the 'data/datasets/' directory and delete it.
 import pathlib
 
+# Display user prompt to confirm deletion
+confirm_delete = input("Are you sure you want to delete all prepared data files? (y/n): ")
+if confirm_delete.lower() != "y":
+    print("Deletion cancelled.")
+    exit()
+
 data_dir = pathlib.Path("data/datasets/")
 prepared_files = list(data_dir.rglob("prepared_data.csv"))
 for file_path in prepared_files:
