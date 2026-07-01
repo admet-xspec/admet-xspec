@@ -7,7 +7,7 @@ SvmClassifier.params = {
     'gamma': 'scale',
     }
 
-SvmClassifier.multi_endpoint = True
+SvmClassifier.do_attributed_learning = True
 
 # Include hyperparameter optimization config
 include 'configs/predictors/classifiers/optimization/svm_hyperparams.gin'

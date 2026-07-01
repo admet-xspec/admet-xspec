@@ -21,8 +21,6 @@ class DataInterface:
     Manage dataset loading, normalization and train/test split saving.
     """
 
-    # TODO: add support for multi-class classification datasets
-
     possible_smiles_cols = ["SMILES", "Smiles", "smiles", "molecule"]
     possible_label_cols = ["LABEL", "Label", "label", "Y", "y", "Standard Value"]
 

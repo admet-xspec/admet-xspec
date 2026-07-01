@@ -1,26 +1,21 @@
 Data sourcing & setup
 ======================
 
-.. warning::
+.. note::
 
    
    ADMET-XSpec handles ChEMBL-sourced datasets automatically. All external datasets
-   are to be reformatted to `.csv` files with 'smiles' and 'y' columns as the features and labels!
-   
-   .. code-block:: text
-      
-      data/datasets/permeability/B3DB/binary_classification/b3db_classification.csv
-      data/datasets/permeability/PAMPA/binary_classification/pampa_combined.csv
+   must be reformatted manually as ``.csv`` files containing at least the following two columns:
+      - **'smiles'** column containing SMILES strings of molecules
+      - **'y'** column containing (continuous or binary) labels
 
 Introductory note
 ------------------
 
-.. note::
+**This page contains all the necessary information on how to use
+ADMET-XSpec with your own datasets.**
 
-   This page contains all the necessary information on how to use
-   ADMET-XSpec with your own datasets.
-
-The most important fact about uploading your own data to use with
+The most important piece of information to keep in mind when using
 ADMET-XSpec is that **each dataset must be placed in a separate
 subdirectory somewhere in** ``data/datasets``. The exact organization of
 the directories populating ``data/datasets`` is not critical and may be
@@ -129,7 +124,7 @@ units, relation, and type may change depending on what kind of
 phenomenon you are trying to model and what kind of assay was used to
 gather the data uploaded to ChEMBL.
 
-.. warning::
+.. note::
 
    Filter criteria are not applied to non-ChEMBL datasets.
 
@@ -182,7 +177,7 @@ points are assigned class ``0``.
 
 .. tip::
 
-   Apart from floats, this setting also accepts ``"median"``, which
+   Apart from floats, the ``threshold`` setting also accepts ``"median"``, which
    results in a perfectly balanced dataset with the threshold set at the
    median value of all the labels :math:`y`.
 

@@ -10,7 +10,7 @@ RfClassifier.params = {
     'max_features': 'sqrt'
     }
 
-RfClassifier.multi_endpoint = True
+RfClassifier.do_attributed_learning = True
 
 # Include hyperparameter optimization config
 include 'configs/predictors/classifiers/optimization/rf_hyperparams.gin'

@@ -19,12 +19,12 @@ class _ScikitEstimatorBase(ScikitPredictorBase):
         self,
         params: dict[str, Any] | None = None,
         random_state: int = 42,
-        multi_endpoint: bool = False,
+        do_attributed_learning: bool = False,
     ) -> None:
         super().__init__(
             params=params,
             random_state=random_state,
-            multi_endpoint=multi_endpoint,
+            do_attributed_learning=do_attributed_learning,
         )
 
     def _base_estimator_kwargs(self) -> dict[str, Any]:

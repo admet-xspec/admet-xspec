@@ -1,23 +1,21 @@
 #=====================[ADMET-Xspec]=====================#
 #----------------------[pipeline]-----------------------#
 
-include 'configs/processing_plans/train.gin'			    # we are training on set hyperaparameters
-								                            #   (see other processing plans)
+include 'configs/processing_plans/train_optimize.gin'		# we are performing hyperparameter optimization
+								                            #   and will train models on the best hyperparams
 include 'configs/splitters/scaffold.gin'			        # scaffold split
-include 'configs/featurizers/ecfp.gin'				        # ECFP4 featurization
+include 'configs/featurizers/ecfp_count.gin'			    # count KRFP featurization
 include 'configs/sim_filters/none.gin'				        # no filter applied for augumenting datasets
-include 'configs/predictors/classifiers/lgbm.gin'		    # LightGBM model
+include 'configs/predictors/regressors/rf.gin'			    # RandomForest regressor model
 
 #------------------------[data]-------------------------#
 
 ProcessingPipeline.datasets = [					            # listing datasets by friendly names
-    'AChE_human_pIC50',						                # (see data/datasets/registry.txt)
-    'AChE_rat_pIC50',
-    'AChE_mouse_pIC50'
+    'AChE_human_pIC50'						                # (see data/datasets/registry.txt)
 ]
 
 ProcessingPipeline.test_origin_dataset = 'AChE_human_pIC50'	# only human data to populate the test set
-ProcessingPipeline.task_setting = 'binary_classification'	# or 'regression'
+ProcessingPipeline.task_setting = 'regression'
 
 #========================================================#
 # Advanced gin config settings

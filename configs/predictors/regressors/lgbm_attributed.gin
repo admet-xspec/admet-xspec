@@ -10,7 +10,7 @@ LightGbmRegressor.params = {
     'learning_rate': 0.05,
 }
 
-LightGbmRegressor.multi_endpoint = True
+LightGbmRegressor.do_attributed_learning = True
 
 # Include hyperparameter optimization config
 include 'configs/predictors/regressors/optimization/lgbm_hyperparams.gin'

@@ -1,2 +1,7 @@
+#=======================================================#
+#    Do not modify! This file configures an internal    #
+#   featurizer of the Tanimoto similarity calculator!   #
+#=======================================================#
+
 tanimoto_featurizer/gin.singleton.constructor = @MaccsFeaturizer
 tanimoto_featurizer = @tanimoto_featurizer/gin.singleton()

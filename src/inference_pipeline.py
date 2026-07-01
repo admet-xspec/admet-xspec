@@ -141,7 +141,7 @@ class InferencePipeline:
     def _align_source_labels(
         self, df: pd.DataFrame, predictor: PredictorBase
     ) -> pd.DataFrame:
-        """Align source labels to match predictor endpoint map for multi-endpoint models."""
+        """Align source labels to match predictor endpoint map for attributed learning models."""
         endpoint_ohe_map = getattr(predictor, "endpoint_ohe_map", None)
         if not endpoint_ohe_map:
             return df

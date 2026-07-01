@@ -10,7 +10,7 @@ LightGbmClassifier.params = {
     'learning_rate': 0.05,
 }
 
-LightGbmClassifier.multi_endpoint = True
+LightGbmClassifier.do_attributed_learning = True
 
 # Include hyperparameter optimization config
 include 'configs/predictors/classifiers/optimization/lgbm_hyperparams.gin'

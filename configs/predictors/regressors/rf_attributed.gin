@@ -7,7 +7,7 @@ RfRegressor.params = {'max_depth': 38,
      'min_samples_split': 3,
      'n_estimators': 860}
 
-RfRegressor.multi_endpoint = True
+RfRegressor.do_attributed_learning = True
 
 # Include hyperparameter optimization config
 include 'configs/predictors/regressors/optimization/rf_hyperparams.gin'

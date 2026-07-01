@@ -22,7 +22,7 @@ class PredictorBase(abc.ABC):
         self,
         random_state: int = 42,
         task: str | None = None,
-        multi_endpoint: bool = False,
+        do_attributed_learning: bool = False,
     ) -> None:
         self.featurizer: FeaturizerBase | None = None
         self.random_state = random_state
@@ -30,7 +30,7 @@ class PredictorBase(abc.ABC):
         self.source_col = "source"
         self.target_col = "y"
         self.task_name = task
-        self.multi_endpoint = multi_endpoint
+        self.do_attributed_learning = do_attributed_learning
         self.endpoint_ohe_map: dict[Any, np.ndarray] | None = None
         # Set random seed for reproducibility
         np.random.seed(random_state)
@@ -47,8 +47,8 @@ class PredictorBase(abc.ABC):
         return self.task_name
 
     @property
-    def is_multi_endpoint(self) -> bool:
-        return self.multi_endpoint
+    def is_attributed(self) -> bool:
+        return self.do_attributed_learning
 
     @abc.abstractmethod
     def get_hyperparameters(self) -> HyperParams:
@@ -108,14 +108,14 @@ class PredictorBase(abc.ABC):
             self.featurizer.get_cache_key() if self.featurizer else "nofeaturizer"
         )
         key = f"{self.task_name}_{self.name}_{featurizer_key}"
-        if self.is_multi_endpoint:
-            key = "multiend_" + key
+        if self.is_attributed:
+            key = "attributed_" + key
         return key
 
     def get_cache_key_for_hyperparameter_parsing(self) -> str:
         # TODO: clean this mess
-        if self.is_multi_endpoint:
-            return self.get_cache_key().replace("multiend_", "")
+        if self.is_attributed:
+            return self.get_cache_key().replace("attributed_", "")
         else:
             return self.get_cache_key()
 
@@ -157,7 +157,7 @@ class PredictorBase(abc.ABC):
         return self.endpoint_ohe_map if self.endpoint_ohe_map else None
 
     def _create_endpoint_map(self, endpoints: pd.Series) -> None:
-        """Create endpoint -> one-hot mapping used for multi-endpoint predictors."""
+        """Create endpoint -> one-hot mapping used for attributed predictors."""
         endpoint_map: dict[Any, np.ndarray] = {}
         unique_endpoints = sorted(endpoints.unique())
         for i, endpoint in enumerate(unique_endpoints):

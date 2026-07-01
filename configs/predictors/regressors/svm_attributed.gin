@@ -7,7 +7,7 @@ SvmRegressor.params = {
     'gamma': 'scale',
     }
 
-SvmRegressor.multi_endpoint = True
+SvmRegressor.do_attributed_learning = True
 
 # Include hyperparameter optimization config
 include 'configs/predictors/regressors/optimization/svm_hyperparams.gin'

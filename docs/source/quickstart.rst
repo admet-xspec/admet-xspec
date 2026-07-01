@@ -1,18 +1,16 @@
 Quick Start
 ===========
 
-Installation
-------------
-
-ADAMET-XSpec can be set up with both ``uv`` and ``conda``. Clone the repository and navigate to its directory.
+ADAMET-XSpec can be set up with both ``uv`` and ``conda``. Clone the repository and navigate to its directory. Then,
+you can choose one of the two installation methods described below.
 
 .. code:: bash
    
    git clone https://github.com/admet-xspec/admet-xspec.git
    cd admet-xspec
 
-UV setup
---------
+UV installation
+---------------
 
 .. _`official uv docs`: https://docs.astral.sh/uv/getting-started/
 
@@ -24,14 +22,14 @@ Then, have ``uv`` register a .venv within the current directory and install pack
    uv init .
    uv sync
 
-Run a demo experiment with uv:
+Run a demo experiment with uv to test your installation:
 
 .. code:: bash
    
    uv run process.py --cfg configs/examples/train_lgbm.gin
 
-Conda setup
------------
+Conda installation
+------------------
 
 .. _miniconda: https://www.anaconda.com/download/success?reg=skipped
 
@@ -39,30 +37,37 @@ Install miniconda_ following the instructions for your operating system.
 
 .. code:: bash
    
-   conda create -n admet python=3.11.8
+   conda create -n xspec python=3.11.8
    conda activate xspec
    conda install rdkit seaborn conda-forge::py-xgboost conda-forge::ray-all
    
    pip install -r requirements.txt
-   
    # dev dependencies
    pre-commit install
 
-Run a demo experiment with Conda:
+Run a demo experiment with Conda to test your installation:
 
 .. code:: bash
-   
-   # if you haven't already:
-   conda activate xspec
+
+   conda activate xspec # if you haven't already:
    
    python -m process --cfg configs/examples/train_lgbm.gin
 
-3 Experiments you can run now!
-------------------------------
+Three experiments to run right now
+----------------------------------
 
-1. **I'm training a classifier for the prediction of human acetylcholinesterase (AChE) inhibitory action of organic molecules. I want to test how the inclusion of datapoints from mouse and rat-based AChE inhibition assays into my exclusively-human dataset influences performance of the model**
+As the setup of ADMET-XSpec relies on the use of `gin` config files, we provide three examples of experiments that you
+should be able immediately after the installation. The config files for these experiments are located in ``configs/examples/``
+directory.
 
-   I want to input pre-optimized hyperparameters for the model, utilize scaffold-based train-test split strategy, represent the 
+Below are three scenarions you can explore with the provided config files. Do not worry - the next chapters
+will go into detail about how to build your own config files for your own experiments.
+
+1. I'm training a classifier for the prediction of human acetylcholinesterase (AChE) inhibitory action on organic
+   molecules. **I want to test how the inclusion of data points from mouse and rat-based AChE inhibition assays into my
+   exclusively-human dataset influences performance of the model on human test data.**
+
+   I want to input pre-optimized hyperparameters for the model, utilize scaffold-based train-test split strategy, represent the
    molecules using ECFP4 fingerprints and employ a LightGBM classifier alogrithm.
  
    .. code:: bash
@@ -88,21 +93,26 @@ Run a demo experiment with Conda:
       # or
       python -m process --cfg configs/examples/train_rf_optimize.gin
 
-3. **I have a heterogenous dataset of IC50-labeled Monoamine oxidase A (MAO-A) inhibitors, obtained as a naive concatenation of the rat and the human-derived data.** I want to explore how **attributted learning** affects the predictive power of the trained regressor on human test data.
+3. **I have a heterogeneous dataset of IC50-labeled Monoamine oxidase A (MAO-A) inhibitors, obtained as a naive concatenation of the rat and the human-derived data.** I want to explore how **attributted learning** affects the predictive power of the trained regressor on human test data.
 
    I want to utilize scaffold split, KRFP (Klekota & Roth FP) featurizer, < 95% tanimoto similarity filter for the rat data (against 
    the whole human set) and an RF regressor in the attributed leatning mode.
 
-   .. note::
-      When working with heterogenous datasets (concatented from two or more data sources), ADMET-Xspec allows for training ML models in the **attributed learning** mode. According to this strategy, the :math:`n` unique **attributes**
-      :math:`\mathbf{a}^{(k)} \to \mathcal{A}` (data source labels) found in the whole dataset are mapped to OHE vectors
-      :math:`\phi: \mathcal{A} \to \{0,1\}^n`. For each data point, described by a feature vector
-      :math:`\mathbf{x}^{(k)} \in \mathbb{R}^d`, we then construct an augmented representation
-      :math:`\tilde{\mathbf{x}} \in \mathbb{R}^{d+n}` by concatenating the feature vector with the OHE attribute.
-
-
    .. code:: bash
-      
+
       uv run process.py --cfg configs/examples/train_rf_attributed.gin
       # or
       python -m process --cfg configs/examples/train_rf_attributed.gin
+
+   .. note::
+      When working with heterogeneous datasets (concatenated from two or more data sources), ADMET-Xspec allows for training ML models in the **attributed learning** mode.
+      The strategy can be described in the following way:
+
+      The dataset contains :math:`n` samples. For data point :math:`(\mathbf{x}^{(k)}, {y}^{(k)}, {a}^{(k)})`, described by a feature vector
+      :math:`\mathbf{x}^{(k)} \in \mathbb{R}^d` and labeled with :math:`y^{(k)}`, there is an additional attribute :math:`a^{(k)}`, which, in our case, indicates
+      the source of the data point. An OHE map :math:`\phi: \{a_1, a_2 \dots, a_m\} \to \{0,1\}^m` assigns attributes to unique OHE vectors :math:`\mathbf{e}_{a}^{(k)}`.
+      For each data point, the encoded attribute :math:`\mathbf{e}_{a}^{(k)}` is concatenated with the original feature vector :math:`\mathbf{x}^{(k)}`, resulting in an extended feature vector
+      :math:`\mathbf{\hat{x}}^{(k)} \in \mathbb{R}^{d+m}`. The model is then trained on the extended feature vectors :math:`\mathbf{\hat{x}}^{(k)}` and their corresponding labels :math:`y^{(k)}`.
+
+
+

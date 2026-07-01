@@ -1,3 +1,8 @@
+#=======================================================#
+#    Do not modify! This file configures an internal    #
+#   featurizer of the Tanimoto similarity calculator!   #
+#=======================================================#
+
 EcfpFeaturizer.radius = 2
 EcfpFeaturizer.n_bits = 2048
 EcfpFeaturizer.count = False
