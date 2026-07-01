@@ -5,10 +5,9 @@ Training and hyperparameter optimization
 Introductory notes
 ==================
 
-ADMET-XSpec is a tool that seeks to allow researchers to investigate the
-viability of integrating non-human assays into the human drug development
-process, specifically with respect to ADMET properties. It is worthwhile to
-keep this in mind when considering major elements of how the tool functions,
+ADMET-XSpec is a tool that allows researchers to investigate the
+viability of integrating non-human ADMET data into the human drug development
+process. It is worthwhile to keep this in mind when considering major elements of how the tool functions,
 including:
 
 - Aggregating splits during training
@@ -18,60 +17,50 @@ including:
 
 .. note::
 
-   In short, **we want to try out as many methods of enriching the training
-   set** — normally composed of solely human data — **with mouse and rat
-   data**. If performance worsens, we want to amend our approach
-   (filtering). If establishing a "proper" source of truth for
-   classification is not necessary (a unanimously agreed-upon value for
-   inactivity vs. activity), we simply want to see if classification
-   accuracy improves when adding new data (using the mean or median of
-   regression values as the classification threshold).
+   **The goal is to explore as many methods of enriching the training set**
+   — normally composed of solely human data — **with data sourced from non-human assays or even simple in vitro studies**.
+   If a performance loss is observed, we can modify the training set to include only those non-human data points that are
+   sufficiently dissimilar to the human dataset (filtering by Tanimoto distance). If establishing a "proper" source of truth for
+   classification threshold is not necessary (a unanimously agreed-upon value for inactivity vs. activity), we can simply study
+   if classification accuracy improves when adding new data using the median of the coninous label :math:`y` as the threshold.
+
+Structure of the general experiment config file
+===============================================
+
+As you may have noticed, the general experiment config file (``experiment_config.gin``) is structured in a way that allows for easy
+modification of the training pipeline. The config file is divided into sections, each of which corresponds
 
 .. contents:: Sections
    :local:
    :depth: 1
 
-How the raw data is transformed
-================================
+How raw data is prepared
+========================
 
 .. admonition:: Goals
    :class: tip
 
    After reading this section, you will understand all of the
-   transformations applied to the data before it ends up in a training loop
-   for an ML method.
+   transformations applied to molecular data before it ends up being used
+   to train a ML model.
 
-Let's base our discussion on a diagram that illustrates the flow of data:
+Let's discuss the flow of data through the training pipeline in terms of four major steps:
 
-.. figure:: train_optimize_diagram.png
-   :alt: Data flow from raw ChEMBL data to model training
-   :align: center
-
-   Flow of raw ChEMBL human, mouse, and rat data into the model-training
-   classes implementing :class:`ScikitPredictorBase`.
-
-This diagram shows how we take raw ChEMBL human, mouse, and rat data and
-provide it to model training classes implementing the
-:class:`ScikitPredictorBase` interface.
-
-Let's briefly note the three color-coded sections, which group together
-concerns at the different stages of data transformation:
-
-#. **Arriving at the prepared dataset.** This is mostly accomplished by the
-   :class:`DataInterface` class.
-#. **Splitting the prepared human data and integrating rodent data** to form
-   the test set (final) and aggregate train set (raw). This is accomplished
+#. **Arriving at the prepared dataset.** This is handled by the
+   :class:`DataInterface` class. The smiles strings are canonicalized, neutralized, the counterions
+    are stripped, and the labels are transformed according to the specifications in ``params.yaml``.
+#. **Splitting the prepared human data** (and integrating augmenting data) to form
+   the human test set and (augmented) train set. This is accomplished
    with :class:`ProcessingPipeline`, relying on :class:`DataInterface` for
    data-loading operations and weaving in some of its own manipulations.
-#. **Filtering the aggregate train set by minimum Tanimoto distance** to
-   molecules in the test set. This is best explained by the pseudocode
-   ``for`` loop in the diagram and is achieved through using
+#. **Filtering the augmenting train samples by minimum Tanimoto distance** to
+   molecules present in the whole human dataset / human test set. This is achieved through using
    :class:`SimilarityFilterBase` in :class:`ProcessingPipeline`.
 
 .. _arriving-at-the-prepared-dataset:
 
 Arriving at the prepared dataset
----------------------------------
+--------------------------------
 
 Recall these parts of ``AChE/human/regression/params.yaml``:
 
@@ -103,94 +92,43 @@ the boundary of **1: Arriving at the prepared dataset** and enters
 **2: Splitting the prepared human data**, it is guaranteed to have the
 following qualities:
 
-- Only those molecules in the ChEMBL ``.csv`` that met the standard unit,
-  standard value, and (if applicable) standard relation criteria remain; in
-  the case of transforming to binary classification, only those that could
-  be unambiguously placed in either the inactive or active category
-  (appropriate ``<`` or ``>`` values).
-- Of those molecules, only those whose SMILES passed canonicalization
-  remain; for the exact details of this step, see
-  :func:`~src.utils.get_clean_smiles`.
-- For those molecules, the label transformations have been applied in the
-  regression setting, and in the binary classification setting, the labels
-  have been converted to ``0`` (inactive) or ``1`` (active).
+1. Only those molecules in the ChEMBL ``.csv`` that met the standard unit,
+   standard value, and (if applicable) standard relation criteria remain; in
+   the case of transforming to binary classification, only those that could
+   be unambiguously placed in either the inactive or active category
+   (appropriate ``<`` or ``>`` values).
+
+2. Of those molecules, only those whose SMILES successfully passed canonicalization, neutralization
+   and counterion-stripping remain; for the exact details of this step, see
+   :func:`~src.utils.get_clean_smiles`.
+
+3. For those molecules, the label transformations have been applied in the
+   regression setting, and in the binary classification setting, the labels
+   have been converted to ``0`` (inactive) or ``1`` (active).
 
 .. important::
 
-   Before proceeding to the next section, the SMILES are featurized. For
-   the sake of example, we assume that the ECFP4 fingerprint featurizer is
-   employed.
+   Before proceeding to the next section, the SMILES undergo featurization. For
+   the sake of example, we assume that the featurizer that was specified in the
+   general config `.gin` file of this experiment is an ECFP featurizer.
 
-Splitting the prepared human data, integrating rodent data
--------------------------------------------------------------
+Splitting and augmenting the human data
+---------------------------------------
 
-.. todo::
+The first thing to note is that the human data is split into train and test sets. The test set is held out for evaluation,
+while the train set is used for model training.
 
-   Description of scaffold splitting and its motivation.
+Filtering the augmented data by Tanimoto distance
+-------------------------------------------------
 
-Filtering the aggregate train set by minimum Tanimoto distance
--------------------------------------------------------------------
-
-.. todo::
-
-   Description of filtering by Tanimoto distance and its motivation.
-
-``ScikitPredictorBase`` as the model-training interface
-=========================================================
-
-.. admonition:: Goals
-   :class: tip
-
-   After reading this section, you will understand how we use
-   scikit-learn's well-established interface to train models, as well as
-   how we run optimization and save optimized hyperparameters, which can be
-   used for future runs.
-
-   You will also know where to find the configs responsible for the ranges
-   and distributions from which we sample hyperparameters for the
-   optimization search.
-
-:class:`ScikitPredictorBase` exposes the following public methods:
-
-.. code-block:: python
-   :lineno-start: 1
-
-   def train(self, smiles_list, target_list): ...
-   def optimize(self, smiles_list, target_list): ...
-   def predict(self, smiles_list): ...
-   def get_hyperparameters(self): ...
-   def set_hyperparameters(self, params): ...
-
-.. py:method:: train(smiles_list, target_list)
-
-   Trains a model based on a set of data and internal hyperparameters.
-   These are provided through an ``experiment_config.gin`` (the filename is
-   used as an example).
-
-.. py:method:: optimize(smiles_list, target_list)
-
-   Performs a `RandomizedSearchCV
-   <https://scikit-learn.org/stable/modules/generated/sklearn.model_selection.RandomizedSearchCV.html>`_
-   to train a model (and discard it) and save the optimal hyperparameters
-   internally. If :meth:`train` is run afterwards, the model is trained
-   with those optimal hyperparameters.
-
-.. py:method:: predict(smiles_list)
-
-   Returns a list of predictions: probability of the positive class for
-   classifiers, and predicted values for regressors. This can be used to
-   collect metrics about the fit.
-
-.. py:method:: get_hyperparameters()
-
-   Retrieves the hyperparameters stored within the class.
-
-.. py:method:: set_hyperparameters(params)
-
-   Sets those hyperparameters.
+The Tanimoto distance is a measure of similarity between two molecular fingerprints.
+In the context of ADMET-XSpec, it is used to filter the augmenting training samples (ex. rat-based, mouse-based) based
+on their similarity to molecules present in the full human dataset or just the human test set. **This filtering step can
+be used to ensure that the label noise introduced by near-duplicate molecules from the rat or mouse datasets does not
+throw off the model's performance on the human test set.**
 
 Motivating use cases
----------------------
+--------------------
 
 Here are three use cases of :class:`ProcessingPipeline` that motivate these
 methods:
@@ -210,27 +148,39 @@ methods:
    which were introduced earlier in this documentation.
 
 Hyperparameter search space configs
--------------------------------------
+-----------------------------------
 
 The configs governing the hyperparameter search space can be found under:
 
-- ``./configs/predictors/classifiers/optimization/*_hyperparams.gin``
-- ``./configs/predictors/regressors/optimization/*_hyperparams.gin``
+- ``./configs/predictors/classifiers/optimization/{model_name}_hyperparams.gin``
+- ``./configs/predictors/regressors/optimization/{model_name}_hyperparams.gin``
 
 Here is the portion covering the distribution for LightGBM, as an example:
 
 .. code-block:: text
 
-   LightGbmClassifier.params_distribution = {
-       'n_estimators': @n_estimators/QLogUniform(),
-       'max_depth': @max_depth/QUniform(),
-       'num_leaves': @num_leaves/QUniform(),
-       'min_child_samples': @min_child_samples/QUniform(),
-       'learning_rate': [0.01, 0.05, 0.1],
+   ProcessingPipeline.params_distribution = {
+   'n_estimators': ('int_log', 100, 2000),
+   'max_depth': ('int', 2, 50),
+   'num_leaves': ('int', 20, 200),
+   'min_child_samples': ('int', 10, 100),
+   'learning_rate': ('categorical', [0.01, 0.05, 0.1])
    }
 
-Where to find outputted models
-================================
+   ProcessingPipeline.n_optim_cv_folds = 5
+   ProcessingPipeline.n_optim_iter = 100
+   ProcessingPipeline.target_metric = 'roc_auc'
+
+   The ``params_distribution`` dictionary defines the hyperparameters to be optimized,
+   the type of distribution to sample from, and the range of values to sample. As our
+   optimization method makes use of `Optuna <https://optuna.org/>`_, the types of distributions
+   are those supported by Optuna.
+
+   The ``n_optim_cv_folds`` and ``n_optim_iter`` parameters define the number of cross-validation folds and the number of trials
+   to run during the optimization process, respectively. The ``target_metric`` parameter defines the metric to optimize for during hyperparameter tuning.
+
+Where to find output models
+===========================
 
 .. admonition:: Goals
    :class: tip
@@ -256,20 +206,20 @@ model:
            └── console.log
 
 Directory naming convention
------------------------------
+---------------------------
 
-The directory name for the model is composed of:
+The directory name (``LightGBM_clf_ecfp_featurizer_4b52a``) for the model is composed of:
 
 - The model name: ``LightGBM_clf`` (a classifier, in this case)
 - The featurizer name: ``ecfp_featurizer``
-- The featurizer's "hash code," a result of MD5 hashing its parameters:
+- The featurizer's "hash code", a result of MD5 hashing its parameters:
   ``4b52a``
 
-The directory name for the data that resulted in this model being trained
+The directory name (``scaffold_e4737_tanimoto_5p_filter_c2805_91da5``) for the data that resulted in this model being trained
 (one model can have multiple such subdirectories) follows suit and is
 composed of:
 
-- The splitter key, containing the splitter type and hash code:
+- The splitter key, containing the splitter type and its hashed parameters:
   ``scaffold_e4737``
 - The filter key, again with a hash code: ``tanimoto_5p_filter_c2805``
 - The dataset's hash code: ``91da5``

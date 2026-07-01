@@ -2,17 +2,20 @@
 Choosing your processing plan
 =============================
 
-Introductory notes
-===================
+**The main goal of** :class:`ProcessingPipeline` **is to provide a single interface for
+training and evaluating models on heterogeneous datasets. This pipeline is
+designed to be flexible and modular, allowing users to easily configure and
+run experiments with different datasets, featurizers, models, and hyperparameter
+optimization methods.** The pipeline is also designed to be efficient, with
+caching and logging functionality built in to minimize redundant computations
+and facilitate reproducibility.
 
-ADMET-XSpec lets you switch between splitting and preprocessing data and
-training models on compositions of that data quickly, within a single
-config file. In addition, you can opt in or out of generating
-visualizations for both the original body of data and your compositions
-(mixed splits).
+The different dataset concatenations, train-test splits and trained model weights are
+cached and easily retrieved, minimizing the need for the user to manually
+copy, move, rename and organize files anywhere on disk.
 
-To support this functionality, we use what we call "processing plans". The
-name reflects the fact that they control :class:`ProcessingPipeline`.
+To support this functionality, we use what we call **"processing plans"**. The
+name reflects the fact that they control the flow of :class:`ProcessingPipeline`.
 
 .. admonition:: Goals
    :class: tip
@@ -20,12 +23,12 @@ name reflects the fact that they control :class:`ProcessingPipeline`.
    After reading this section, you should understand:
 
    #. What processing plans represent and how they connect to the
-      :meth:`~ProcessingPipeline.run` method of :class:`ProcessingPipeline`
-   #. Which processing plans are possible and how to configure them
-   #. The create/load distinction with train/test splits
+        :class:`ProcessingPipeline` class.
+   #. What processing plans are available out of the box and when to use them.
+   #. How to create your own processing plan for a custom workflow.
 
-The nine pipeline steps
-=========================
+The nine steps of ProcessingPipeline
+------------------------------------
 
 At a high level, a processing plan controls these nine steps in the
 execution of :class:`ProcessingPipeline`:
@@ -33,14 +36,14 @@ execution of :class:`ProcessingPipeline`:
 .. code-block:: text
 
    # Step 1: Load datasets
-   # Step 2: Visualize raw datasets
-   # Step 3: Create(*) train/test splits
-   # Step 4: Save train/test splits
-   # Step 5: Visualize train/test splits
-   # Step 6: Load optimized hyperparameters
-   # Step 7: Optimize hyperparameters
-   # Step 8: Train and evaluate the model
-   # Step 9: Refit final model on full dataset
+   # Step 2: Create train/test splits (if they do not exist in cache)
+   # Step 3: Save train/test splits to cache
+   # Step 4: Load previously-optimized hyperparameters
+   # Step 5: Optimize hyperparameters with Optuna
+   # Step 7: Train the model
+   # Step 8: Calculate confidence intervals for metrics
+   # Step 9: Save the trained model to cache
+   # Step 10: Refit on the entire train+test dataset and save to cache
 
 These steps are comments taken from the :meth:`~ProcessingPipeline.run`
 method itself. They are placed between control-flow blocks to disable
@@ -48,110 +51,54 @@ certain parts from running with an ``if``/``else``.
 
 .. tip::
 
-   If you want deeper insight by looking into the methods called by
-   :class:`ProcessingPipeline`, you can check out the
-   :meth:`~ProcessingPipeline.run` method. However, you will do fine by
-   sticking to one of the processing plans we have provided in
-   ``configs/processing_plans``. These are used in our set of
-   ``configs/examples``.
-
-.. note::
-
    The file ``configs/processing_plans/_possible_plans.gin`` serves as a
    reminder of what plans you can create whenever you find yourself outside
    of our docs.
 
-The default plan: ``train_optimize.gin``
-==========================================
+Example - Train and optimize plan
+---------------------------------
 
 Let's look at ``configs/processing_plans/train_optimize.gin``, the one you
-are likely to use most often. With this processing plan, the
-:class:`ProcessingPipeline` will:
-
-#. Load your raw ChEMBL datasets and preprocess them.
-#. **Not** visualize the preprocessed datasets, since you set that step to
-   ``False``.
-#. Create\ [*]_ your training and test splits, and save them to cache.
-#. **Not** visualize the train/test splits, since you set that step to
-   ``False``.
-#. **Not** load hyperparameters found to be optimal in a different run,
-   since you set that to ``False``. More on this in
-   :doc:`Guide 3.4: Training and optimization <training_and_optimization>`.
-#. Find optimal hyperparameters for training and train a model on them, as
-   well as refit the model on the entire train+test dataset and generate
-   metrics based on that.
+are likely to be using most often:
 
 .. code-block:: python
-
    ProcessingPipeline.do_load_datasets = True
-   ProcessingPipeline.do_visualize_datasets = False
    ProcessingPipeline.do_load_train_test = True
    ProcessingPipeline.do_dump_train_test = True
-   ProcessingPipeline.do_visualize_train_test = False
    ProcessingPipeline.do_load_optimized_hyperparams = False
    ProcessingPipeline.do_optimize_hyperparams = True
    ProcessingPipeline.do_train_model = True
+   ProcessingPipeline.do_get_metrics_confidence_interval = True
+   ProcessingPipeline.do_save_trained_model = True
    ProcessingPipeline.do_refit_final_model = True
 
-.. [*] This symbol highlights the ambiguity that may arise from referring
-   to the train/test split stage as "creation" on the one hand and
-   "loading" on the other — see :ref:`create-vs-load` below.
+According to this processing plan, the :class:`ProcessingPipeline` will:
 
-Other example plans
-=====================
+#. Load your raw datasets and preprocess them.
+#. Load your train-test splits from cache, if they exist. If they do not exist,
+   the pipeline will perform the split on specified datasets.
+#. Save the train-test splits to cache.
+#. **Not** load hyperparameters found to be optimal in a previous run, since ``do_load_optimized_hyperparams`` it is set
+   to ``False``.
+#. Optimize hyperparameters using Optuna, retain the best hyperparameters found, and save them to cache.
+#. Train a model on the train-test split using the best hyperparameters found in the previous step.
+#. Estimate confidence intervals for the metrics with bootstrapping.
+#. Save the trained predictor as a ``.pkl`` file to cache.
+#. Refit the model on the entire train+test dataset and save it to cache.
 
-Consider the following two processing plans, which we will call
-*"Just visualize raw"* and *"Train on select splits"*.
+Other processing plans
+======================
 
-"Just visualize raw"
-----------------------
+The other processing plans are similar to the one above, but with different combinations of steps enabled or disabled.
 
-.. code-block:: python
+1. ``train.gin`` will skip hyperparameter optimization and use the hyperparameter values parsed
+   from the corresponding predictor's ``.gin`` config file.
 
-   ProcessingPipeline.do_load_datasets = True
-   ProcessingPipeline.do_visualize_datasets = True
-   ProcessingPipeline.do_load_train_test = False
-   ProcessingPipeline.do_dump_train_test = False
-   ProcessingPipeline.do_visualize_train_test = False
-   ProcessingPipeline.do_load_optimized_hyperparams = False
-   ProcessingPipeline.do_optimize_hyperparams = False
-   ProcessingPipeline.do_train_model = False
-   ProcessingPipeline.do_refit_final_model = False
+2. ``normalize.gin`` will not train a model, but will instead perform the standard pre-processing steps on a raw dataset
+and save the normalized dataset to cache.
 
-"Train on select splits"
---------------------------
+3. ``split.gin`` will not train a model, but will instead perform the standard pre-processing steps on a raw dataset,
+create train-test splits, handle non-human data augmentations / filtering and save the train-test splits to cache.
 
-.. code-block:: python
-
-   ProcessingPipeline.do_load_datasets = False
-   ProcessingPipeline.do_visualize_datasets = False
-   ProcessingPipeline.do_load_train_test = True
-   ProcessingPipeline.do_dump_train_test = False
-   ProcessingPipeline.do_visualize_train_test = False
-   ProcessingPipeline.do_load_optimized_hyperparams = False
-   ProcessingPipeline.do_optimize_hyperparams = True
-   ProcessingPipeline.do_train_model = True
-   ProcessingPipeline.do_refit_final_model = True
-
-You can see how, in the first plan, we wish to simply process the original
-data in some way without training a model, and in the second plan we do not
-want to interact with the original data at all, since we already have
-generated splits and aim to train a model on those splits. These splits
-have been saved to disk (in ``data/cache``) and are therefore "loaded".
-
-.. _create-vs-load:
-
-The create/load distinction
-==============================
-
-Ambiguity arises when we run :class:`ProcessingPipeline` on original data,
-"creating splits" in the process and immediately proceeding to train a
-model on those splits. This is, in fact, the only way to create splits: the
-original data must be loaded, and then splits must be dumped — that is when
-they are "created". This is not reflected in the step's name,
-``do_load_train_test``.
-
-.. note::
-
-   To reconcile this, think of :class:`ProcessingPipeline` as immediately
-   "loading" the splits it had just created.
+4. ``train_load_hyperparams.gin`` will search cache to find previously optimized hyperparameters for the exact splitter
+/ featurizer / model combination, parse them and use them to train a model on some train-test split.

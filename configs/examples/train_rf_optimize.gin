@@ -1,4 +1,4 @@
-#=====================[ADMET-Xspec]=====================#
+#=====================[ADMET-XSpec]=====================#
 #----------------------[pipeline]-----------------------#
 
 include 'configs/processing_plans/train_optimize.gin'		# we are performing hyperparameter optimization

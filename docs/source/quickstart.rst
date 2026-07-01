@@ -1,6 +1,14 @@
 Quick Start
 ===========
 
+.. admonition:: Goals
+   :class: tip
+
+   After reading this section, you will:
+
+   #. Have ADMET-XSpec installed and ready to use.
+   #. Be able to run three demo experiments with the provided config files.
+
 ADAMET-XSpec can be set up with both ``uv`` and ``conda``. Clone the repository and navigate to its directory. Then,
 you can choose one of the two installation methods described below.
 

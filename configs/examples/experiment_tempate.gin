@@ -1,0 +1,28 @@
+#=====================[ADMET-XSpec]=====================#
+#----------------------[pipeline]-----------------------#
+
+include 'configs/processing_plans/...'
+include 'configs/splitters/...'
+include 'configs/featurizers/...'
+include 'configs/sim_filters/...'
+include 'configs/predictors/...'
+
+#------------------------[data]-------------------------#
+
+ProcessingPipeline.datasets = [
+    '..._friendly_name_1',
+    '..._friendly_name_2'
+]
+
+ProcessingPipeline.test_origin_dataset = '..._friendly_name_1't
+ProcessingPipeline.task_setting = '...'
+
+#========================================================#
+# Advanced gin config settings
+include 'configs/data_interface/data_interface.gin'
+ProcessingPipeline.hyperparams_source_sim_filter = None
+ProcessingPipeline.data_interface = %data_interface
+ProcessingPipeline.splitter = %splitter
+ProcessingPipeline.featurizer = %featurizer
+ProcessingPipeline.sim_filter = %sim_filter
+ProcessingPipeline.predictor = %predictor

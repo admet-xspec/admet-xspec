@@ -29,6 +29,6 @@ Table of contents
 
    quickstart
    features
-   models
+
    sourcing_data
    api
