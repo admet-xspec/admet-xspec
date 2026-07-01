@@ -28,6 +28,7 @@ Table of contents
 .. toctree::
 
    quickstart
-   usage
-   sourcing_dara
+   features
+   models
+   sourcing_data
    api
