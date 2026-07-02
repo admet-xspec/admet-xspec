@@ -61,7 +61,8 @@ Example plan - Train
 Let's look at ``configs/processing_plans/train.gin``, which is one of the simplest processing plans that yield
 a trained model. The contents of this file are as follows:
 
-.. code-block:: python
+.. code-block:: text
+
    ProcessingPipeline.do_load_datasets = True
    ProcessingPipeline.do_load_train_test = True
    ProcessingPipeline.do_dump_train_test = True
@@ -93,7 +94,8 @@ Example plan - Train and optimize
 Let's look at ``configs/processing_plans/train_optimize.gin``, the one you
 are likely to be using rather often. The contents of this file are as follows:
 
-.. code-block:: python
+.. code-block:: text
+
    ProcessingPipeline.do_load_datasets = True
    ProcessingPipeline.do_load_train_test = True
    ProcessingPipeline.do_dump_train_test = True
@@ -129,5 +131,5 @@ The other processing plans are similar to the one above, but with different comb
 #. ``split.gin`` will not train a model, but will instead perform the standard pre-processing steps on a raw dataset,
    create train-test splits, handle non-human data augmentations / filtering and save the train-test splits to cache.
 
-#. ``train_load_hyperparams.gin`` will search cache to find previously optimized hyperparameters for the exact splitter
+#. ``train_load_hyperparams.gin`` will search through cache to find previously optimized hyperparameters for the exact splitter
    / featurizer / model combination, parse them and use them to train a model on some train-test split.

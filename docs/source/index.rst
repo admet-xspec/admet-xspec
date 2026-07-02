@@ -13,7 +13,7 @@ ADMET-XSpec implements:
    - A selection of train-test splitting strategies, molecular featurizers, ML algorithms, and
      hyperparameter optimization methods for building diverse data pipelines.
    - Both single-task and **attributed learning** modes for training on heterogeneous datasets.
-   - Exclusively ``gin`` config-based interface for easy preparation of large experiments.
+   - Exclusively ``gin-config`` based interface for easy preparation of large experiments.
    - Model & data interface for facile inference on new molecules using previously trained models.
 
 For the installation instructions refer to the :doc:`quickstart` section.
