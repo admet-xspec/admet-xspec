@@ -1,23 +1,22 @@
 #=====================[ADMET-XSpec]=====================#
 #----------------------[pipeline]-----------------------#
 
-include 'configs/processing_plans/train.gin'			    # we are training on set hyperaparameters
-								                            #   (see other processing plans)
+include 'configs/processing_plans/train.gin'			    # we are training on set hyperparams
 include 'configs/splitters/scaffold.gin'			        # scaffold split
-include 'configs/featurizers/ecfp.gin'				        # ECFP4 featurization
-include 'configs/sim_filters/none.gin'				        # no filter applied for augumenting datasets
-include 'configs/predictors/classifiers/lgbm.gin'		    # LightGBM model
+include 'configs/featurizers/krfp.gin'				        # KRFP (Klekota & Roth FP) featurization
+include 'configs/sim_filters/tanimoto_5p_to_whole.gin'      # drop all augmenting set (rat) molecular scaffolds
+                                                            #   with Tanimoto similarity > 0.95 to human data
+include 'configs/predictors/regressors/rf_attributed.gin'	# RandomForest attributed classifier
 
 #------------------------[data]-------------------------#
 
 ProcessingPipeline.datasets = [					            # listing datasets by friendly names
-    'AChE_human_pIC50',						                # (see data/datasets/registry.txt)
-    'AChE_rat_pIC50',
-    'AChE_mouse_pIC50'
+    'MAOA_human_pIC50',						                # (see data/datasets/registry.txt)
+    'MAOA_rat_pIC50'
 ]
 
-ProcessingPipeline.test_origin_dataset = 'AChE_human_pIC50'	# only human data to populate the test set
-ProcessingPipeline.task_setting = 'binary_classification'	# or 'regression'
+ProcessingPipeline.test_origin_dataset = 'MAOA_human_pIC50'	# only human data to populate the test set
+ProcessingPipeline.task_setting = 'regression'
 
 #========================================================#
 # Advanced gin config settings

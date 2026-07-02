@@ -29,7 +29,7 @@ class ScikitPredictorBase(abc.ABC):
     def __init__(
         self,
         params: dict[str, Any] | None = None,
-        multi_endpoint: bool = False,
+        do_attributed_learning: bool = False,
         **kwargs,
     ) -> None:
         # Let other bases initialize (RegressorBase/BinaryClassifierBase -> PredictorBase)
@@ -37,7 +37,7 @@ class ScikitPredictorBase(abc.ABC):
         # PredictorBase usually initializes this; keep explicit for type checkers.
         self.featurizer: FeaturizerBase | None = getattr(self, "featurizer", None)
         # Keep local flag in sync with PredictorBase in multiple inheritance.
-        self.multi_endpoint: bool = bool(multi_endpoint)
+        self.do_attributed_learning: bool = bool(do_attributed_learning)
         self.model: BaseEstimator | None = None
         self.params: dict[str, Any] = params or {}
 
@@ -50,8 +50,8 @@ class ScikitPredictorBase(abc.ABC):
         """
         Convert model input dataframe into a numerical feature matrix.
 
-        If ``multi_endpoint`` is enabled, append endpoint one-hot vectors to molecule
-        features so a single estimator can distinguish endpoint context.
+        If trained in attributed learning mode, append endpoint one-hot vectors to molecule
+        features so that a single estimator can distinguish endpoint context.
         """
         if self.featurizer is None:
             raise ValueError(
@@ -63,8 +63,8 @@ class ScikitPredictorBase(abc.ABC):
             )
 
         X = self.featurizer.featurize(df[self.smiles_col].tolist())
-        # Multi-endpoint predictors append endpoint identity to molecular features.
-        if self.multi_endpoint:
+        # Attributed predictors append endpoint identity to molecular features.
+        if self.is_attributed:
             X = np.hstack([X, self._endpoint_features(df)])
         return X.astype(np.float32)
 
@@ -72,8 +72,8 @@ class ScikitPredictorBase(abc.ABC):
         """Return endpoint one-hot features aligned with ``df`` row order."""
         if self.source_col not in df.columns:
             raise ValueError(
-                f"Missing required source column `{self.source_col}` for multi-endpoint prediction."
-            )
+                f"Missing required source column `{self.source_col}` for attributed learning prediction. "
+                f"This column should contain the endpoint identifier (data source) for each row.")
         if self.endpoint_ohe_map is None:
             raise ValueError(
                 "Endpoint OHE map is not initialized. Train first or load a model with endpoint metadata."
@@ -98,8 +98,8 @@ class ScikitPredictorBase(abc.ABC):
 
         # Always create a fresh estimator for each train call.
         self.model = self._init_model()
-        # For multi-endpoint tasks, create endpoint map for OHE encoding
-        if self.endpoint_ohe_map is None and self.multi_endpoint:
+        # For attributed learning tasks, create endpoint map for OHE encoding
+        if self.endpoint_ohe_map is None and self.is_attributed:
             cast(Any, self)._create_endpoint_map(df[self.source_col])
         if self.params:
             self.set_hyperparameters(self.params)

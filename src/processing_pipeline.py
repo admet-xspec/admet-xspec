@@ -473,7 +473,7 @@ class ProcessingPipeline:
 
         self.predictor.train(train_df)
 
-        if self.predictor.is_multi_endpoint:
+        if self.predictor.is_attributed:
             logging.info(f"* Endpoint OHE encoding:")
             for key, value in self.predictor.get_endpoint_OHE_map().items():
                 logging.info(f"  - {key}: {np.array2string(value.astype(int))}")
@@ -498,7 +498,7 @@ class ProcessingPipeline:
             "Optimized Hyperparameters": self.do_optimize_hyperparams,
         }
 
-        if self.predictor.is_multi_endpoint:
+        if self.predictor.is_attributed:
             metadata_dict["Endpoints"] = self.predictor.get_endpoint_OHE_map()
 
         self.data_interface.save_model_metadata(
