@@ -116,6 +116,7 @@ will go into detail about how to build your own config files for your own experi
    .. note::
       When working with heterogeneous datasets (concatenated from two or more data sources), ADMET-Xspec allows for training ML models in the **attributed learning** mode.
       In this mode, the feature vector of each data point is concatenated with a vector representing the source of the particular data point. 
+      
       **This allows the model to learn the differences between the data sources and may improve its predictive performance on the target data source.**
       
       Each data point :math:`(\mathbf{x}, {y}, {a})`, described by a feature vector
