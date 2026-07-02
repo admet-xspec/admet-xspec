@@ -21,7 +21,7 @@ a single component of the pipeline.
 
 **A template for a general config file may look like this:**
 
-.. code-block:: gin
+.. code-block:: text
    #=====================[ADMET-XSpec]=====================#
    #----------------------[pipeline]-----------------------#
 
@@ -52,11 +52,11 @@ a single component of the pipeline.
    ProcessingPipeline.predictor = %predictor
 
 1. Choose an appropriate processing plan for your workflow.
-   * ``train.gin`` for a standard training run with fixed hyperparameters.
-   * ``train_optimize.gin`` when hyperparameter optimization is part of the run.
-   * ``train_load_hyperparams.gin`` when the model should load previously optimized hyperparameters.
-   * ``split.gin`` when you only need the dataset splitting stage.
-   * ``normalize.gin`` for preprocessing/normalization-oriented workflows.
+   - ``train.gin`` for a standard training run with fixed hyperparameters.
+   - ``train_optimize.gin`` when hyperparameter optimization is part of the run.
+   - ``train_load_hyperparams.gin`` when the model should load previously optimized hyperparameters.
+   - ``split.gin`` when you only need the dataset splitting stage.
+   - ``normalize.gin`` for preprocessing/normalization-oriented workflows.
    If you are unsure, consult the :ref:`features` section for a description of the available plans.
 2. Include gin files representing the chosen splitter type, featurizer, similarity filter and predictor.
 3. Set the dataset list using the datasets' friendly names. The list of all friendly names identified in the
