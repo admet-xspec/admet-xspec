@@ -50,6 +50,7 @@ Install miniconda_ following the instructions for your operating system.
    conda install rdkit seaborn conda-forge::py-xgboost conda-forge::ray-all
    
    pip install -r requirements.txt
+
    # dev dependencies
    pre-commit install
 
@@ -57,7 +58,7 @@ Run a demo experiment with Conda to test your installation:
 
 .. code:: bash
 
-   conda activate xspec # if you haven't already:
+   conda activate xspec # if you haven't already
    
    python -m process --cfg configs/examples/train_lgbm.gin
 
@@ -76,7 +77,7 @@ will go into detail about how to build your own config files for your own experi
    exclusively-human dataset influences performance of the model on human test data.**
 
    I want to input pre-optimized hyperparameters for the model, utilize scaffold-based train-test split strategy, represent the
-   molecules using ECFP4 fingerprints and employ a LightGBM classifier alogrithm.
+   molecules using ECFP4 fingerprints and employ a LightGBM classifier algorithm.
  
    .. code:: bash
       
