@@ -44,7 +44,7 @@ uv sync
 ```
 #### Run example with uv
 ```bash
-uv run process.py --cfg configs/examples/train_optimize_rf_clf.gin
+uv run process.py --cfg configs/examples/train_lgbm.gin
 ```
 
 Change the type to 'uv'. The uv path should be that of your system uv installation, the Environment path should be
@@ -52,19 +52,19 @@ that of the `.venv` that uv created inside of `./admet_prediction`.
 
 ### 2. Conda setup
 ```bash
-conda create -n admet python=3.11.8
-conda activate admet_xspec
+conda create -n xspec python=3.11.8
+conda activate xspec
 conda install rdkit seaborn conda-forge::py-xgboost conda-forge::ray-all
-
+   
 pip install -r requirements.txt
 
-# Dev dependencies
+# dev dependencies
 pre-commit install
 ```
 #### Run example with conda
 ```bash
 # if you haven't already:
-conda activate admet_xspec
+conda activate xspec
 
 python -m process --cfg configs/examples/train_optimize_rf_clf.gin
 ```

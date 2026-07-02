@@ -1,4 +1,4 @@
-Quick Start
+Quick start
 ===========
 
 .. admonition:: Goals
@@ -115,13 +115,10 @@ will go into detail about how to build your own config files for your own experi
 
    .. note::
       When working with heterogeneous datasets (concatenated from two or more data sources), ADMET-Xspec allows for training ML models in the **attributed learning** mode.
-      The strategy can be described in the following way:
-
-      The dataset contains :math:`n` samples. For data point :math:`(\mathbf{x}^{(k)}, {y}^{(k)}, {a}^{(k)})`, described by a feature vector
-      :math:`\mathbf{x}^{(k)} \in \mathbb{R}^d` and labeled with :math:`y^{(k)}`, there is an additional attribute :math:`a^{(k)}`, which, in our case, indicates
-      the source of the data point. An OHE map :math:`\phi: \{a_1, a_2 \dots, a_m\} \to \{0,1\}^m` assigns attributes to unique OHE vectors :math:`\mathbf{e}_{a}^{(k)}`.
-      For each data point, the encoded attribute :math:`\mathbf{e}_{a}^{(k)}` is concatenated with the original feature vector :math:`\mathbf{x}^{(k)}`, resulting in an extended feature vector
-      :math:`\mathbf{\hat{x}}^{(k)} \in \mathbb{R}^{d+m}`. The model is then trained on the extended feature vectors :math:`\mathbf{\hat{x}}^{(k)}` and their corresponding labels :math:`y^{(k)}`.
-
-
-
+      In this mode, the feature vector of each data point is concatenated with a vector representing the source of the particular data point. 
+      **Beasides
+      
+      Each data point :math:`(\mathbf{x}, {y}, {a})`, described by a feature vector
+      :math:`\mathbf{x} \in \mathbb{R}^d` and labeled with :math:`y`has an additional attribute :math:`a`, which, in our case, identifies
+      the exact assay type of possible :math:{m} used to gather the data. A standard OHE map :math:`\phi: \{a_1, a_2, \dots, a_m\} \to \{0,1\}^m` encodes all m attributes :math:`a` as OHE vectors :math:`\mathbf{e}_{a}`.
+      The ML models are trained on the concatenated feature vectors :math:`\mathbf{\hat{x}} \in \mathbb{R}^{d+m}` and the corresponding labels :math:`y`.
