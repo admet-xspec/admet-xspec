@@ -3,7 +3,7 @@ Training and hyperparameter optimization
 ========================================
 
 Introductory notes
-==================
+------------------
 
 ADMET-XSpec is a tool that allows researchers to investigate the
 viability of integrating non-human ADMET data into the human drug development
@@ -24,18 +24,9 @@ including:
    classification threshold is not necessary (a unanimously agreed-upon value for inactivity vs. activity), we can simply study
    if classification accuracy improves when adding new data using the median of the coninous label :math:`y` as the threshold.
 
-Structure of the general experiment config file
-===============================================
-
-As you may have noticed, the general experiment config file (``experiment_config.gin``) is structured in a way that allows for easy
-modification of the training pipeline. The config file is divided into sections, each of which corresponds
-
-.. contents:: Sections
-   :local:
-   :depth: 1
 
 How raw data is prepared
-========================
+------------------------
 
 .. admonition:: Goals
    :class: tip
@@ -115,11 +106,15 @@ following qualities:
 Splitting and augmenting the human data
 ---------------------------------------
 
-The first thing to note is that the human data is split into train and test sets. The test set is held out for evaluation,
-while the train set is used for model training.
+As the aim of ADMET-XSpec is exploring the usability of non-human ADMET data in human drug development
+process, **the test sets that the ML models are evaluated on are typically human-only data.*** The train-test
+split is therefore performed first on human data only. If any augmenting datasets (ex. rat, mouse) are to be included,
+only the human train is augmented by concatenation with the new data.
 
-Filtering the augmented data by Tanimoto distance
--------------------------------------------------
+The data splitting functionality is handled by :class:`DataSplitterBase` class.
+
+Filtering the augmenting data by Tanimoto distance
+--------------------------------------------------
 
 The Tanimoto distance is a measure of similarity between two molecular fingerprints.
 In the context of ADMET-XSpec, it is used to filter the augmenting training samples (ex. rat-based, mouse-based) based
@@ -127,33 +122,15 @@ on their similarity to molecules present in the full human dataset or just the h
 be used to ensure that the label noise introduced by near-duplicate molecules from the rat or mouse datasets does not
 throw off the model's performance on the human test set.**
 
-Motivating use cases
---------------------
-
-Here are three use cases of :class:`ProcessingPipeline` that motivate these
-methods:
-
-#. Simply training a model with predefined ``experiment_config.gin``
-   parameters and outputting it to ``./data/cache/models``.
-#. Finding optimal hyperparameters by having :meth:`optimize` find them, and
-   then training a model on those parameters — in this case, *we provide
-   ranges and distributions for sampling the hyperparameters* (see below).
-#. Training a model on optimal hyperparameters without finding them via
-   :meth:`optimize` — instead, loading optimal hyperparameters that were
-   already saved to disk.
-
-.. seealso::
-
-   These various use cases are covered by different processing plans,
-   which were introduced earlier in this documentation.
+The filtering functionality is handled by :class:`SimilarityFilterBase` class.
 
 Hyperparameter search space configs
 -----------------------------------
 
 The configs governing the hyperparameter search space can be found under:
 
-- ``./configs/predictors/classifiers/optimization/{model_name}_hyperparams.gin``
-- ``./configs/predictors/regressors/optimization/{model_name}_hyperparams.gin``
+- ``configs/predictors/classifiers/optimization/{model_name}_hyperparams.gin``
+- ``configs/predictors/regressors/optimization/{model_name}_hyperparams.gin``
 
 Here is the portion covering the distribution for LightGBM, as an example:
 
@@ -179,8 +156,8 @@ Here is the portion covering the distribution for LightGBM, as an example:
    The ``n_optim_cv_folds`` and ``n_optim_iter`` parameters define the number of cross-validation folds and the number of trials
    to run during the optimization process, respectively. The ``target_metric`` parameter defines the metric to optimize for during hyperparameter tuning.
 
-Where to find output models
-===========================
+Where are the models saved?
+---------------------------
 
 .. admonition:: Goals
    :class: tip
@@ -204,6 +181,26 @@ model:
        ├── operative_config.gin
        └── training_log
            └── console.log
+
+Let us now discuss the contents of each of these files:
+
+#. ``hyperparams.yaml`` contains the hyperparameters used to train the model. If
+   hyperparameter optimization was performed, this file will contain the
+   best hyperparameters found during that process.
+
+#. ``metrics.yaml`` contains the evaluation metrics for the model on the test set,
+   including bootstrap-derived confidence intervals for each metric.
+
+#. ``model_final_refit.pkl`` is a binary file containing the model refit on the entire train+test dataset.
+
+#. ``model_metadata.yaml`` contains some useful metadata about the model, including the exact components of
+   :class:`ProcessingPipeline` config used to train it.
+
+#. ``model.pkl`` is a binary file containing the model trained on the train set only.
+
+#. ``operative_config.gin`` is a copy of the full contents of the general `gin` config file used to train the model.
+
+#. ``training_log/console.log`` contains the console output of the training process, including any warnings or errors.
 
 Directory naming convention
 ---------------------------

@@ -119,15 +119,15 @@ According to this processing plan, the :class:`ProcessingPipeline` will:
 #. Refit the model on the entire train+test dataset and save it to cache.
 
 Other processing plans
-======================
+----------------------
 
 The other processing plans are similar to the one above, but with different combinations of steps enabled or disabled.
 
 #. ``normalize.gin`` will not train a model, but will instead perform the standard pre-processing steps on a raw dataset
-and save the normalized dataset to cache.
+   and save the normalized dataset to cache.
 
 #. ``split.gin`` will not train a model, but will instead perform the standard pre-processing steps on a raw dataset,
-create train-test splits, handle non-human data augmentations / filtering and save the train-test splits to cache.
+   create train-test splits, handle non-human data augmentations / filtering and save the train-test splits to cache.
 
 #. ``train_load_hyperparams.gin`` will search cache to find previously optimized hyperparameters for the exact splitter
-/ featurizer / model combination, parse them and use them to train a model on some train-test split.
+   / featurizer / model combination, parse them and use them to train a model on some train-test split.
