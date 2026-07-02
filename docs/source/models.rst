@@ -39,7 +39,7 @@ Let's discuss the flow of data through the training pipeline in terms of four ma
 
 #. **Arriving at the prepared dataset.** This is handled by the
    :class:`DataInterface` class. The smiles strings are canonicalized, neutralized, the counterions
-    are stripped, and the labels are transformed according to the specifications in ``params.yaml``.
+   are stripped, and the labels are transformed according to the specifications in ``params.yaml``.
 #. **Splitting the prepared human data** (and integrating augmenting data) to form
    the human test set and (augmented) train set. This is accomplished
    with :class:`ProcessingPipeline`, relying on :class:`DataInterface` for
@@ -148,13 +148,13 @@ Here is the portion covering the distribution for LightGBM, as an example:
    ProcessingPipeline.n_optim_iter = 100
    ProcessingPipeline.target_metric = 'roc_auc'
 
-   The ``params_distribution`` dictionary defines the hyperparameters to be optimized,
-   the type of distribution to sample from, and the range of values to sample. As our
-   optimization method makes use of `Optuna <https://optuna.org/>`_, the types of distributions
-   are those supported by Optuna.
+The ``params_distribution`` dictionary defines the hyperparameters to be optimized,
+the type of distribution to sample from, and the range of values to sample. As our
+optimization method makes use of `Optuna <https://optuna.org/>`_, the types of distributions
+are those supported by Optuna.
 
-   The ``n_optim_cv_folds`` and ``n_optim_iter`` parameters define the number of cross-validation folds and the number of trials
-   to run during the optimization process, respectively. The ``target_metric`` parameter defines the metric to optimize for during hyperparameter tuning.
+The ``n_optim_cv_folds`` and ``n_optim_iter`` parameters define the number of cross-validation folds and the number of trials
+to run during the optimization process, respectively. The ``target_metric`` parameter defines the metric to optimize for during hyperparameter tuning.
 
 Where are the models saved?
 ---------------------------
