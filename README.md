@@ -21,11 +21,11 @@ data preprocessing steps. The repository is currently under active development.
 
 ## ADMET-XSpec 1.0.1
 
-For usage and examples see the [admet-xscpec documentation](https://admet-xspec.readthedocs.io/en/latest/index.html)
+For usage and examples see the [admet-xscpec documentation](https://admet-xspec-docs.readthedocs.io/en/latest/index.html)
 
 ## Quick start
 
-This is an extract from the [admet-xspec documentation](https://admet-xspec.readthedocs.io/en/latest/quick_start/index.html).
+This is an extract from the [admet-xspec documentation](https://admet-xspec-docs.readthedocs.io/en/latest/quickstart.html).
 
 ADMET-XSpec can be set up either using plain `uv` or by creating a conda environment.
 First, clone the repository:
