@@ -66,5 +66,5 @@ pre-commit install
 # if you haven't already:
 conda activate xspec
 
-python -m process --cfg configs/examples/train_optimize_rf_clf.gin
+python -m process --cfg configs/examples/ttrain_rf_optimize.gin
 ```
