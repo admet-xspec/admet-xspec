@@ -34,10 +34,11 @@ class FeaturizerBase(abc.ABC):
         if self._use_disk_cache:
             cache_file = self._DEFAULT_CACHE_DIR / f"{self.get_cache_key()}.pkl"
             self._disk_cache_path = cache_file
+            cache_file.parent.mkdir(parents=True, exist_ok=True)
             if cache_file.exists():
                 lock_path = cache_file.with_suffix(".lock")
                 with filelock.FileLock(lock_path, timeout=30):
-                    if cache_file.exists():  # re-check under lock
+                    if cache_file.exists():
                         self._smiles_cache = joblib.load(cache_file)
         self._cache_initialized = True
 
