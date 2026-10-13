@@ -1,0 +1,7 @@
+friendly_name: "ESOL"
+raw_or_derived: "raw"
+category: "solubility"
+is_chembl: false
+task_setting: "regression"
+
+#https://huggingface.co/datasets/HR-machine/ESol

@@ -1,0 +1,7 @@
+friendly_name: "LogD_74"
+raw_or_derived: "raw"
+category: "physicochemical"
+is_chembl: false
+task_setting: "regression"
+
+#https://github.com/nanxstats/logd74
