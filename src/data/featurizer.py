@@ -36,10 +36,10 @@ class FeaturizerBase(abc.ABC):
             self._disk_cache_path = cache_file
             cache_file.parent.mkdir(parents=True, exist_ok=True)
             if cache_file.exists():
-                lock_path = cache_file.with_suffix(".lock")
-                with filelock.FileLock(lock_path, timeout=30):
-                    if cache_file.exists():
-                        self._smiles_cache = joblib.load(cache_file)
+                try:
+                    self._smiles_cache = joblib.load(cache_file)
+                except Exception:
+                    logging.warning(f"{self.name}: cache file corrupt or unreadable, starting fresh.")
         self._cache_initialized = True
 
     def _persist_cache(self) -> None:
