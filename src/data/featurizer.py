@@ -1,9 +1,10 @@
 import abc
 import logging
-import pickle
 import tempfile
 from typing import List, Hashable
 import hashlib
+import filelock
+import joblib
 
 import gin
 import numpy as np
@@ -27,28 +28,35 @@ class FeaturizerBase(abc.ABC):
     cache_enabled: bool = True
 
     def _ensure_cache(self) -> None:
-        """Lazy-init the in-memory cache, loading from disk when _use_disk_cache is True."""
         if hasattr(self, "_cache_initialized"):
             return
         self._smiles_cache: dict[str, np.ndarray] = {}
         if self._use_disk_cache:
             cache_file = self._DEFAULT_CACHE_DIR / f"{self.get_cache_key()}.pkl"
-            self._disk_cache_path: pathlib.Path = cache_file
+            self._disk_cache_path = cache_file
             if cache_file.exists():
-                with open(cache_file, "rb") as f:
-                    self._smiles_cache = pickle.load(f)
-                logging.debug(
-                    f"{self.name}: loaded {len(self._smiles_cache)} cached entries from {cache_file}"
-                )
+                lock_path = cache_file.with_suffix(".lock")
+                with filelock.FileLock(lock_path, timeout=30):
+                    if cache_file.exists():  # re-check under lock
+                        self._smiles_cache = joblib.load(cache_file)
         self._cache_initialized = True
 
     def _persist_cache(self) -> None:
-        """Write the in-memory cache to disk (no-op when _use_disk_cache is False)."""
         if not self._use_disk_cache:
             return
-        self._disk_cache_path.parent.mkdir(parents=True, exist_ok=True)
-        with open(self._disk_cache_path, "wb") as f:
-            pickle.dump(self._smiles_cache, f)
+        cache_path = self._disk_cache_path
+        cache_path.parent.mkdir(parents=True, exist_ok=True)
+        lock_path = cache_path.with_suffix(".lock")
+
+        with filelock.FileLock(lock_path, timeout=30):
+            # Merge with whatever is already on disk
+            if cache_path.exists():
+                on_disk = joblib.load(cache_path)
+                on_disk.update(self._smiles_cache)  # our entries win
+                self._smiles_cache = on_disk
+            tmp_path = cache_path.with_suffix(".tmp")
+            joblib.dump(self._smiles_cache, tmp_path)
+            tmp_path.replace(cache_path)
 
     def featurize(self, smiles_list: List[str]) -> np.ndarray:
         """Return feature matrix, computing only SMILES absent from cache."""
