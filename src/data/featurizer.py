@@ -49,11 +49,10 @@ class FeaturizerBase(abc.ABC):
         cache_path.parent.mkdir(parents=True, exist_ok=True)
         lock_path = cache_path.with_suffix(".lock")
 
-        with filelock.FileLock(lock_path, timeout=30):
-            # Merge with whatever is already on disk
+        with filelock.FileLock(lock_path, timeout=600):
             if cache_path.exists():
                 on_disk = joblib.load(cache_path)
-                on_disk.update(self._smiles_cache)  # our entries win
+                on_disk.update(self._smiles_cache)
                 self._smiles_cache = on_disk
             tmp_path = cache_path.with_suffix(".tmp")
             joblib.dump(self._smiles_cache, tmp_path)
