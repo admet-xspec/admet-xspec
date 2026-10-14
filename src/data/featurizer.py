@@ -177,12 +177,6 @@ class PropertyFeaturizer(FeaturizerBase):
         # Convert to DataFrame and handle missing values
         desc_array = pd.DataFrame(descriptor_dicts).fillna(0).to_numpy()
 
-        # Fit scaler on first call, then transform
-        if not self.is_fitted:
-            self.scaler.fit(desc_array)
-            self.is_fitted = True
-
-        desc_array = self.scaler.transform(desc_array)
         # Check for nans and infs and replace them with zeros
         desc_array = np.array(desc_array, dtype=np.float32)
         if np.isnan(desc_array).sum() or np.isinf(desc_array).sum():
@@ -192,6 +186,13 @@ class PropertyFeaturizer(FeaturizerBase):
                 "Replacing with zeros."
             )
             desc_array = np.nan_to_num(desc_array, nan=0.0, posinf=0.0, neginf=0.0)
+
+        # Fit scaler on first call, then transform
+        if not self.is_fitted:
+            self.scaler.fit(desc_array)
+            self.is_fitted = True
+
+        desc_array = self.scaler.transform(desc_array)
 
         return np.array(desc_array, dtype=np.float32)
 
