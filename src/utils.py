@@ -14,31 +14,52 @@ import csv
 # disable RDKit warnings
 RDLogger.DisableLog("rdApp.*")
 
+logger = logging.getLogger(__name__)
+
 _RdkitUncharger = Uncharger()
 _RdkitSaltRemover = SaltRemover()
-
 
 def get_clean_smiles(smiles: str, remove_salt: bool = True) -> str | None:
     """
     Strips salts and removes charges from a molecule. Returns SMILES in canonical form.
     Its purpose is to be the standard procedure for cleaning SMILES strings before using them in our
     training and inference pipelines. Any modifications to this function should be done with caution.
+
+    Returns None for any input that does not yield a usable molecule:
+      - input that is not a string
+      - SMILES that RDKit cannot parse
+      - SMILES containing no atoms, either as given or after salt stripping
+      - any unexpected RDKit failure
+
+    A non-None return is therefore always a canonical SMILES describing at least one atom.
     """
-    if isinstance(smiles, str):
+    if not isinstance(smiles, str):
+        return None
+
+    try:
         mol = Chem.MolFromSmiles(smiles)
         if mol is None:
             return None
+
         if remove_salt:
-            mol = SaltRemover().StripMol(mol)
-            mol = _RdkitUncharger.uncharge(mol)  # (*) except for this
+            stripped = _RdkitSaltRemover.StripMol(mol)
+            if stripped is not None:
+                mol = stripped
+            mol = _RdkitUncharger.uncharge(mol)
             # leave only the largest fragment
             mol_fragments = Chem.GetMolFrags(mol, asMols=True)
             if len(mol_fragments) > 0:
-                mol = max(
-                    Chem.GetMolFrags(mol, asMols=True), key=lambda x: x.GetNumAtoms()
-                )
-        return Chem.MolToSmiles(mol, isomericSmiles=True, canonical=True)
-    else:
+                mol = max(mol_fragments, key=lambda x: x.GetNumAtoms())
+
+        # Covers both branches: an empty input string parses to a valid zero-atom
+        # Mol, so remove_salt=False leaks "" too.
+        if mol.GetNumAtoms() == 0:
+            return None
+
+        return Chem.MolToSmiles(mol, isomericSmiles=True, canonical=True) or None
+
+    except Exception:
+        logger.warning("get_clean_smiles failed for input %r", smiles, exc_info=True)
         return None
 
 
