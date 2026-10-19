@@ -11,6 +11,7 @@ from tqdm import tqdm
 from copy import deepcopy
 import numpy as np
 from threadpoolctl import threadpool_limits
+import importlib.metadata
 
 from src.data.data_interface import DataInterface
 from src.data.featurizer import FeaturizerBase
@@ -18,7 +19,7 @@ from src.utils import sample_optuna_params, get_available_cpus, plan_parallel_tr
 from src.data.split import DataSplitterBase
 from src.data.sim_filter import SimilarityFilterBase
 from src.predictor.predictor_base import PredictorBase
-from src.utils import log_markdown_table
+from src.utils import log_markdown_table, format_cli_histogram, format_cli_bar_chart
 from src.data.utils import get_label_counts
 import hashlib
 
@@ -72,6 +73,9 @@ class ProcessingPipeline:
         override_cache: bool = False,
         show_progress_bar: bool = False,
         n_cpus: int | None = None,
+        # Label-distribution plots logged when datasets/splits are loaded
+        label_hist_bins: int = 10,
+        ascii_plots: bool = False
     ):
         # Execution flags
         self.do_load_datasets = do_load_datasets
@@ -138,6 +142,9 @@ class ProcessingPipeline:
 
         # Other
         self.show_progress_bar = show_progress_bar
+        self.label_hist_bins = label_hist_bins
+        self.ascii_plots = ascii_plots
+        self._version = importlib.metadata.version("admet-xspec")
 
         # Validate configuration early
         self._validate_configuration()
@@ -204,6 +211,7 @@ class ProcessingPipeline:
             df = self.data_interface.get_by_friendly_name(name)
             df = df[[self.smiles_col, self.target_col]].copy()
             df[self.source_col] = name
+            self._log_label_distribution(df, f"Loaded dataset `{name}`")
             dfs.append(df)
         return dfs
 
@@ -216,6 +224,7 @@ class ProcessingPipeline:
         for name in friendly_names:
             df = self.data_interface.get_by_friendly_name(name, is_in_splits=True)
             df = df[[self.smiles_col, self.target_col, self.source_col]].copy()
+            self._log_label_distribution(df, f"Loaded split `{name}`")
             dfs.append(df)
         return dfs
 
@@ -303,12 +312,15 @@ class ProcessingPipeline:
                 post = post_counts.get(src, 0)
                 logging.info(f"Source {src}: {pre} -> {post} samples after filtering")
             logging.info(f"After filtering: train={len(train_df)}, test={len(test_df)}")
-            return train_df, test_df
+        else:
+            # No filtering: concatenate augmentation with split train
+            train_df = pd.concat([split_train_df, augmentation_df], ignore_index=True)
+            test_df = split_test_df
+            logging.info(f"No filtering applied. Combined train={len(train_df)}")
 
-        # No filtering: concatenate augmentation with split train
-        train_df = pd.concat([split_train_df, augmentation_df], ignore_index=True)
-        logging.info(f"No filtering applied. Combined train={len(train_df)}")
-        return train_df, split_test_df
+        self._log_label_distribution(train_df, "Train set (origin train + augmentation)")
+        self._log_label_distribution(test_df, "Test set")
+        return train_df, test_df
 
     def _get_cached_splits(
         self, train_friendly_names: List[str], test_friendly_names: List[str]
@@ -329,6 +341,10 @@ class ProcessingPipeline:
         test = self._aggregate_dataframes(test_dfs, empty_if_none=True)
 
         logging.info(f"Cached split loaded: train={len(train)}, test={len(test)}")
+        if len(train_dfs) > 1:
+            self._log_label_distribution(train, f"Train set ({len(train_dfs)} splits combined)")
+        if len(test_dfs) > 1:
+            self._log_label_distribution(test, f"Test set ({len(test_dfs)} splits combined)")
         return train, test
 
     def _save_splits(self, train_df: pd.DataFrame, test_df: pd.DataFrame) -> None:
@@ -401,7 +417,8 @@ class ProcessingPipeline:
     def _log_pipeline_start(self) -> None:
         """Log initial pipeline configuration for easy debugging."""
         logging.info(datetime.now().strftime("%Y-%m-%d-%H-%M-%S"))
-        self.log_bar(w_text="ADMET-XSpec")
+        welcome_bar_text = "ADMET-XSpec " + self._version
+        self.log_bar(w_text="ADMET-XSpec ")
         logging.info("Configuration summary:")
         logging.info(f"* Datasets: {self.datasets}")
         if self.splitter:
@@ -427,6 +444,111 @@ class ProcessingPipeline:
                     f"* Loading hyperparams optimized on {self.test_origin_dataset}"
                 )
         logging.info(f"* Task setting: {self.task_setting}")
+
+    # --------------------- Label distribution logging --------------------- #
+
+    @property
+    def _is_classification(self) -> bool:
+        return self.task_setting in {"binary_classification", "multi_class_classification"}
+
+    def _log_label_distribution(self, df: pd.DataFrame, title: str) -> None:
+        """Log size and label distribution of ``df`` as one multi-line record.
+
+        Regression: summary statistics and a histogram of the labels.
+        Classification: a bar chart of class counts.
+        Either way, mixed-source data also gets a per-source breakdown.
+        This is diagnostics only, so a failure is logged and never stops the run.
+        """
+        try:
+            report = self._format_label_report(df, title)
+        except Exception as exc:
+            logging.warning(f"Could not summarize label distribution of {title}: {exc}")
+            return
+        logging.info(report)
+
+    def _format_label_report(self, df: pd.DataFrame, title: str) -> str:
+        header = f"{title}: {len(df)} rows"
+        if df is None or df.empty:
+            return header + " (empty)"
+        if self.target_col not in df.columns:
+            return header + f" (no `{self.target_col}` column)"
+
+        y = df[self.target_col]
+        lines = [header]
+        if self._is_classification:
+            class_counts = self._class_counts(y)
+            lines.append("Class distribution:")
+            lines.append(format_cli_bar_chart(class_counts, ascii_only=self.ascii_plots))
+            real_counts = [c for k, c in class_counts.items() if k != "NaN"]
+            if len(real_counts) >= 2:
+                lines.append(
+                    f"  majority/minority ratio: {max(real_counts) / min(real_counts):.2f}"
+                )
+            elif len(real_counts) == 1:
+                lines.append(
+                    "  Note: only one class present; ROC-AUC and PR-AUC are undefined on this set."
+                )
+        else:
+            y_num = pd.to_numeric(y, errors="coerce")
+            finite = y_num[np.isfinite(y_num)]
+            n_bad = len(y_num) - len(finite)
+            if len(finite):
+                q1, med, q3 = finite.quantile([0.25, 0.5, 0.75])
+                lines.append(
+                    f"  min={finite.min():.4g}  q1={q1:.4g}  median={med:.4g}  "
+                    f"q3={q3:.4g}  max={finite.max():.4g}  "
+                    f"mean={finite.mean():.4g}  std={finite.std():.4g}"
+                )
+            if n_bad:
+                lines.append(f"  {n_bad} non-numeric/NaN/inf label(s) excluded from the plot")
+            lines.append("Label distribution:")
+            lines.append(
+                format_cli_histogram(
+                    finite, n_bins=self.label_hist_bins, ascii_only=self.ascii_plots
+                )
+            )
+
+        if self.source_col in df.columns and df[self.source_col].nunique() > 1:
+            lines.append("By source:")
+            lines.extend(self._format_source_breakdown(df))
+        return "\n".join(lines)
+
+    @staticmethod
+    def _class_counts(y: pd.Series) -> dict:
+        """Class -> count, sorted by class. Integral labels are shown as ints, even when
+        stored as floats or object dtype (e.g. after concatenating with an empty frame)."""
+        y_num = pd.to_numeric(y, errors="coerce")
+        if y_num.notna().all() and (y_num % 1 == 0).all():
+            y = y_num.astype(int)
+        counts = y.value_counts(dropna=False).sort_index()
+        return {("NaN" if pd.isna(k) else k): int(v) for k, v in counts.items()}
+
+    def _format_source_breakdown(self, df: pd.DataFrame) -> List[str]:
+        """One line per source: class counts (classification) or summary stats (regression)."""
+        groups = df.groupby(self.source_col, sort=True)
+        name_w = max(len(str(name)) for name, _ in groups)
+        lines = []
+        for name, group in groups:
+            y = group[self.target_col]
+            prefix = f"  {str(name):<{name_w}}  n={len(group):<6}"
+            if self._is_classification:
+                parts = [
+                    f"{label}: {count} ({100.0 * count / len(group):.1f}%)"
+                    for label, count in self._class_counts(y).items()
+                ]
+                lines.append(prefix + "  " + "  ".join(parts))
+            else:
+                y_num = pd.to_numeric(y, errors="coerce")
+                y_num = y_num[np.isfinite(y_num)]
+                if y_num.empty:
+                    lines.append(prefix + "  (no finite labels)")
+                    continue
+                lines.append(
+                    prefix
+                    + f"  mean={y_num.mean():.4g}  std={y_num.std():.4g}  "
+                    f"min={y_num.min():.4g}  max={y_num.max():.4g}"
+                )
+        return lines
 
     # --------------------- Identification / caching --------------------- #
 
