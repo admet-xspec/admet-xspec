@@ -5,7 +5,6 @@ from typing import Any
 import numpy as np
 import pandas as pd
 from sklearn.model_selection import KFold
-from torch import return_types
 
 from src.data.featurizer import FeaturizerBase
 from src.utils import get_metric_callable

@@ -10,6 +10,7 @@ import optuna
 from tqdm import tqdm
 from copy import deepcopy
 import numpy as np
+from sklearn.utils.multiclass import type_of_target
 
 from src.data.data_interface import DataInterface
 from src.data.featurizer import FeaturizerBase
@@ -370,10 +371,8 @@ class ProcessingPipeline:
 
     # --------------------- Small helpers --------------------- #
 
-    def _aggregate_dataframes(
-        self, dfs: List[pd.DataFrame], empty_if_none: bool = False
-    ) -> pd.DataFrame:
-        """Concatenate multiple DataFrames, return empty standardized frame if requested."""
+    def _aggregate_dataframes(self, dfs, empty_if_none=False):
+        dfs = [d for d in dfs if not d.empty]
         if not dfs:
             return self._empty_dataframe() if empty_if_none else pd.DataFrame()
         return pd.concat(dfs, ignore_index=True)
@@ -586,6 +585,8 @@ class ProcessingPipeline:
         logging.info(f"* Optimization CV folds: {self.n_optim_cv_folds}")
         logging.info(f"* Optimization iterations: {self.n_optim_iter}")
         logging.info(f"* Hyperparameter search space: {self.params_distribution}")
+        logging.info(f"train y dtype={train_df[self.target_col].dtype}, "
+                     f"type_of_target={type_of_target(train_df[self.target_col])}")
 
         # TODO: move this somewhere else
         _METRICS_TO_MAXIMIZE = {
@@ -595,6 +596,8 @@ class ProcessingPipeline:
             "precision",
             "recall",
             "r2",
+            "pr_auc",
+            "spearman"
         }
         _METRICS_TO_MINIMIZE = {"rmse", "mae", "mse"}
         if self.target_metric in _METRICS_TO_MAXIMIZE:

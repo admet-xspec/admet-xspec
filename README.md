@@ -19,7 +19,7 @@ and evaluation. ADMET-XSpec allows for the evaluation of predictive models train
 data points, leveraging a selection of machine learning algorithms, feature extraction techniques and additional
 data preprocessing steps. The repository is currently under active development.
 
-## ADMET-XSpec 1.0.1
+## ADMET-XSpec 1.0.2
 
 For usage and examples see the [admet-xscpec documentation](https://admet-xspec-docs.readthedocs.io/en/latest/index.html)
 

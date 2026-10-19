@@ -64,7 +64,7 @@ Let's address the first point — we create a subdirectory in
 are preparing a dataset for training human AChE IC50 regressors, our
 data file will land in the following path::
 
-   data/datasets/AChE/human/regression/DOWNLOAD(1).csv
+   data/datasets/AChE/human/regression/DOWNLOAD.csv
 
 Now we should discuss what should end up in the contents of every
 ``params.yaml`` file.
@@ -143,7 +143,7 @@ samples to one of two AChE activity classes (``0`` or ``1``).
 
 Let's create a separate subdirectory for the binary classification AChE
 dataset — for example, ``data/datasets/AChE/human/binary_classification``.
-Next, we copy the whole ChEMBL-sourced ``DOWNLOAD(1).csv`` from the
+Next, we copy the whole ChEMBL-sourced ``DOWNLOAD.csv`` from the
 regression directory into our new classification directory. As the raw
 data file is the same, changes will have to be made in ``params.yaml``
 to enable ADMET-XSpec to parse this dataset for training binary
