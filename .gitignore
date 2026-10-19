@@ -1,9 +1,0 @@
-.idea
-*.pyc
-/models
-*/__pycache__
-/external/DeepChemStable
-*.log
-/data/splits
-/data/datasets/registry.txt
-/data/splits/registry.txt
