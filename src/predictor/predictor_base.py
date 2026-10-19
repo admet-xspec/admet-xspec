@@ -1,10 +1,11 @@
 import abc
+import logging
 from collections import defaultdict
-from typing import Any
+from typing import Any, Iterator
 
 import numpy as np
 import pandas as pd
-from sklearn.model_selection import KFold
+from sklearn.model_selection import KFold, StratifiedKFold
 
 from src.data.featurizer import FeaturizerBase
 from src.utils import get_metric_callable
@@ -12,6 +13,7 @@ from src.utils import get_metric_callable
 
 HyperParams = dict[str, Any]
 MetricsDict = dict[str, Any]
+CvFolds = Iterator[tuple[np.ndarray, np.ndarray]]
 
 
 class PredictorBase(abc.ABC):
@@ -31,6 +33,8 @@ class PredictorBase(abc.ABC):
         self.task_name = task
         self.do_attributed_learning = do_attributed_learning
         self.endpoint_ohe_map: dict[Any, np.ndarray] | None = None
+        # Number of native threads the model may use; None means the library default.
+        self.n_threads: int | None = None
         # Set random seed for reproducibility
         np.random.seed(random_state)
 
@@ -48,6 +52,18 @@ class PredictorBase(abc.ABC):
     @property
     def is_attributed(self) -> bool:
         return self.do_attributed_learning
+
+    @property
+    def supports_threading(self) -> bool:
+        """Whether `set_n_threads` actually controls the model's parallelism."""
+        return False
+
+    def set_n_threads(self, n_threads: int | None) -> None:
+        """Limit the number of native threads used for training/prediction.
+
+        No-op by default; predictors backed by multithreaded libraries override this.
+        """
+        self.n_threads = n_threads
 
     @abc.abstractmethod
     def get_hyperparameters(self) -> HyperParams:
@@ -118,24 +134,38 @@ class PredictorBase(abc.ABC):
         else:
             return self.get_cache_key()
 
-    def cross_validate(self, df: pd.DataFrame, n_folds: int = 1) -> MetricsDict:
-        """Run k-fold cross-validation and average the resulting metrics."""
+    def cross_validate(self, df: pd.DataFrame, n_folds: int = 5) -> MetricsDict:
+        """Run k-fold cross-validation and average the resulting metrics.
+
+        Folds come from `_get_cv_folds`: plain shuffled KFold here, stratified for
+        classifiers (see `BinaryClassifierBase`). Leaves the predictor trained on the
+        last fold's training part.
+        """
         if n_folds < 2:
             raise ValueError("`n_folds` must be at least 2 for cross-validation.")
         if len(df) < n_folds:
             raise ValueError(
                 f"Not enough rows for {n_folds}-fold CV: got {len(df)} rows."
             )
+        df = df.reset_index(drop=True)
+
+        # Attributed models: build the endpoint map from every source up front. Otherwise
+        # it would be built from the first fold's training part, and a source missing
+        # there would make evaluation of later folds fail.
+        if self.is_attributed and self.endpoint_ohe_map is None:
+            self._require_columns(df, [self.source_col])
+            self._create_endpoint_map(df[self.source_col])
 
         metrics_dicts: list[MetricsDict] = []
-        kf = KFold(n_splits=n_folds, shuffle=True, random_state=self.random_state)
-        for train_index, test_index in kf.split(df):
-            train_df = df.iloc[train_index]
-            test_df = df.iloc[test_index]
-            self.train(train_df)
-            fold_metrics = self.evaluate(test_df)
-            metrics_dicts.append(fold_metrics)
+        for train_index, test_index in self._get_cv_folds(df, n_folds):
+            self.train(df.iloc[train_index])
+            metrics_dicts.append(self.evaluate(df.iloc[test_index]))
         return self._average_metrics(metrics_dicts)
+
+    def _get_cv_folds(self, df: pd.DataFrame, n_folds: int) -> CvFolds:
+        """Yield (train, test) positional indices for each CV fold."""
+        kf = KFold(n_splits=n_folds, shuffle=True, random_state=self.random_state)
+        return kf.split(df)
 
     def set_column_ids(
         self,
@@ -190,21 +220,91 @@ class BinaryClassifierBase(PredictorBase, abc.ABC):
 
     evaluation_metrics = ["accuracy", "roc_auc", "f1", "precision", "recall", "pr_auc"]
 
+    # When the data mixes several sources (e.g. human + animal endpoints), stratify CV on
+    # (source, class) pairs, so every fold keeps each source's share and class balance.
+    stratify_cv_by_source: bool = True
+
     def evaluate(self, df: pd.DataFrame) -> MetricsDict:
         """Evaluate binary predictions using a fixed metric set."""
         self._require_columns(df, [self.target_col])
+        y_true = self._as_binary_labels(df[self.target_col])
         preds = self.predict(df)
         binary_preds = self.classify(preds)
         metrics_dict: MetricsDict = {}
         for m in self.evaluation_metrics:
             if m in ["roc_auc", "pr_auc"]:
                 # roc_auc needs class probabilities
-                metrics_dict[m] = get_metric_callable(m)(df[self.target_col], preds)
+                metrics_dict[m] = get_metric_callable(m)(y_true, preds)
             else:
-                metrics_dict[m] = get_metric_callable(m)(
-                    df[self.target_col], binary_preds
-                )
+                metrics_dict[m] = get_metric_callable(m)(y_true, binary_preds)
         return metrics_dict
+
+    def _get_cv_folds(self, df: pd.DataFrame, n_folds: int) -> CvFolds:
+        """Stratified folds, so every fold holds both classes in their overall ratio."""
+        self._require_columns(df, [self.target_col])
+        y = self._as_binary_labels(df[self.target_col])
+        class_counts = np.bincount(y, minlength=2)
+        if class_counts.min() < n_folds:
+            # Some test fold would contain no sample of the minority class, which makes
+            # roc_auc/pr_auc undefined and precision/recall meaningless.
+            raise ValueError(
+                f"Stratified {n_folds}-fold CV needs at least {n_folds} samples of each "
+                f"class, got {{0: {class_counts[0]}, 1: {class_counts[1]}}}. "
+                f"Lower `n_optim_cv_folds` or check the labels."
+            )
+        strata = self._get_cv_strata(df, y, n_folds)
+        skf = StratifiedKFold(
+            n_splits=n_folds, shuffle=True, random_state=self.random_state
+        )
+        return skf.split(np.zeros(len(df)), strata)
+
+    def _get_cv_strata(
+        self, df: pd.DataFrame, y: np.ndarray, n_folds: int
+    ) -> np.ndarray:
+        """Labels to stratify on: (source, class) pairs if possible, else the class."""
+        if (
+            not self.stratify_cv_by_source
+            or self.source_col not in df.columns
+            or df[self.source_col].nunique() < 2
+        ):
+            return y
+        joint = (
+            df[self.source_col].astype(str).to_numpy().astype(object)
+            + "|"
+            + y.astype(str).astype(object)
+        )
+        _, group_counts = np.unique(joint, return_counts=True)
+        if group_counts.min() < n_folds:
+            logging.warning(
+                f"Some (source, class) groups have fewer than {n_folds} samples; "
+                f"stratifying CV folds on the class only."
+            )
+            return y
+        return joint
+
+    def _as_binary_labels(self, y: pd.Series) -> np.ndarray:
+        """Return labels as a 0/1 int array, or fail with a clear message.
+
+        Also accepts 0/1 stored with object dtype (e.g. after concatenating with an
+        empty, untyped DataFrame), which sklearn would reject as an "unknown" target.
+        """
+        try:
+            y_num = pd.to_numeric(pd.Series(y), errors="raise")
+        except (ValueError, TypeError) as exc:
+            raise ValueError(
+                f"Target column `{self.target_col}` is not numeric: {exc}"
+            ) from exc
+        if y_num.isna().any():
+            raise ValueError(
+                f"Target column `{self.target_col}` contains {int(y_num.isna().sum())} NaN(s)."
+            )
+        unexpected = sorted(set(np.unique(y_num)) - {0, 1})
+        if unexpected:
+            raise ValueError(
+                f"Expected binary 0/1 labels in `{self.target_col}`, "
+                f"also found: {unexpected[:10]}"
+            )
+        return y_num.to_numpy().astype(int)
 
     def classify(self, preds: Any) -> np.ndarray:
         """Convert model scores/probabilities into hard labels using threshold."""

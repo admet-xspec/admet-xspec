@@ -26,10 +26,15 @@ class ScikitPredictorBase(abc.ABC):
     featurizer: FeaturizerBase | None = None
     endpoint_ohe_map: dict[str, np.ndarray] | None = None
 
+    # Constructor argument of the estimator that sets its number of native threads
+    # (e.g. "n_jobs"), or None if the estimator is single-threaded.
+    thread_param: str | None = None
+
     def __init__(
         self,
         params: dict[str, Any] | None = None,
         do_attributed_learning: bool = False,
+        n_threads: int | None = None,
         **kwargs,
     ) -> None:
         # Let other bases initialize (RegressorBase/BinaryClassifierBase -> PredictorBase)
@@ -39,7 +44,37 @@ class ScikitPredictorBase(abc.ABC):
         # Keep local flag in sync with PredictorBase in multiple inheritance.
         self.do_attributed_learning: bool = bool(do_attributed_learning)
         self.model: BaseEstimator | None = None
-        self.params: dict[str, Any] = params or {}
+        self.params: dict[str, Any] = self._without_thread_param(params or {})
+        self.n_threads: int | None = n_threads
+
+    # --- threading ---------------------------------------------------------
+    @property
+    def supports_threading(self) -> bool:
+        return self.thread_param is not None
+
+    def set_n_threads(self, n_threads: int | None) -> None:
+        """Set the number of native threads; applies to the current and future models."""
+        self.n_threads = n_threads
+        if self.model is not None:
+            self._apply_n_threads(self.model)
+
+    def _apply_n_threads(self, model: BaseEstimator) -> None:
+        if self.thread_param is not None and self.n_threads is not None:
+            model.set_params(**{self.thread_param: self.n_threads})
+
+    def _without_thread_param(self, params: dict[str, Any]) -> dict[str, Any]:
+        # The thread count is a property of the machine, not a hyperparameter: keep it
+        # out of saved/loaded hyperparams so a value from an old run never overrides
+        # the current thread budget.
+        if self.thread_param is None or self.thread_param not in params:
+            return dict(params)
+        return {k: v for k, v in params.items() if k != self.thread_param}
+
+    def _new_model(self) -> BaseEstimator:
+        """A fresh estimator with the configured thread count applied."""
+        model = self._init_model()
+        self._apply_n_threads(model)
+        return model
 
     @abc.abstractmethod
     def _init_model(self) -> BaseEstimator:
@@ -97,7 +132,7 @@ class ScikitPredictorBase(abc.ABC):
             )
 
         # Always create a fresh estimator for each train call.
-        self.model = self._init_model()
+        self.model = self._new_model()
         # For attributed learning tasks, create endpoint map for OHE encoding
         if self.endpoint_ohe_map is None and self.is_attributed:
             cast(Any, self)._create_endpoint_map(df[self.source_col])
@@ -144,7 +179,7 @@ class ScikitPredictorBase(abc.ABC):
                 k: (v.item() if isinstance(v, np.generic) else v)
                 for k, v in self.params.items()
             }
-        hyperparams = self.model.get_params()
+        hyperparams = self._without_thread_param(self.model.get_params())
         for k, v in list(hyperparams.items()):
             if isinstance(v, np.generic):
                 hyperparams[k] = v.item()
@@ -153,7 +188,8 @@ class ScikitPredictorBase(abc.ABC):
     def set_hyperparameters(self, params: dict[str, Any]) -> None:
         """Validate and apply estimator hyperparameters."""
         if self.model is None:
-            self.model = self._init_model()
+            self.model = self._new_model()
+        params = self._without_thread_param(params)
         # Validate supported params against model.get_params()
         model_params = self.model.get_params()
         unknown = [key for key in params if key not in model_params]

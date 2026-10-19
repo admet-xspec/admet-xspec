@@ -8,8 +8,9 @@ import pandas as pd
 import logging
 from pathlib import Path
 import optuna
-from typing import Any, Dict
+from typing import Any, Dict, Tuple
 import csv
+import os
 
 # disable RDKit warnings
 RDLogger.DisableLog("rdApp.*")
@@ -300,3 +301,64 @@ def get_metric_callable(metric_name: str):
             f"Invalid metric name: '{metric_name}'. Supported metrics: {list(metrics_dict.keys())}"
         )
     return metrics_dict[metric_name]
+
+
+def get_available_cpus() -> int:
+    """Number of CPUs this process may actually use.
+
+    ``os.cpu_count()`` (which Optuna's ``n_jobs=-1`` and most libraries' defaults rely on)
+    reports every core of the node, not the cores SLURM allocated to the job. This takes
+    the smallest of: SLURM_CPUS_PER_TASK, the CPU affinity mask (reflects cgroups/taskset
+    binding), and os.cpu_count().
+    """
+    candidates = []
+    slurm_cpus = os.environ.get("SLURM_CPUS_PER_TASK", "")
+    if slurm_cpus.isdigit() and int(slurm_cpus) > 0:
+        candidates.append(int(slurm_cpus))
+    try:
+        candidates.append(len(os.sched_getaffinity(0)))
+    except AttributeError:  # not available on macOS/Windows
+        pass
+    candidates.append(os.cpu_count() or 1)
+    return max(1, min(candidates))
+
+
+def plan_parallel_trials(
+    n_cpus: int,
+    n_trials: int,
+    n_workers: int | None = -1,
+    threads_per_trial: int | None = None,
+    model_is_threaded: bool = True,
+    default_threads_per_trial: int = 4,
+) -> Tuple[int, int]:
+    """Split a CPU budget between concurrent Optuna trials and threads inside each model.
+
+    :param n_cpus: total CPUs available to the process
+    :param n_trials: number of trials in the study (no point running more workers)
+    :param n_workers: concurrent trials; -1/None/0 chooses automatically
+    :param threads_per_trial: native threads per model; None chooses automatically
+    :param model_is_threaded: whether the model can use more than one thread
+    :param default_threads_per_trial: thread count per trial used when both are automatic
+    :return: (n_workers, threads_per_trial), with n_workers * threads_per_trial <= n_cpus
+        unless the caller explicitly asked for more
+    """
+    n_cpus = max(1, n_cpus)
+    n_trials = max(1, n_trials)
+    if not model_is_threaded:
+        threads_per_trial = 1
+
+    if n_workers is None or n_workers < 1:
+        per_trial = threads_per_trial or min(default_threads_per_trial, n_cpus)
+        n_workers = max(1, n_cpus // per_trial)
+    n_workers = min(n_workers, n_trials)
+
+    if threads_per_trial is None:
+        # Give each worker an equal share, including cores left over by the n_trials cap.
+        threads_per_trial = max(1, n_cpus // n_workers)
+
+    if n_workers * threads_per_trial > n_cpus:
+        logging.warning(
+            f"{n_workers} parallel trials x {threads_per_trial} thread(s) each exceeds the "
+            f"{n_cpus} available CPU(s); expect oversubscription."
+        )
+    return n_workers, threads_per_trial

@@ -20,11 +20,13 @@ class _ScikitEstimatorBase(ScikitPredictorBase):
         params: dict[str, Any] | None = None,
         random_state: int = 42,
         do_attributed_learning: bool = False,
+        n_threads: int | None = None,
     ) -> None:
         super().__init__(
             params=params,
             random_state=random_state,
             do_attributed_learning=do_attributed_learning,
+            n_threads=n_threads,
         )
 
     def _base_estimator_kwargs(self) -> dict[str, Any]:
@@ -51,6 +53,7 @@ class RfRegressor(_ScikitRegressorBase):
     """RandomForest regressor wrapper."""
 
     estimator_cls = sklearn.ensemble.RandomForestRegressor
+    thread_param = "n_jobs"
 
     @property
     def name(self) -> str:
@@ -62,6 +65,7 @@ class RfClassifier(_ScikitClassifierBase):
     """RandomForest classifier wrapper."""
 
     estimator_cls = sklearn.ensemble.RandomForestClassifier
+    thread_param = "n_jobs"
 
     @property
     def name(self) -> str:
@@ -99,6 +103,7 @@ class XGBoostRegressor(_ScikitRegressorBase):
     """XGBoost regressor wrapper."""
 
     estimator_cls = xgb.XGBRegressor
+    thread_param = "n_jobs"
 
     @property
     def name(self) -> str:
@@ -110,6 +115,7 @@ class XGBoostClassifier(_ScikitClassifierBase):
     """XGBoost classifier wrapper."""
 
     estimator_cls = xgb.XGBClassifier
+    thread_param = "n_jobs"
 
     @property
     def name(self) -> str:
@@ -121,6 +127,7 @@ class LightGbmClassifier(_ScikitClassifierBase):
     """LightGBM classifier wrapper."""
 
     estimator_cls = lgb.LGBMClassifier
+    thread_param = "n_jobs"
 
     def _base_estimator_kwargs(self) -> dict[str, Any]:
         return {"random_state": self.random_state, "verbosity": -1}
@@ -135,6 +142,7 @@ class LightGbmRegressor(_ScikitRegressorBase):
     """LightGBM regressor wrapper."""
 
     estimator_cls = lgb.LGBMRegressor
+    thread_param = "n_jobs"
 
     def _base_estimator_kwargs(self) -> dict[str, Any]:
         return {"random_state": self.random_state, "verbosity": -1}

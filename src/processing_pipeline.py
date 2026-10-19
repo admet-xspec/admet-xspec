@@ -10,11 +10,11 @@ import optuna
 from tqdm import tqdm
 from copy import deepcopy
 import numpy as np
-from sklearn.utils.multiclass import type_of_target
+from threadpoolctl import threadpool_limits
 
 from src.data.data_interface import DataInterface
 from src.data.featurizer import FeaturizerBase
-from src.utils import sample_optuna_params
+from src.utils import sample_optuna_params, get_available_cpus, plan_parallel_trials
 from src.data.split import DataSplitterBase
 from src.data.sim_filter import SimilarityFilterBase
 from src.predictor.predictor_base import PredictorBase
@@ -59,6 +59,7 @@ class ProcessingPipeline:
         n_optim_cv_folds: int | None = None,
         n_optim_iter: int | None = None,
         n_optim_jobs: int = -1,
+        n_threads_per_trial: int | None = None,
         target_metric: str | None = None,
         ci_n_bootstraps: int = 1000,
         ci_percentiles: float = 95.0,
@@ -70,6 +71,7 @@ class ProcessingPipeline:
         logfile: str | None = None,
         override_cache: bool = False,
         show_progress_bar: bool = False,
+        n_cpus: int | None = None,
     ):
         # Execution flags
         self.do_load_datasets = do_load_datasets
@@ -112,6 +114,7 @@ class ProcessingPipeline:
         self.n_optim_cv_folds = n_optim_cv_folds
         self.n_optim_iter = n_optim_iter
         self.n_optim_jobs = n_optim_jobs
+        self.n_threads_per_trial = n_threads_per_trial
         self.target_metric = target_metric
         self.optuna_sampler = optuna.samplers.TPESampler(seed=42)
 
@@ -122,6 +125,11 @@ class ProcessingPipeline:
 
         # Inject featurizer into the model
         self.predictor.set_featurizer(self.featurizer)
+
+        # CPU budget: what SLURM/cgroups actually allocated, unless set explicitly.
+        # Outside of hyperparameter optimization the model may use all of it.
+        self.n_cpus = n_cpus or get_available_cpus()
+        self.predictor.set_n_threads(self.n_cpus)
 
         # Derived identifiers / caches
         self.split_key = self._get_split_key(datasets=self.datasets, sim_filter=self.sim_filter)
@@ -371,8 +379,10 @@ class ProcessingPipeline:
 
     # --------------------- Small helpers --------------------- #
 
-    def _aggregate_dataframes(self, dfs, empty_if_none=False):
-        dfs = [d for d in dfs if not d.empty]
+    def _aggregate_dataframes(
+        self, dfs: List[pd.DataFrame], empty_if_none: bool = False
+    ) -> pd.DataFrame:
+        """Concatenate multiple DataFrames, return empty standardized frame if requested."""
         if not dfs:
             return self._empty_dataframe() if empty_if_none else pd.DataFrame()
         return pd.concat(dfs, ignore_index=True)
@@ -406,6 +416,7 @@ class ProcessingPipeline:
         if self.predictor:
             logging.info(f"* Predictor: {self.predictor.name}")
             logging.info(f"* Predictor key: {self.predictor_key}")
+        logging.info(f"* Available CPUs: {self.n_cpus}")
         if self.do_load_optimized_hyperparams:
             if self.hyperparams_source_sim_filter:
                 logging.info(
@@ -585,8 +596,6 @@ class ProcessingPipeline:
         logging.info(f"* Optimization CV folds: {self.n_optim_cv_folds}")
         logging.info(f"* Optimization iterations: {self.n_optim_iter}")
         logging.info(f"* Hyperparameter search space: {self.params_distribution}")
-        logging.info(f"train y dtype={train_df[self.target_col].dtype}, "
-                     f"type_of_target={type_of_target(train_df[self.target_col])}")
 
         # TODO: move this somewhere else
         _METRICS_TO_MAXIMIZE = {
@@ -596,8 +605,6 @@ class ProcessingPipeline:
             "precision",
             "recall",
             "r2",
-            "pr_auc",
-            "spearman"
         }
         _METRICS_TO_MINIMIZE = {"rmse", "mae", "mse"}
         if self.target_metric in _METRICS_TO_MAXIMIZE:
@@ -609,21 +616,43 @@ class ProcessingPipeline:
                 f"Unknown target metric {self.target_metric} for optimization"
             )
 
+        # Split the CPU budget between concurrent trials and threads inside each model.
+        n_workers, threads_per_trial = plan_parallel_trials(
+            n_cpus=self.n_cpus,
+            n_trials=self.n_optim_iter,
+            n_workers=self.n_optim_jobs,
+            threads_per_trial=self.n_threads_per_trial,
+            model_is_threaded=self.predictor.supports_threading,
+        )
+        logging.info(
+            f"* Parallelism: {n_workers} concurrent trial(s) x {threads_per_trial} "
+            f"thread(s) per model ({self.n_cpus} CPUs available)"
+        )
+
+        # Featurize the training set once, before any trial starts, so concurrent trials
+        # read cached features instead of all computing them at the same time.
+        shared_featurizer = self._warm_shared_featurizer(train_df)
+
         # Define an objective function for the optimization process
         # Here it is a k-fold cross-validation on some target metric
         def objective(trial: optuna.Trial) -> float:
-            # Instantiate a fresh predictor for the trial
-            trial_predictor = deepcopy(self.predictor)
+            # Instantiate a fresh predictor for the trial. A stateless featurizer is
+            # shared rather than copied (the memo maps it to itself), which avoids copying
+            # its feature cache for every trial.
+            memo = {}
+            if shared_featurizer is not None:
+                memo[id(shared_featurizer)] = shared_featurizer
+            trial_predictor = deepcopy(self.predictor, memo)
+            trial_predictor.set_n_threads(threads_per_trial)
             # Inject hyperparams
             params = sample_optuna_params(trial, self.params_distribution)
             logging.debug(f"Trial {trial.number}: {params}")
             trial_predictor.set_hyperparameters(params)
-            trial_predictor.train(train_df)
-            # Evaluate with cross-validation
+            # Evaluate with cross-validation (trains one model per fold)
             scores = trial_predictor.cross_validate(
                 train_df, n_folds=self.n_optim_cv_folds
             )
-            mean_score = scores[self.target_metric].mean()
+            mean_score = float(scores[self.target_metric])
             logging.debug(
                 f"Trial {trial.number} {self.target_metric} score: {mean_score}"
             )
@@ -637,7 +666,10 @@ class ProcessingPipeline:
             study_name="_".join([self.predictor_key, self.split_key]),
             sampler=self.optuna_sampler,
         )
-        study.optimize(objective, n_trials=self.n_optim_iter, n_jobs=self.n_optim_jobs)
+        # Cap BLAS pools too (numpy/scipy), which would otherwise each start one thread
+        # per core of the node in every concurrent trial.
+        with threadpool_limits(limits=threads_per_trial, user_api="blas"):
+            study.optimize(objective, n_trials=self.n_optim_iter, n_jobs=n_workers)
         elapsed_time = time.time() - start_time
         logging.info(
             f"Hyperparameter optimization completed in {elapsed_time/60:.2f} minutes"
@@ -647,6 +679,24 @@ class ProcessingPipeline:
 
         # Retain best hyperparameters
         self.predictor.set_hyperparameters(study.best_params)
+
+    def _warm_shared_featurizer(self, train_df: pd.DataFrame):
+        """Featurize `train_df` once and return the featurizer if trials may share it.
+
+        Only featurizers whose output does not depend on fitted state (those that use the
+        disk cache) are shared; featurizers with a fitted scaler keep being copied per
+        trial, as before. After warming, trials only read the featurizer's cache, so
+        sharing it between threads is safe.
+        """
+        featurizer = self.predictor.get_featurizer()
+        if (
+            featurizer is None
+            or not featurizer.cache_enabled
+            or not getattr(featurizer, "_use_disk_cache", False)
+        ):
+            return None
+        featurizer.featurize(train_df[self.smiles_col].tolist())
+        return featurizer
 
     def _dump_training_info(self) -> None:
         self.data_interface.dump_training_logs(self.predictor_key, self.split_key)
