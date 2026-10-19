@@ -19,7 +19,7 @@ if __name__ == "__main__":
         "-c",
         type=str,
         help="Path to the config file",
-        default="configs/train.gin",
+        default="configs/examples/train_lgbm.gin",
     )
     parser.add_argument(
         "--log-level",

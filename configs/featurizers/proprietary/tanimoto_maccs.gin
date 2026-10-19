@@ -3,5 +3,8 @@
 #   featurizer of the Tanimoto similarity calculator!   #
 #=======================================================#
 
+# Bindings are scoped to `tanimoto_featurizer/` so that they neither leak into nor
+# inherit from the model featurizer configured in configs/featurizers/.
+
 tanimoto_featurizer/gin.singleton.constructor = @MaccsFeaturizer
 tanimoto_featurizer = @tanimoto_featurizer/gin.singleton()

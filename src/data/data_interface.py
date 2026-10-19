@@ -302,8 +302,8 @@ class DataInterface:
                 return
             self._generate_prepared_dataset(dataset_dir_path)
 
-    def _generate_prepared_dataset(self, dataset_dir_path: Path) -> None:
-        # Caller must hold the dataset's "prepared" lock.
+    def _load_transformed_raw_df(self, dataset_dir_path: Path) -> pd.DataFrame:
+        """Load the raw dataset, clean SMILES, apply filter criteria and label transformations."""
         csvs = [
             p
             for p in dataset_dir_path.rglob("*.csv")
@@ -313,13 +313,17 @@ class DataInterface:
             raise RuntimeError(f"No raw dataset found in `{dataset_dir_path}`")
         if len(csvs) > 1:
             raise RuntimeError(f"Multiple raw datasets found in `{dataset_dir_path}`")
-        logging.info(f"Generating prepared dataset for raw {csvs[0]}")
         raw_df = self._load_df(csvs[0])
         logging.info(f"Raw dataset size: {len(raw_df)}")
 
-        prepared = self.get_normalized_df(raw_df)
-        prepared = self._apply_filter_criteria(prepared, dataset_dir_path)
-        prepared = self._apply_label_transformations(prepared, dataset_dir_path)
+        df = self.get_normalized_df(raw_df)
+        df = self._apply_filter_criteria(df, dataset_dir_path)
+        return self._apply_label_transformations(df, dataset_dir_path)
+
+    def _generate_prepared_dataset(self, dataset_dir_path: Path) -> None:
+        # Caller must hold the dataset's "prepared" lock.
+        logging.info(f"Generating prepared dataset in `{dataset_dir_path}`")
+        prepared = self._load_transformed_raw_df(dataset_dir_path)
         if self.task_setting == "binary_classification":
             label_counts = get_label_counts(prepared, column_name="y")
             if len(label_counts) > 2:
@@ -648,21 +652,39 @@ class DataInterface:
             )
 
     # --- classification helpers ---
-    def _parse_classification_threshold(self, dataset_dir_path: Path) -> float:
+    def _parse_classification_threshold(
+        self, dataset_dir_path: Path, _visited: Tuple[Path, ...] = ()
+    ) -> float | str:
+        """Return the dataset's `threshold`, or the one of its `threshold_source`.
+
+        A source's `"median"` threshold resolves to the median of the source's own
+        transformed labels, i.e. the value used to classify the source itself.
+        """
         cfg = self._read_data_config(dataset_dir_path)
         if not cfg:
             raise RuntimeError(
                 "No data config yaml found to parse threshold for classification task."
             )
-        if cfg.get("threshold_source"):
-            # Takes only the source dataset's lock; deadlocks only on cyclic configs.
-            ds = self.get_by_friendly_name(cfg["threshold_source"])
-            if "y_cont" not in ds.columns:
-                raise RuntimeError("threshold_source dataset must contain `y_cont`.")
-            return float(ds["y_cont"].median())
-        if "threshold" in cfg:
-            return cfg["threshold"]
-        raise RuntimeError("No `threshold` or `threshold_source` in data config.")
+        source_name = cfg.get("threshold_source")
+        if source_name:
+            source_dir = self._find_dataset_dir(source_name)
+            visited = (*_visited, dataset_dir_path.resolve())
+            if source_dir.resolve() in visited:
+                raise RuntimeError(
+                    f"Cyclic `threshold_source` reference to `{source_name}` in `{dataset_dir_path}`."
+                )
+            threshold = self._parse_classification_threshold(source_dir, visited)
+            if threshold == "median":
+                source_df = self._load_transformed_raw_df(source_dir)
+                threshold = float(source_df["y"].median())
+            logging.info(f"Using threshold {threshold} of `threshold_source` `{source_name}`.")
+            return threshold
+        threshold = cfg.get("threshold")
+        if threshold is None:
+            raise RuntimeError(
+                f"No `threshold` or `threshold_source` in data config of `{dataset_dir_path}`."
+            )
+        return threshold
 
     def _clean_relation_series(self, df: pd.DataFrame) -> pd.Series:
         if "Standard Relation" in df.columns:

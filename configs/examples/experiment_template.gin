@@ -14,7 +14,7 @@ ProcessingPipeline.datasets = [
     '..._friendly_name_2'
 ]
 
-ProcessingPipeline.test_origin_dataset = '..._friendly_name_1't
+ProcessingPipeline.test_origin_dataset = '..._friendly_name_1'
 ProcessingPipeline.task_setting = '...'
 
 #========================================================#

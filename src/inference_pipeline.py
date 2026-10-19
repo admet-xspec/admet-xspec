@@ -6,12 +6,13 @@ from typing import Optional
 import logging
 
 import gin
+import numpy as np
 import pandas as pd
 import yaml
 
 from src.data.data_interface import DataInterface
 from src.predictor.predictor_base import BinaryClassifierBase, PredictorBase
-from src.utils import log_markdown_table
+from src.utils import get_clean_smiles, log_markdown_table
 
 
 @gin.configurable
@@ -41,6 +42,7 @@ class InferencePipeline:
         self.smiles_col = smiles_col
         self.source_col = source_col
         self.target_col = target_col
+        self.clean_smiles_col = f"{smiles_col}_clean"
         self.do_evaluate = do_evaluate
         self.do_append_to_input_file = do_append_to_input_file
 
@@ -105,7 +107,8 @@ class InferencePipeline:
             raise ValueError(
                 f"Cannot evaluate without `{self.target_col}` in inference dataset."
             )
-        metrics = self.predictor.evaluate(self.data)
+        eval_df = self._get_model_input(self.data).dropna(subset=[self.target_col])
+        metrics = self.predictor.evaluate(eval_df)
         logging.info("Metrics (markdown):")
         log_markdown_table(metrics)
         return metrics
@@ -124,7 +127,23 @@ class InferencePipeline:
             except ValueError:
                 pass
 
-        return dataset
+        return self._clean_smiles(dataset)
+
+    def _clean_smiles(self, df: pd.DataFrame) -> pd.DataFrame:
+        """Add `<smiles_col>_clean` with SMILES cleaned as for training; invalid ones are NaN."""
+        df[self.clean_smiles_col] = df[self.smiles_col].apply(get_clean_smiles)
+        n_invalid = int(df[self.clean_smiles_col].isna().sum())
+        if n_invalid:
+            logging.warning(
+                f"{n_invalid} input SMILES could not be cleaned; their predictions are left empty."
+            )
+        return df
+
+    def _get_model_input(self, df: pd.DataFrame) -> pd.DataFrame:
+        """Return the rows with valid SMILES, with the cleaned SMILES in `smiles_col`."""
+        valid = df[df[self.clean_smiles_col].notna()].copy()
+        valid[self.smiles_col] = valid[self.clean_smiles_col]
+        return valid
 
     def _load_predictor(self) -> PredictorBase:
         predictor = self.data_interface.unpickle_model(
@@ -170,19 +189,23 @@ class InferencePipeline:
     def _predict_dataframe(
         self, df: pd.DataFrame, predictor: PredictorBase
     ) -> pd.DataFrame:
-        preds = predictor.predict(df)
-        if len(preds) != len(df):
+        model_input = self._get_model_input(df)
+        preds = predictor.predict(model_input)
+        if len(preds) != len(model_input):
             raise RuntimeError(
-                f"Prediction length mismatch: {len(preds)} predictions for {len(df)} rows"
+                f"Prediction length mismatch: {len(preds)} predictions for {len(model_input)} rows"
             )
 
-        df[self.label_name] = preds
+        df[self.label_name] = np.nan
+        df.loc[model_input.index, self.label_name] = np.asarray(preds)
         if self.task_setting in {"binary_classification", "multi_class_classification"}:
             if not isinstance(predictor, BinaryClassifierBase):
                 raise TypeError(
                     "Classification task requires predictor to implement `classify`."
                 )
-            df[f"{self.label_name}_class"] = predictor.classify(preds)
+            class_col = f"{self.label_name}_class"
+            df[class_col] = pd.Series(pd.NA, index=df.index, dtype="boolean")
+            df.loc[model_input.index, class_col] = np.asarray(predictor.classify(preds))
         return df
 
     def _save_predictions(self, results: pd.DataFrame) -> None:
@@ -194,7 +217,8 @@ class InferencePipeline:
     def _save_metrics(self, metrics: dict) -> None:
         self.out_dir.mkdir(parents=True, exist_ok=True)
         with open(self.metrics_path, "w") as fh:
-            yaml.safe_dump({"metrics": metrics}, fh)
+            # Metric values are numpy scalars, which `safe_dump` cannot represent.
+            yaml.safe_dump({"metrics": {k: float(v) for k, v in metrics.items()}}, fh)
 
     def _detect_task_setting(self, predictor: PredictorBase) -> str:
         """Return the task setting implied by the loaded predictor."""

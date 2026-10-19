@@ -1,13 +1,17 @@
+#=====================[ADMET-XSpec]=====================#
+# Run `configs/examples/train_rf_optimize.gin` first: it trains the model used here
+# (human AChE pIC50 RF regressor on ECFP4 counts) and prepares the input dataset.
+
 include 'configs/data_interface/data_interface.gin'
 
 InferencePipeline.data_interface = %data_interface
 
-# Inference input dataset path (CSV)
-InferencePipeline.dataset_path = 'data/datasets/MAO-A/human/property_ic50/binary_classification/prepared_data.csv'
+# Inference input dataset path (CSV with a SMILES column; replace with your own molecules)
+InferencePipeline.dataset_path = 'data/datasets/AChE/human/regression/prepared_data.csv'
 
 # Cache keys identifying the trained model in data/cache/models/<model_cache_key>/<data_cache_key>/model.pkl
-InferencePipeline.model_cache_key = 'AChE_human_pIC50_RF_reg_ecfp_featurizer_4b52a'
-InferencePipeline.data_cache_key = 'scaffold_e4737_tanimoto_5p_filter_c2805_44323'
+InferencePipeline.model_cache_key = 'AChE_human_pIC50_RF_reg_ecfp_featurizer_4efda'
+InferencePipeline.data_cache_key = 'scaffold_e4737_nofilter_9a75c'
 
 # Task/column settings
 InferencePipeline.task_setting = 'regression'
@@ -16,6 +20,5 @@ InferencePipeline.source_col = 'source'
 InferencePipeline.target_col = 'y'
 
 # Runtime behavior
-InferencePipeline.do_evaluate = False
+InferencePipeline.do_evaluate = True            # the input has `y` labels, so metrics can be computed
 InferencePipeline.override_cache = False
-

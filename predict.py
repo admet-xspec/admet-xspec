@@ -19,7 +19,7 @@ if __name__ == "__main__":
         "-c",
         type=str,
         help="Path to the config file",
-        default="configs/predict.gin",
+        default="configs/examples/predict.gin",
     )
     parser.add_argument(
         "--log-level",

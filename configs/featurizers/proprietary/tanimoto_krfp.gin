@@ -3,7 +3,10 @@
 #   featurizer of the Tanimoto similarity calculator!   #
 #=======================================================#
 
-KlekotaRothFeaturizer.keys_path = 'data/featurizers/krfp_keys.txt'
+# Bindings are scoped to `tanimoto_featurizer/` so that they neither leak into nor
+# inherit from the model featurizer configured in configs/featurizers/.
+
+tanimoto_featurizer/KlekotaRothFeaturizer.keys_path = 'data/featurizers/krfp_keys.txt'
 
 tanimoto_featurizer/gin.singleton.constructor = @KlekotaRothFeaturizer
 tanimoto_featurizer = @tanimoto_featurizer/gin.singleton()

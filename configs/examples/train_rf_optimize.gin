@@ -4,8 +4,8 @@
 include 'configs/processing_plans/train_optimize.gin'		# we are performing hyperparameter optimization
 								                            #   and will train models on the best hyperparams
 include 'configs/splitters/scaffold.gin'			        # scaffold split
-include 'configs/featurizers/ecfp_count.gin'			    # count KRFP featurization
-include 'configs/sim_filters/none.gin'				        # no filter applied for augumenting datasets
+include 'configs/featurizers/ecfp_count.gin'			    # ECFP4 count featurization
+include 'configs/sim_filters/none.gin'				        # no filter applied for augmenting datasets
 include 'configs/predictors/regressors/rf.gin'			    # RandomForest regressor model
 
 #------------------------[data]-------------------------#
