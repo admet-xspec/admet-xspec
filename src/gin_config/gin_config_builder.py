@@ -13,7 +13,7 @@ TASK_TO_PREDICTOR_DIR = {
 
 @dataclass(frozen=True)
 class ExperimentSelection:
-    """Container describing one training experiment gin configuration."""
+    """Choices making up one training experiment gin config."""
 
     processing_plan: str
     featurizer: str
@@ -26,6 +26,8 @@ class ExperimentSelection:
 
 
 class GinOptions(TypedDict):
+    """Selectable gin fragments, grouped by kind."""
+
     processing_plans: list[str]
     featurizers: list[str]
     splitters: list[str]
@@ -36,6 +38,7 @@ class GinOptions(TypedDict):
 def _list_gin_files(
     directory: Path, root_dir: Path, recursive: bool = False
 ) -> list[str]:
+    """List `.gin` files in `directory` as `configs/...` paths."""
     if not directory.exists():
         return []
     pattern = "**/*.gin" if recursive else "*.gin"
@@ -44,6 +47,7 @@ def _list_gin_files(
 
 
 def _filter_out_internal_files(paths: Iterable[str]) -> list[str]:
+    """Drop `_`-prefixed and optimization fragments."""
     return [
         p
         for p in paths
@@ -52,8 +56,7 @@ def _filter_out_internal_files(paths: Iterable[str]) -> list[str]:
 
 
 def discover_gin_options(configs_dir: Path) -> GinOptions:
-    """Discover selectable gin fragments under the provided `configs` directory."""
-
+    """Discover selectable gin fragments under `configs_dir`."""
     processing_plans = _filter_out_internal_files(
         _list_gin_files(configs_dir / "processing_plans", root_dir=configs_dir)
     )
@@ -88,8 +91,7 @@ def discover_gin_options(configs_dir: Path) -> GinOptions:
 
 
 def load_dataset_names(registry_file: Path) -> list[str]:
-    """Load dataset names from a registry file while preserving input order."""
-
+    """Load unique dataset names from a registry file, preserving order."""
     if not registry_file.exists():
         return []
 
@@ -105,8 +107,7 @@ def load_dataset_names(registry_file: Path) -> list[str]:
 
 
 def validate_selection(selection: ExperimentSelection) -> None:
-    """Raise a ValueError when an experiment selection is invalid."""
-
+    """Raise `ValueError` if the experiment selection is invalid."""
     if not selection.datasets:
         raise ValueError("At least one training dataset must be selected.")
 
@@ -131,7 +132,6 @@ def validate_selection(selection: ExperimentSelection) -> None:
 
 def render_gin_config(selection: ExperimentSelection) -> str:
     """Render one training configuration file in gin format."""
-
     validate_selection(selection)
 
     quoted_datasets = ",\n    ".join(f"'{name}'" for name in selection.datasets)
@@ -159,8 +159,7 @@ def render_gin_config(selection: ExperimentSelection) -> str:
 
 
 def build_experiment_filename(selection: ExperimentSelection, index: int) -> str:
-    """Create a deterministic and filesystem-safe filename for one experiment."""
-
+    """Return a deterministic, filesystem-safe filename for one experiment."""
     def stem(path: str) -> str:
         return Path(path).stem.replace("_", "-")
 
@@ -177,14 +176,12 @@ def build_experiment_filename(selection: ExperimentSelection, index: int) -> str
 def write_batch_configs(
     selections: Sequence[ExperimentSelection], output_dir: Path, overwrite: bool = False
 ) -> list[Path]:
-    """Write multiple rendered gin configs and return written file paths."""
-
+    """Write rendered gin configs and return their paths."""
     output_dir.mkdir(parents=True, exist_ok=True)
 
     written: list[Path] = []
     for idx, selection in enumerate(selections, start=1):
-        filename = build_experiment_filename(selection, idx)
-        target = output_dir / filename
+        target = output_dir / build_experiment_filename(selection, idx)
         if target.exists() and not overwrite:
             raise FileExistsError(
                 f"{target} already exists. Enable overwrite to replace files."

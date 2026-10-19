@@ -21,13 +21,13 @@ class FeaturizerBase(abc.ABC):
     """Base class for molecular featurizers."""
 
     _DEFAULT_CACHE_DIR = pathlib.Path(tempfile.gettempdir()) / "admet_fp_cache"
-    # Subclasses with a fitted scaler (whose output varies between runs) should set False
-    # so the cache never leaks stale scaled values across runs.
+    # False for featurizers with a fitted scaler, whose output varies between runs.
     _use_disk_cache: bool = True
-    # Set to False (per instance) to bypass caching entirely, e.g. in tests.
+    # Set False per instance to bypass caching entirely (e.g. in tests).
     cache_enabled: bool = True
 
     def _ensure_cache(self) -> None:
+        """Lazily load the in-memory cache, seeded from disk if available."""
         if hasattr(self, "_cache_initialized"):
             return
         self._smiles_cache: dict[str, np.ndarray] = {}
@@ -39,10 +39,13 @@ class FeaturizerBase(abc.ABC):
                 try:
                     self._smiles_cache = joblib.load(cache_file)
                 except Exception:
-                    logging.warning(f"{self.name}: cache file corrupt or unreadable, starting fresh.")
+                    logging.warning(
+                        f"{self.name}: cache file corrupt or unreadable, starting fresh."
+                    )
         self._cache_initialized = True
 
     def _persist_cache(self) -> None:
+        """Merge the in-memory cache into the on-disk one under a file lock."""
         if not self._use_disk_cache:
             return
         cache_path = self._disk_cache_path
@@ -68,14 +71,13 @@ class FeaturizerBase(abc.ABC):
         )
         if unique_uncached:
             new_features = self._compute_features(unique_uncached)
-            for smi, feat in zip(unique_uncached, new_features):
-                self._smiles_cache[smi] = feat
+            self._smiles_cache.update(zip(unique_uncached, new_features))
             self._persist_cache()
         return np.stack([self._smiles_cache[smi] for smi in smiles_list])
 
     @abc.abstractmethod
     def _compute_features(self, smiles_list: List[str]) -> np.ndarray:
-        """Compute features from scratch for the given SMILES (no caching)."""
+        """Compute features for the given SMILES, bypassing the cache."""
         pass
 
     @property
@@ -95,14 +97,19 @@ class FeaturizerBase(abc.ABC):
         """Return parameters for hashing/caching purposes."""
         pass
 
-    def get_cache_key(self):
-        """
-        Generate a 5-character cache key.
-        """
-        params_values = self.get_hashable_params_values()
-        params_values = str(params_values).encode("utf-8")
-        hash_string = hashlib.md5(params_values).hexdigest()
-        return f"{self.name}_{hash_string[:5]}"
+    def get_cache_key(self) -> str:
+        """Return `<name>_<5-char hash of params>`."""
+        params = str(self.get_hashable_params_values()).encode("utf-8")
+        return f"{self.name}_{hashlib.md5(params).hexdigest()[:5]}"
+
+    @staticmethod
+    def _to_mols(smiles_list: List[str]) -> List[Chem.Mol | None]:
+        """Parse SMILES, logging the ones RDKit fails to parse."""
+        mols = [Chem.MolFromSmiles(smi) for smi in smiles_list]
+        for i, (mol, smi) in enumerate(zip(mols, smiles_list)):
+            if mol is None:
+                logging.debug(f"Failed to convert SMILES at index {i}: {smi}")
+        return mols
 
 
 @gin.configurable
@@ -117,19 +124,11 @@ class EcfpFeaturizer(FeaturizerBase):
 
     def _compute_features(self, smiles_list: List[str]) -> np.ndarray:
         """Generate ECFP fingerprints for given SMILES."""
-        mols = [Chem.MolFromSmiles(smi) for smi in smiles_list]
-
-        # Log failed conversions
-        for i, (mol, smi) in enumerate(zip(mols, smiles_list)):
-            if mol is None:
-                logging.debug(f"Failed to convert SMILES at index {i}: {smi}")
-
-        # Generate fingerprints
+        mols = self._to_mols(smiles_list)
         if self.count:
             fps = [self.generator.GetCountFingerprintAsNumPy(mol) for mol in mols]
         else:
             fps = [self.generator.GetFingerprintAsNumPy(mol) for mol in mols]
-
         return np.stack(fps)
 
     @property
@@ -144,13 +143,13 @@ class EcfpFeaturizer(FeaturizerBase):
         return [self.radius, self.n_bits, self.count]
 
     def __getstate__(self):
-        """Pickle support: exclude non-serializable generator."""
+        """Drop the unpicklable generator."""
         state = self.__dict__.copy()
         del state["generator"]
         return state
 
     def __setstate__(self, state):
-        """Pickle support: reconstruct generator after unpickling."""
+        """Rebuild the generator after unpickling."""
         self.__dict__.update(state)
         self.generator = GetMorganGenerator(radius=self.radius, fpSize=self.n_bits)
 
@@ -159,24 +158,21 @@ class EcfpFeaturizer(FeaturizerBase):
 class PropertyFeaturizer(FeaturizerBase):
     """RDKit molecular property descriptor featurizer with normalization."""
 
-    # Scaled output depends on a fitted scaler; disk-caching would serve stale values on re-runs.
+    # Output depends on a fitted scaler, so disk cache would serve stale values.
     _use_disk_cache = False
 
-    def __init__(self, scaler=StandardScaler()):
-        self.scaler = scaler
+    def __init__(self, scaler=None):
+        # Fresh default per instance; a shared one would be re-fit across instances.
+        self.scaler = scaler if scaler is not None else StandardScaler()
         self.is_fitted = False
 
     def _compute_features(self, smiles_list: List[str]) -> np.ndarray:
         """Generate normalized molecular descriptors."""
         mols = [Chem.MolFromSmiles(smi) for smi in smiles_list]
-
-        # Compute descriptors for each molecule
         descriptor_dicts = [self._compute_descriptors(mol) for mol in mols]
-
-        # Convert to DataFrame and handle missing values
         desc_array = pd.DataFrame(descriptor_dicts).fillna(0).to_numpy()
 
-        # Check for nans and infs and replace them with zeros
+        # float32 cast can overflow large descriptors to inf.
         desc_array = np.array(desc_array, dtype=np.float32)
         if np.isnan(desc_array).sum() or np.isinf(desc_array).sum():
             logging.warning(
@@ -186,13 +182,11 @@ class PropertyFeaturizer(FeaturizerBase):
             )
             desc_array = np.nan_to_num(desc_array, nan=0.0, posinf=0.0, neginf=0.0)
 
-        # Fit scaler on first call, then transform
+        # Fit on the first call only, so later calls reuse training statistics.
         if not self.is_fitted:
             self.scaler.fit(desc_array)
             self.is_fitted = True
-
         desc_array = self.scaler.transform(desc_array)
-
         return np.array(desc_array, dtype=np.float32)
 
     @staticmethod
@@ -224,18 +218,9 @@ class MaccsFeaturizer(FeaturizerBase):
 
     def _compute_features(self, smiles_list: List[str]) -> np.ndarray:
         """Generate MACCS keys fingerprints for given SMILES."""
-        mols = [Chem.MolFromSmiles(smi) for smi in smiles_list]
-
-        # Log failed conversions
-        for i, (mol, smi) in enumerate(zip(mols, smiles_list)):
-            if mol is None:
-                logging.debug(f"Failed to convert SMILES at index {i}: {smi}")
-
-        # Generate MACCS keys fingerprints
+        mols = self._to_mols(smiles_list)
         fps = [MACCSkeys.GenMACCSKeys(mol) for mol in mols]
-        fps_array = np.array([np.array(fp) for fp in fps])
-
-        return fps_array
+        return np.array([np.array(fp) for fp in fps])
 
     @property
     def feature_name(self) -> str:
@@ -259,16 +244,8 @@ class KlekotaRothFeaturizer(FeaturizerBase):
 
     def _compute_features(self, smiles_list: List[str]) -> np.ndarray:
         """Generate Klekota-Roth fingerprints for given SMILES."""
-        mols = [Chem.MolFromSmiles(smi) for smi in smiles_list]
-
-        # Log failed conversions
-        for i, (mol, smi) in enumerate(zip(mols, smiles_list)):
-            if mol is None:
-                logging.debug(f"Failed to convert SMILES at index {i}: {smi}")
-
-        fps = [self._get_krfp_fingerprint(mol) for mol in mols]
-        fps_array = np.array(fps)
-        return fps_array
+        mols = self._to_mols(smiles_list)
+        return np.array([self._get_krfp_fingerprint(mol) for mol in mols])
 
     @property
     def feature_name(self) -> str:
@@ -285,33 +262,25 @@ class KlekotaRothFeaturizer(FeaturizerBase):
         """Read Klekota-Roth fingerprint keys from a file."""
         if not pathlib.Path(keys_path).exists():
             raise FileNotFoundError(f"Klekota-Roth keys file not found at: {keys_path}")
-        klek_keys = [line.strip() for line in open(keys_path)]
-        klek_keys_mols = list(map(Chem.MolFromSmarts, klek_keys))
-        return klek_keys_mols
+        with open(keys_path) as f:
+            klek_keys = [line.strip() for line in f]
+        return [Chem.MolFromSmarts(key) for key in klek_keys]
 
     def _get_krfp_fingerprint(self, mol: Chem.Mol) -> np.ndarray:
+        """Return presence bits of the 4860 Klekota-Roth substructures in `mol`.
+
+        Paper: https://doi.org/10.1093/bioinformatics/btn479
         """
-        Generate Klekota-Roth fingerprint for a single molecule.
-        Checks for the presence of 4860 predefined substructures corresponding to chemical
-        motifs that were selected as relevant in medicinal chemistry.
-        Original paper: https://doi.org/10.1093/bioinformatics/btn479
-        """
-        fp_list = []
-        for key in self.keys_mols:
-            if mol.HasSubstructMatch(key):
-                fp_list.append(1)
-            else:
-                fp_list.append(0)
-        return np.array(fp_list)
+        return np.array([int(mol.HasSubstructMatch(key)) for key in self.keys_mols])
 
 
 @gin.configurable
 class PropertyEcfpFeaturizer(FeaturizerBase):
     """Combined property descriptor and ECFP fingerprint featurizer."""
 
-    # TODO: Remove this class and implement an union featurizer that can combine any n featurizers
+    # TODO: replace with a union featurizer combining any n featurizers.
 
-    # Output depends on PropertyFeaturizer's fitted scaler; disk caching would give stale values.
+    # Output depends on a fitted scaler, so disk cache would serve stale values.
     _use_disk_cache = False
 
     def __init__(self, radius: int = 2, n_bits: int = 2048, count: bool = False):
@@ -351,6 +320,9 @@ class Map4Featurizer(FeaturizerBase):
         include_duplicated_shingles: bool = False,
     ):
         super().__init__()
+        self.size = size
+        self.radius = radius
+        self.include_duplicated_shingles = include_duplicated_shingles
         self.map4_generator = map4.MAP4(
             dimensions=size,
             radius=radius,
@@ -359,19 +331,10 @@ class Map4Featurizer(FeaturizerBase):
 
     def _compute_features(self, smiles_list: List[str]) -> np.ndarray:
         """Generate MAP4 fingerprints for given SMILES."""
-
-        mols = [Chem.MolFromSmiles(smi) for smi in smiles_list]
-
-        # Log failed conversions
-        for i, (mol, smi) in enumerate(zip(mols, smiles_list)):
-            if mol is None:
-                logging.debug(f"Failed to convert SMILES at index {i}: {smi}")
-
-        fps_array = self.map4_generator.calculate_many(
+        mols = self._to_mols(smiles_list)
+        return self.map4_generator.calculate_many(
             mols, number_of_threads=2, verbose=False
         )
-
-        return fps_array
 
     @property
     def feature_name(self) -> str:
@@ -382,4 +345,9 @@ class Map4Featurizer(FeaturizerBase):
         return "map4_featurizer"
 
     def get_hashable_params_values(self) -> List[Hashable]:
-        return [self.feature_name]
+        return [
+            self.feature_name,
+            self.size,
+            self.radius,
+            self.include_duplicated_shingles,
+        ]

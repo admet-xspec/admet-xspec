@@ -8,11 +8,12 @@ import pandas as pd
 import logging
 from pathlib import Path
 import optuna
-from typing import Any, Dict, Tuple
+from typing import Any, Dict, Tuple, Mapping
+import numpy as np
 import csv
 import os
+import toml
 
-# disable RDKit warnings
 RDLogger.DisableLog("rdApp.*")
 
 logger = logging.getLogger(__name__)
@@ -20,19 +21,16 @@ logger = logging.getLogger(__name__)
 _RdkitUncharger = Uncharger()
 _RdkitSaltRemover = SaltRemover()
 
+
 def get_clean_smiles(smiles: str, remove_salt: bool = True) -> str | None:
-    """
-    Strips salts and removes charges from a molecule. Returns SMILES in canonical form.
-    Its purpose is to be the standard procedure for cleaning SMILES strings before using them in our
-    training and inference pipelines. Any modifications to this function should be done with caution.
+    """Strip salts, neutralize charges and return canonical SMILES.
 
-    Returns None for any input that does not yield a usable molecule:
-      - input that is not a string
-      - SMILES that RDKit cannot parse
-      - SMILES containing no atoms, either as given or after salt stripping
-      - any unexpected RDKit failure
+    Standard SMILES cleaning for training and inference; change with caution.
 
-    A non-None return is therefore always a canonical SMILES describing at least one atom.
+    Returns:
+        Canonical SMILES with at least one atom, or None if the input is not a
+        string, cannot be parsed, has no atoms (before or after salt stripping),
+        or RDKit fails unexpectedly.
     """
     if not isinstance(smiles, str):
         return None
@@ -47,13 +45,12 @@ def get_clean_smiles(smiles: str, remove_salt: bool = True) -> str | None:
             if stripped is not None:
                 mol = stripped
             mol = _RdkitUncharger.uncharge(mol)
-            # leave only the largest fragment
+            # Keep the largest fragment.
             mol_fragments = Chem.GetMolFrags(mol, asMols=True)
             if len(mol_fragments) > 0:
                 mol = max(mol_fragments, key=lambda x: x.GetNumAtoms())
 
-        # Covers both branches: an empty input string parses to a valid zero-atom
-        # Mol, so remove_salt=False leaks "" too.
+        # "" parses to a zero-atom Mol, so this is needed even without salt removal.
         if mol.GetNumAtoms() == 0:
             return None
 
@@ -65,11 +62,7 @@ def get_clean_smiles(smiles: str, remove_salt: bool = True) -> str | None:
 
 
 def get_nice_class_name(obj):
-    """
-    Takes an object of any class and returns a clean name of the class.
-    :param x: object (any)
-    :return: str
-    """
+    """Return the class name of `obj`."""
     return type(obj).__name__
 
 
@@ -80,59 +73,49 @@ def get_converted_unit(
     mol_weight: float | None = None,
     tissue_density: float | None = 1,
 ):
-    """Convert a measurment from one unit to another."""
-    to_unit_implemented = {"uM"}
-    assert (
-        to_unit in to_unit_implemented
-    ), f"Conversion to unit {to_unit} not implemented yet."
+    """Convert a measurement from one unit to another."""
+    aliases = {"ug ml-1": "ug/ml", "umol/L": "uM"}
+    from_unit = aliases.get(from_unit, from_unit)
+    to_unit = aliases.get(to_unit, to_unit)
+    assert to_unit == "uM", f"Conversion to unit {to_unit} not implemented yet."
 
-    if to_unit == "ug ml-1":
-        to_unit = "ug/ml"
-    if to_unit == "umol/L":
-        to_unit = "uM"
+    assert mol_weight is not None, (
+        f"Molecular weight not provided for {from_unit}->{to_unit} conversion."
+    )
 
-    if to_unit == "uM":
-        assert mol_weight is not None, (
-            f"Molecular weight not provided " f"for {from_unit}->{to_unit} conversion."
-        )
-
-        match from_unit:
-            case "ng/g":
-                return (val * tissue_density / mol_weight) / 1000
-            case "ug/g":
-                return val / mol_weight
-            case "ng/ml":
-                return (val / mol_weight) / 1000
-            case "ug/ml":
-                return val / mol_weight
-            case "ug/L":
-                return (val / mol_weight) / 1000
-            case "mg%":
-                mg_per_liter = val * 10
-                return (mg_per_liter * 1000) / mol_weight
-            case "nM":
-                return val / 1000
-            case "uM":
-                return val
-            case "nmol/g":
-                return val * tissue_density / 1000
-            case "pmol/g":
-                return val * tissue_density / 1_000_000
-            case "umol/Kg":
-                return val * tissue_density / 1000
-            case _:
-                logging.info(
-                    f"Do not support conversion from {from_unit}, returning None."
-                )
-                return None
+    match from_unit:
+        case "ng/g":
+            return (val * tissue_density / mol_weight) / 1000
+        case "ug/g":
+            return val / mol_weight
+        case "ng/ml":
+            return (val / mol_weight) / 1000
+        case "ug/ml":
+            return val / mol_weight
+        case "ug/L":
+            return (val / mol_weight) / 1000
+        case "mg%":
+            mg_per_liter = val * 10
+            return (mg_per_liter * 1000) / mol_weight
+        case "nM":
+            return val / 1000
+        case "uM":
+            return val
+        case "nmol/g":
+            return val * tissue_density / 1000
+        case "pmol/g":
+            return val * tissue_density / 1_000_000
+        case "umol/Kg":
+            return val * tissue_density / 1000
+        case _:
+            logging.info(
+                f"Do not support conversion from {from_unit}, returning None."
+            )
+            return None
 
 
 def log_markdown_table(dictionary: dict):
-    """
-    Logs a dictionary as a horizonatal markdown table.
-    :param dictionary: dict
-    :return: None
-    """
+    """Log a dictionary as a horizontal markdown table."""
     if not isinstance(dictionary, dict):
         raise ValueError("Input must be a dictionary")
     if len(dictionary) == 0:
@@ -141,37 +124,22 @@ def log_markdown_table(dictionary: dict):
 
     header = "| " + " | ".join(dictionary.keys()) + " |"
     separator = "| " + " | ".join(["---"] * len(dictionary)) + " |"
-    values = (
-        "| "
-        + " | ".join(
-            [
-                f"{v:.3f}" if isinstance(v, float) else str(v)
-                for v in dictionary.values()
-            ]
-        )
-        + " |"
-    )
+    cells = [f"{v:.3f}" if isinstance(v, float) else str(v) for v in dictionary.values()]
+    values = "| " + " | ".join(cells) + " |"
 
     table = "\n".join([header, separator, values])
     logging.info("\n" + table + "\n")
 
 
 def parse_smiles_from_messy_csv(path: str | Path) -> pd.Series:
-    """
-    Parses a SMILES column from a .csv, which may have different possible names.
-    :param path: str | Path, path to the .csv file
-    :return: tuple of (smiles: pd.Series, target: pd.Series)
-    """
-
-    # Different possible names for the smiles column
+    """Return the SMILES column of a CSV, accepting several common column names."""
     SMILES_COLS = ["smiles", "SMILES", "Smiles", "molecule", "Molecule", "MOL"]
     df = pd.read_csv(path)
 
-    # Check how many possible SMILES columns are present
     smiles_cols_present = [col for col in SMILES_COLS if col in df.columns]
     if len(smiles_cols_present) == 0:
         raise ValueError(f"No SMILES column found. Expected one of: {SMILES_COLS}")
-    elif len(smiles_cols_present) > 1:
+    if len(smiles_cols_present) > 1:
         raise ValueError(
             f"Multiple SMILES columns found: {smiles_cols_present}. Expected only one of {SMILES_COLS}."
         )
@@ -181,36 +149,28 @@ def parse_smiles_from_messy_csv(path: str | Path) -> pd.Series:
 def parse_targets_from_messy_csv(
     path: str | Path, target_col_name: str = None
 ) -> pd.Series | None:
-    """
-    Parses a target column from a .csv, which may have different possible names.
-    Sometimes there is no target column at all (e.g. in inference datasets), or you may
-    want to specify a custom target column name, which this function allows.
-    :param path: str | Path, path to the .csv file
-    :param target_col_name: str, custom name of the target column to look for
-    :return: pd.Series or None if no target column is found
-    """
+    """Return the target column of a CSV, accepting several common column names.
 
-    # Different possible names for the target column
+    `target_col_name`, if given, must exist. Returns None if no target column is
+    found (e.g. inference datasets).
+    """
     TARGET_COLS = ["y", "Y", "target", "Target", "label", "Label"]
     df = pd.read_csv(path)
 
     if target_col_name is not None:
-        # Look for the custom target column name first
-        if target_col_name in df.columns:
-            return df[target_col_name]
-        else:
+        if target_col_name not in df.columns:
             raise ValueError(
                 f"Specified target column '{target_col_name}' not found in the data."
             )
+        return df[target_col_name]
 
-    # Check how many possible target columns are present
     target_cols_present = [col for col in TARGET_COLS if col in df.columns]
     if len(target_cols_present) == 0:
         logging.debug(
             f"No target column found in the dataset. Expected one of: {TARGET_COLS}"
         )
         return None
-    elif len(target_cols_present) > 1:
+    if len(target_cols_present) > 1:
         raise ValueError(
             f"Multiple target columns found: {target_cols_present}. Expected only one of {TARGET_COLS}."
         )
@@ -218,19 +178,14 @@ def parse_targets_from_messy_csv(
 
 
 def detect_csv_delimiter(path: str | Path) -> str:
-    """
-    Detects the delimiter used in a CSV file.
-    :param path: str | Path, path to the .csv file
-    :return: str, detected delimiter
-    """
+    """Detect the delimiter of a CSV file from its first 1024 characters."""
     with open(path, "r") as file:
         sample = file.read(1024)
-    sniffer = csv.Sniffer()
-    dialect = sniffer.sniff(sample)
-    return dialect.delimiter
+    return csv.Sniffer().sniff(sample).delimiter
 
 
 def read_logfile(log_path) -> str | None:
+    """Return the log file contents, or None if it does not exist."""
     if Path(log_path).exists():
         with open(log_path, "r") as f:
             return f.read()
@@ -240,10 +195,9 @@ def read_logfile(log_path) -> str | None:
 def sample_optuna_params(
     trial: optuna.Trial, params_distribution: Dict[str, Any]
 ) -> Dict[str, Any]:
-    """
-    Translate params_distribution entries into Optuna suggest_* calls.
+    """Sample parameters from `params_distribution` via Optuna `suggest_*` calls.
 
-    Supported tuple formats:
+    Supported specs:
         ('int',          low, high)          -> suggest_int
         ('int_log',      low, high)          -> suggest_int(..., log=True)
         ('float',        low, high)          -> suggest_float
@@ -251,23 +205,17 @@ def sample_optuna_params(
         ('categorical',  [v1, v2, ...])      -> suggest_categorical
     """
     sampled: Dict[str, Any] = {}
-    for name, spec in params_distribution.items():
-        kind, *args = spec
+    for name, (kind, *args) in params_distribution.items():
         if kind == "int":
-            low, high = args
-            sampled[name] = trial.suggest_int(name, low, high)
+            sampled[name] = trial.suggest_int(name, *args)
         elif kind == "int_log":
-            low, high = args
-            sampled[name] = trial.suggest_int(name, low, high, log=True)
+            sampled[name] = trial.suggest_int(name, *args, log=True)
         elif kind == "float":
-            low, high = args
-            sampled[name] = trial.suggest_float(name, low, high)
+            sampled[name] = trial.suggest_float(name, *args)
         elif kind == "float_log":
-            low, high = args
-            sampled[name] = trial.suggest_float(name, low, high, log=True)
+            sampled[name] = trial.suggest_float(name, *args, log=True)
         elif kind == "categorical":
-            choices = args[0]
-            sampled[name] = trial.suggest_categorical(name, choices)
+            sampled[name] = trial.suggest_categorical(name, args[0])
         else:
             raise ValueError(
                 f"Unknown distribution kind '{kind}' for param '{name}'. "
@@ -277,12 +225,13 @@ def sample_optuna_params(
 
 
 def pr_auc_score(y_true, y_pred):
+    """Return the area under the precision-recall curve."""
     precision, recall, _ = metrics.precision_recall_curve(y_true, y_pred)
-    pr_auc = metrics.auc(recall, precision)
-    return pr_auc
+    return metrics.auc(recall, precision)
 
 
 def get_metric_callable(metric_name: str):
+    """Return the `metric(y_true, y_pred)` callable for `metric_name`."""
     metrics_dict = {
         "accuracy": metrics.accuracy_score,
         "roc_auc": metrics.roc_auc_score,
@@ -296,7 +245,7 @@ def get_metric_callable(metric_name: str):
         "spearman": lambda y_true, y_pred: stats.spearmanr(y_true, y_pred).correlation,
         "pr_auc": pr_auc_score,
     }
-    if metric_name not in metrics_dict.keys():
+    if metric_name not in metrics_dict:
         raise ValueError(
             f"Invalid metric name: '{metric_name}'. Supported metrics: {list(metrics_dict.keys())}"
         )
@@ -304,12 +253,11 @@ def get_metric_callable(metric_name: str):
 
 
 def get_available_cpus() -> int:
-    """Number of CPUs this process may actually use.
+    """Return the number of CPUs this process may actually use.
 
-    ``os.cpu_count()`` (which Optuna's ``n_jobs=-1`` and most libraries' defaults rely on)
-    reports every core of the node, not the cores SLURM allocated to the job. This takes
-    the smallest of: SLURM_CPUS_PER_TASK, the CPU affinity mask (reflects cgroups/taskset
-    binding), and os.cpu_count().
+    `os.cpu_count()` reports every core of the node, not the SLURM allocation, so
+    take the minimum of `SLURM_CPUS_PER_TASK`, the CPU affinity mask and
+    `os.cpu_count()`.
     """
     candidates = []
     slurm_cpus = os.environ.get("SLURM_CPUS_PER_TASK", "")
@@ -331,16 +279,19 @@ def plan_parallel_trials(
     model_is_threaded: bool = True,
     default_threads_per_trial: int = 4,
 ) -> Tuple[int, int]:
-    """Split a CPU budget between concurrent Optuna trials and threads inside each model.
+    """Split a CPU budget between concurrent Optuna trials and threads per model.
 
-    :param n_cpus: total CPUs available to the process
-    :param n_trials: number of trials in the study (no point running more workers)
-    :param n_workers: concurrent trials; -1/None/0 chooses automatically
-    :param threads_per_trial: native threads per model; None chooses automatically
-    :param model_is_threaded: whether the model can use more than one thread
-    :param default_threads_per_trial: thread count per trial used when both are automatic
-    :return: (n_workers, threads_per_trial), with n_workers * threads_per_trial <= n_cpus
-        unless the caller explicitly asked for more
+    Args:
+        n_cpus: Total CPUs available to the process.
+        n_trials: Number of trials in the study; caps the number of workers.
+        n_workers: Concurrent trials; -1, 0 or None chooses automatically.
+        threads_per_trial: Native threads per model; None chooses automatically.
+        model_is_threaded: Whether the model can use more than one thread.
+        default_threads_per_trial: Threads per trial when both are automatic.
+
+    Returns:
+        `(n_workers, threads_per_trial)`, with their product <= `n_cpus` unless the
+        caller explicitly asked for more.
     """
     n_cpus = max(1, n_cpus)
     n_trials = max(1, n_trials)
@@ -353,7 +304,7 @@ def plan_parallel_trials(
     n_workers = min(n_workers, n_trials)
 
     if threads_per_trial is None:
-        # Give each worker an equal share, including cores left over by the n_trials cap.
+        # Equal share, including cores freed by the `n_trials` cap.
         threads_per_trial = max(1, n_cpus // n_workers)
 
     if n_workers * threads_per_trial > n_cpus:
@@ -362,3 +313,93 @@ def plan_parallel_trials(
             f"{n_cpus} available CPU(s); expect oversubscription."
         )
     return n_workers, threads_per_trial
+
+
+_BLOCK_EIGHTHS = " ▏▎▍▌▋▊▉█"
+
+
+def _render_bar(fraction: float, width: int, ascii_only: bool = False) -> str:
+    """Render a left-aligned bar filling `fraction` of `width` characters.
+
+    Non-zero fractions draw at least the smallest mark, so rare bins stay visible.
+    """
+    fraction = min(max(float(fraction), 0.0), 1.0)
+    if ascii_only:
+        filled = int(round(fraction * width))
+        if fraction > 0 and filled == 0:
+            filled = 1
+        return ("#" * filled).ljust(width)
+    eighths = int(round(fraction * width * 8))
+    if fraction > 0 and eighths == 0:
+        eighths = 1
+    full, rem = divmod(eighths, 8)
+    bar = "█" * full + (_BLOCK_EIGHTHS[rem] if rem else "")
+    return bar.ljust(width)
+
+
+def format_cli_histogram(
+    values, n_bins: int = 10, width: int = 40, ascii_only: bool = False
+) -> str:
+    """Return a horizontal text histogram of the finite numeric `values`.
+
+    Non-finite and non-numeric entries are ignored. One row per bin:
+    `[low, high) |bar| count (percent)`; the last bin is closed.
+    """
+    arr = pd.to_numeric(pd.Series(values), errors="coerce").to_numpy(dtype=float)
+    finite = arr[np.isfinite(arr)]
+    if finite.size == 0:
+        return "  (no finite values to plot)"
+
+    # Identical values would otherwise spread over mostly empty bins.
+    n_bins = 1 if finite.min() == finite.max() else max(1, int(n_bins))
+    counts, edges = np.histogram(finite, bins=n_bins)
+    total = int(counts.sum())
+    max_count = int(counts.max())
+    lows = [f"{e:.4g}" for e in edges[:-1]]
+    highs = [f"{e:.4g}" for e in edges[1:]]
+    low_w = max(len(s) for s in lows)
+    high_w = max(len(s) for s in highs)
+    count_w = len(str(max_count))
+    sep = "|" if ascii_only else "│"
+
+    lines = []
+    for i, count in enumerate(counts):
+        close = "]" if i == len(counts) - 1 else ")"
+        label = f"[{lows[i]:>{low_w}}, {highs[i]:>{high_w}}{close}"
+        bar = _render_bar(count / max_count, width, ascii_only)
+        pct = 100.0 * count / total
+        lines.append(f"  {label} {sep}{bar}{sep} {int(count):>{count_w}} ({pct:5.1f}%)")
+    return "\n".join(lines)
+
+
+def format_cli_bar_chart(
+    counts: Mapping[Any, int], width: int = 40, ascii_only: bool = False
+) -> str:
+    """Return a horizontal text bar chart, one row per key: `key |bar| count (percent)`."""
+    if not counts:
+        return "  (nothing to plot)"
+    total = sum(counts.values())
+    max_count = max(counts.values())
+    label_w = max(len(str(k)) for k in counts)
+    count_w = len(str(max_count))
+    sep = "|" if ascii_only else "│"
+
+    lines = []
+    for key, count in counts.items():
+        frac = count / max_count if max_count else 0.0
+        bar = _render_bar(frac, width, ascii_only)
+        pct = 100.0 * count / total if total else 0.0
+        lines.append(f"  {str(key):>{label_w}} {sep}{bar}{sep} {count:>{count_w}} ({pct:5.1f}%)")
+    return "\n".join(lines)
+
+
+def parse_project_version() -> str:
+    version = "unknown"
+    # adopt path to your pyproject.toml
+    pyproject_toml_file = Path(__file__).parent / "pyproject.toml"
+    if pyproject_toml_file.exists() and pyproject_toml_file.is_file():
+        data = toml.load(pyproject_toml_file)
+        # check project.version
+        if "project" in data and "version" in data["project"]:
+            version = data["project"]["version"]
+    return version

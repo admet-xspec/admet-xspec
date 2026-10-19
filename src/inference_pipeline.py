@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from datetime import datetime
 from pathlib import Path
-from typing import Optional, cast
+from typing import Optional
 import logging
 
 import gin
@@ -11,13 +11,12 @@ import yaml
 
 from src.data.data_interface import DataInterface
 from src.predictor.predictor_base import BinaryClassifierBase, PredictorBase
-from src.utils import detect_csv_delimiter
 from src.utils import log_markdown_table
 
 
 @gin.configurable
 class InferencePipeline:
-    """Load dataset + cached predictor, run inference, and persist outputs to cache."""
+    """Run a cached predictor on a dataset and save predictions and metrics to cache."""
 
     def __init__(
         self,
@@ -63,14 +62,16 @@ class InferencePipeline:
 
         self.data: Optional[pd.DataFrame] = None
         self.predictor: Optional[PredictorBase] = None
-        self.task_setting = self._detect_task_setting()
+        self.task_setting = task_setting
 
         self._validate_configuration()
 
     def run(self) -> Path:
+        """Run inference and return the path of the saved predictions."""
         self._log_pipeline_start()
         self.data = self._load_dataset()
         self.predictor = self._load_predictor()
+        self.task_setting = self._detect_task_setting(self.predictor)
         self.data = self._align_source_labels(self.data, self.predictor)
 
         predictions_df = self._predict_dataframe(self.data, self.predictor)
@@ -87,8 +88,8 @@ class InferencePipeline:
         )
         return self.predictions_path
 
-    # Backward-compatible entrypoint used by predict.py
     def predict(self) -> Path:
+        """Alias of `run`, kept for `predict.py`."""
         return self.run()
 
     def can_compute_metrics(self) -> bool:
@@ -97,6 +98,7 @@ class InferencePipeline:
         return self.target_col in self.data.columns
 
     def evaluate(self) -> dict:
+        """Evaluate the loaded predictor on the loaded dataset."""
         if self.data is None or self.predictor is None:
             raise RuntimeError("Call run() before evaluate().")
         if self.target_col not in self.data.columns:
@@ -109,7 +111,6 @@ class InferencePipeline:
         return metrics
 
     def _load_dataset(self) -> pd.DataFrame:
-        # delimiter = detect_csv_delimiter(self.dataset_path)
         dataset = pd.read_csv(self.dataset_path)
 
         if self.smiles_col not in dataset.columns:
@@ -141,7 +142,7 @@ class InferencePipeline:
     def _align_source_labels(
         self, df: pd.DataFrame, predictor: PredictorBase
     ) -> pd.DataFrame:
-        """Align source labels to match predictor endpoint map for attributed learning models."""
+        """Match source labels to the endpoint map of attributed predictors."""
         endpoint_ohe_map = getattr(predictor, "endpoint_ohe_map", None)
         if not endpoint_ohe_map:
             return df
@@ -175,7 +176,6 @@ class InferencePipeline:
                 f"Prediction length mismatch: {len(preds)} predictions for {len(df)} rows"
             )
 
-        # Persist a narrow schema for inference artifacts.
         df[self.label_name] = preds
         if self.task_setting in {"binary_classification", "multi_class_classification"}:
             if not isinstance(predictor, BinaryClassifierBase):
@@ -196,11 +196,15 @@ class InferencePipeline:
         with open(self.metrics_path, "w") as fh:
             yaml.safe_dump({"metrics": metrics}, fh)
 
-    def _detect_task_setting(self) -> str:
-        # TODO: make this more robust
-        if hasattr(self.predictor, "classify"):
-            return "binary_classification"
-        return "regression"
+    def _detect_task_setting(self, predictor: PredictorBase) -> str:
+        """Return the task setting implied by the loaded predictor."""
+        if isinstance(predictor, BinaryClassifierBase):
+            task_setting = "binary_classification"
+        else:
+            task_setting = "regression"
+        if task_setting != self.task_setting:
+            logging.info(f"* Task setting detected from predictor: {task_setting}")
+        return task_setting
 
     def _validate_configuration(self) -> None:
         if not self.data_interface:

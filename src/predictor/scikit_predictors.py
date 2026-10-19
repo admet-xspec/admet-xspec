@@ -30,11 +30,11 @@ class _ScikitEstimatorBase(ScikitPredictorBase):
         )
 
     def _base_estimator_kwargs(self) -> dict[str, Any]:
-        """Default constructor kwargs for the underlying estimator class."""
+        """Return default constructor kwargs for `estimator_cls`."""
         return {}
 
     def _init_model(self) -> Any:
-        """Instantiate the configured estimator class."""
+        """Instantiate `estimator_cls`."""
         if self.estimator_cls is None:
             raise NotImplementedError("Subclasses must define estimator_cls")
         return self.estimator_cls(**self._base_estimator_kwargs())
@@ -90,7 +90,7 @@ class SvmClassifier(_ScikitClassifierBase):
     estimator_cls = sklearn.svm.SVC
 
     def _base_estimator_kwargs(self) -> dict[str, Any]:
-        # Needed so inference can output probabilities, not only labels.
+        # Enables `predict_proba`.
         return {"probability": True}
 
     @property
@@ -154,12 +154,11 @@ class LightGbmRegressor(_ScikitRegressorBase):
 
 def validate_lgbm_specific_params(params: dict[str, Any] | None) -> None:
     """Warn about potentially inconsistent LightGBM depth/leaf combinations."""
-    if params is None:
+    if params is None or "max_depth" not in params or "num_leaves" not in params:
         return
-    if "max_depth" in params and "num_leaves" in params and params["max_depth"] != -1:
-        max_depth = params["max_depth"]
-        num_leaves = params["num_leaves"]
-        if num_leaves > 2**max_depth:
-            logging.warning(
-                f"num_leaves ({num_leaves}) should not be greater than 2^max_depth ({2 ** max_depth})."
-            )
+    max_depth = params["max_depth"]
+    num_leaves = params["num_leaves"]
+    if max_depth != -1 and num_leaves > 2**max_depth:
+        logging.warning(
+            f"num_leaves ({num_leaves}) should not be greater than 2^max_depth ({2 ** max_depth})."
+        )

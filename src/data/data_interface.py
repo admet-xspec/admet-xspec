@@ -1,8 +1,8 @@
-from typing import ContextManager, Dict, List, Optional, Tuple
-from pathlib import Path
-from collections import namedtuple
 import logging
 import shutil
+from collections import namedtuple
+from pathlib import Path
+from typing import ContextManager, Dict, List, Optional, Tuple
 
 import filelock
 import gin
@@ -33,12 +33,12 @@ from src.data.utils import get_label_counts
 from src.utils import detect_csv_delimiter, get_clean_smiles
 from src.predictor.predictor_base import PredictorBase
 
+_Split = namedtuple("_Split", ["friendly_name", "timestamp"])
+
 
 @gin.configurable
 class DataInterface:
-    """
-    Manage dataset loading, normalization and train/test split saving.
-    """
+    """Manage dataset loading, normalization and train/test split saving."""
 
     possible_smiles_cols = ["SMILES", "Smiles", "smiles", "molecule"]
     possible_label_cols = ["LABEL", "Label", "label", "Y", "y", "Standard Value"]
@@ -61,23 +61,20 @@ class DataInterface:
         self.data_config_filename = data_config_filename
         self.prepared_filename = prepared_filename
         self.registry_filename = registry_filename
-        self.task_setting: Optional[str] = None  # must be set externally before use
-        self.logfile: Optional[Path] = None  # must be set externally before use
-        self.override_cache = (
-            False  # Will override cached prepared datasets and splits if True
-        )
+        # Set externally via `set_task_setting` / `set_logfile`.
+        self.task_setting: Optional[str] = None
+        self.logfile: Optional[Path] = None
+        # Regenerate cached prepared datasets and splits.
+        self.override_cache = False
 
-        # Concurrency settings
         self.lock_timeout = lock_timeout
         self.use_soft_locks = use_soft_locks
         self.stale_artifact_max_age_seconds = stale_artifact_max_age_hours * 3600.0
         self._locks: Dict[str, filelock.BaseFileLock] = {}
 
-        # Those may not need to be configurable
         self.splits_dir = self.cache_dir / "splits"
         self.models_dir = self.cache_dir / "models"
-        # Both live in cache_dir, outside every scanned tree, and on the same filesystem
-        # as splits_dir so that publishing a staged split is an atomic rename.
+        # Outside scanned trees, on the `splits_dir` filesystem for atomic renames.
         self.locks_dir = self.cache_dir / ".locks"
         self.staging_dir = self.cache_dir / ".staging"
         self.split_datafile_name = "data.csv"
@@ -93,7 +90,6 @@ class DataInterface:
         self._init_create_dirs()
         self._cleanup_stale_artifacts()
         self.update_registries()
-        # task_setting must be set externally via set_task_setting before use where required
 
     def _init_create_dirs(self) -> None:
         self.dataset_dir.mkdir(parents=True, exist_ok=True)
@@ -111,8 +107,7 @@ class DataInterface:
         if removed:
             logging.info(f"Removed {removed} stale temporary file(s)/directories.")
 
-    # File-lock objects cannot be pickled, so they are dropped when the instance is sent
-    # to another process and recreated lazily there.
+    # File locks cannot be pickled; drop them and recreate lazily in the new process.
     def __getstate__(self) -> Dict:
         state = self.__dict__.copy()
         state["_locks"] = {}
@@ -121,11 +116,9 @@ class DataInterface:
     def __setstate__(self, state: Dict) -> None:
         self.__dict__.update(state)
 
-    # --- locking ------------------------------------------------------------
+    # --- locking ---
     def _get_lock(self, name: str) -> filelock.BaseFileLock:
-        # One lock object per name per instance. Reusing the object is what makes nested
-        # acquisition of the same lock in one thread reentrant; two separate objects on
-        # the same file would deadlock against each other.
+        # One object per name: reuse makes nested acquisition reentrant.
         lock = self._locks.get(name)
         if lock is None:
             lock = make_file_lock(
@@ -138,8 +131,7 @@ class DataInterface:
         return hold_lock(self._get_lock(name), name)
 
     def split_lock(self, cache_key: str) -> ContextManager[None]:
-        """Lock for one split. Hold it across "check exists, compute, save" to avoid
-        computing the same split in several processes:
+        """Return the lock for one split; hold it across check, compute and save.
 
             with data_interface.split_lock(key):
                 if not data_interface.check_train_test_split_exists(key):
@@ -149,13 +141,13 @@ class DataInterface:
         return self._locked(f"split:{cache_key}")
 
     def model_lock(self, model_cache_key: str, data_cache_key: str) -> ContextManager[None]:
-        """Lock for one model directory. Hold it across "check exists, train, save
-        model/metrics/hyperparams/metadata" so duplicate jobs train once, and so that all
-        artifacts in the directory come from the same run.
+        """Return the lock for one model dir; hold it across check, train and save.
+
+        Ensures duplicate jobs train once and all artifacts come from the same run.
         """
         return self._locked(f"model:{model_cache_key}/{data_cache_key}")
 
-    # --- simple setters / log dumping -------------------------------------
+    # --- setters / log dumping ---
     def set_logfile(self, logfile: str) -> None:
         self.logfile = Path(logfile)
 
@@ -169,7 +161,7 @@ class DataInterface:
     def dump_gin_config(self, path: Path) -> None:
         atomic_write_text(gin.operative_config_str(), path / self.operative_config_filename)
 
-    # --- discovery helpers -------------------------------------------------
+    # --- discovery ---
     def _find_dataset_dir(self, friendly_name: str) -> Path:
         found_paths = []
         for yaml_path in iter_files(self.dataset_dir, ".yaml"):
@@ -181,14 +173,13 @@ class DataInterface:
                 found_paths.append(yaml_path.parent)
         if len(found_paths) == 1:
             return found_paths[0]
-        elif len(found_paths) > 1:
+        if len(found_paths) > 1:
             raise RuntimeError(
                 f"Multiple dataset directories with yaml containing friendly_name: `{friendly_name}` for the task of {self.task_setting} found: {found_paths}"
             )
-        else:
-            raise FileNotFoundError(
-                f"No dataset directory with yaml containing friendly_name: `{friendly_name}` for the task of {self.task_setting} found"
-            )
+        raise FileNotFoundError(
+            f"No dataset directory with yaml containing friendly_name: `{friendly_name}` for the task of {self.task_setting} found"
+        )
 
     def _find_split_dir(self, friendly_name: str) -> Path:
         found_paths = []
@@ -198,19 +189,18 @@ class DataInterface:
                 found_paths.append(yaml_path.parent)
         if len(found_paths) == 1:
             return found_paths[0]
-        elif len(found_paths) > 1:
+        if len(found_paths) > 1:
             raise RuntimeError(
                 f"Multiple split directories with yaml containing friendly_name: `{friendly_name}` found: {found_paths}"
             )
-        else:
-            raise FileNotFoundError(
-                f"No split directory with yaml containing friendly_name: `{friendly_name}` found"
-            )
+        raise FileNotFoundError(
+            f"No split directory with yaml containing friendly_name: `{friendly_name}` found"
+        )
 
     def _check_prepared_dataset_exists(self, dataset_dir_path: Path) -> bool:
         return (dataset_dir_path / self.prepared_filename).exists()
 
-    # --- yaml parsing small helpers ---------------------------------------
+    # --- data config parsing ---
     def _read_data_config(self, dataset_dir_path: Path) -> Dict:
         return load_yaml(dataset_dir_path / self.data_config_filename, missing_ok=True)
 
@@ -223,7 +213,7 @@ class DataInterface:
     def _parse_is_chembl(self, dataset_dir_path: Path) -> bool:
         return self._read_data_config(dataset_dir_path).get("is_chembl", False)
 
-    # --- dataframe transformations ----------------------------------------
+    # --- dataframe transformations ---
     def _apply_filter_criteria(
         self, df: pd.DataFrame, dataset_dir_path: Path
     ) -> pd.DataFrame:
@@ -262,7 +252,7 @@ class DataInterface:
         return df
 
     def _load_df(self, dataset_path: Path) -> pd.DataFrame:
-        # If raw dataset is from ChEMBL, use ';' as delimiter, else detect
+        # ChEMBL exports use ';'.
         delimiter = (
             ";"
             if self._parse_is_chembl(dataset_path.parent)
@@ -270,11 +260,10 @@ class DataInterface:
         )
         loaded = pd.read_csv(dataset_path, delimiter=delimiter)
         logging.info(f"Loaded raw dataset from `{dataset_path}`")
-        if loaded is None or len(loaded) <= 2:
+        if len(loaded) <= 2:
             raise RuntimeError(
-                f"Loading dataset from `{dataset_path}` produced {0 if loaded is None else len(loaded)} rows."
+                f"Loading dataset from `{dataset_path}` produced {len(loaded)} rows."
             )
-        # detect SMILES and drop NaNs
         smiles_col = self.get_smiles_col_in_raw(loaded)
         pre = len(loaded)
         df = loaded.dropna(subset=[smiles_col]).reset_index(drop=True)
@@ -285,14 +274,12 @@ class DataInterface:
         return df
 
     def _save_prepared_df(self, df: pd.DataFrame, dir_path: Path) -> None:
-        # Logs first, so that by the time the prepared CSV becomes visible (which is what
-        # other processes check for) its preparation log is already in place.
+        # Logs first: other processes treat the visible CSV as "done".
         self.dump_logs(dir_path / "preparation_log")
         atomic_to_csv(df, dir_path / self.prepared_filename)
 
     def _prepared_lock_name(self, dataset_dir_path: Path) -> str:
-        # Key on the path relative to dataset_dir, so that machines mounting shared
-        # storage at different absolute paths still agree on the lock.
+        # Relative key, so hosts mounting shared storage at different paths agree.
         resolved = dataset_dir_path.resolve()
         try:
             key = resolved.relative_to(self.dataset_dir.resolve()).as_posix()
@@ -301,11 +288,9 @@ class DataInterface:
         return f"prepared:{key}"
 
     def _ensure_prepared_dataset(self, dataset_dir_path: Path) -> None:
-        """Generate the prepared dataset unless it already exists (double-checked locking).
+        """Generate the prepared dataset unless it exists (double-checked locking).
 
-        The unlocked check keeps the common path cheap. The check inside the lock stops a
-        process from regenerating a dataset that another process finished while it was
-        waiting. Readers need no lock, because the prepared CSV is written atomically.
+        Readers need no lock, as the prepared CSV is written atomically.
         """
         if self._check_prepared_dataset_exists(dataset_dir_path) and not self.override_cache:
             return
@@ -318,7 +303,7 @@ class DataInterface:
             self._generate_prepared_dataset(dataset_dir_path)
 
     def _generate_prepared_dataset(self, dataset_dir_path: Path) -> None:
-        # Must be called with the dataset's "prepared" lock held (see _ensure_prepared_dataset).
+        # Caller must hold the dataset's "prepared" lock.
         csvs = [
             p
             for p in dataset_dir_path.rglob("*.csv")
@@ -332,19 +317,14 @@ class DataInterface:
         raw_df = self._load_df(csvs[0])
         logging.info(f"Raw dataset size: {len(raw_df)}")
 
-        # normalize smiles
         prepared = self.get_normalized_df(raw_df)
-        # apply filtering by columns (mainly for ChEMBL datasets)
         prepared = self._apply_filter_criteria(prepared, dataset_dir_path)
-        # apply pre-defined label transformations (e.g., log10, negate)
         prepared = self._apply_label_transformations(prepared, dataset_dir_path)
-        # for classification tasks, assign binary classes based on continuous labels
         if self.task_setting == "binary_classification":
-            # at this point we expect the labels to be in `y` column
-            num_unique_labels = get_label_counts(prepared, column_name="y")
-            if len(num_unique_labels.keys()) > 2:
+            label_counts = get_label_counts(prepared, column_name="y")
+            if len(label_counts) > 2:
                 logging.warning(
-                    f"Dataset has {len(num_unique_labels.keys())} unique labels. The labels are assumed to be continuous and will be converted to binary classes."
+                    f"Dataset has {len(label_counts)} unique labels. The labels are assumed to be continuous and will be converted to binary classes."
                 )
                 prepared = self._assign_binary_classes_based_on_continuous_labels(
                     prepared,
@@ -352,9 +332,8 @@ class DataInterface:
                     is_chembl=self._parse_is_chembl(dataset_dir_path),
                 )
             else:
-                logging.info(f"Binary labels detected: {num_unique_labels.keys()}.")
-                # ensure labels are 0 and 1
-                unique_labels = sorted(num_unique_labels.keys())
+                logging.info(f"Binary labels detected: {label_counts.keys()}.")
+                unique_labels = sorted(label_counts.keys())
                 if unique_labels != [0, 1]:
                     logging.warning(
                         "The binary labels are not 0 and 1; remapping to 0 and 1."
@@ -365,11 +344,6 @@ class DataInterface:
             raise NotImplementedError(
                 "Multi-class classification datasets are not yet supported."
             )
-        if prepared is None:
-            raise RuntimeError(
-                f"Failed to generate prepared dataset for `{dataset_dir_path}`"
-            )
-        # Drop rows with NaN labels after all transformations
         pre = len(prepared)
         prepared = prepared.dropna(subset=["smiles", "y"]).reset_index(drop=True)
         if len(prepared) != pre:
@@ -402,7 +376,6 @@ class DataInterface:
 
     @staticmethod
     def get_clean_smiles_df(df: pd.DataFrame, smiles_col: str) -> pd.DataFrame:
-        # apply canonicalization and drop rows where canonicalization produced NaN
         pre = len(df)
         df[smiles_col] = df[smiles_col].apply(get_clean_smiles)
         df = df.dropna(subset=[smiles_col]).reset_index(drop=True)
@@ -435,7 +408,6 @@ class DataInterface:
         smiles_col = self.get_smiles_col_in_raw(df_to_prepare)
         label_col = self.get_label_col_in_raw(df_to_prepare)
 
-        # rename to canonical names
         rename_map = {}
         if smiles_col != "smiles":
             rename_map[smiles_col] = "smiles"
@@ -454,7 +426,7 @@ class DataInterface:
             logging.debug(f"Dropped {pre - len(df_to_prepare)} rows with NaN labels.")
         return df_to_prepare
 
-    # --- public dataset getters ------------------------------------------
+    # --- public dataset getters ---
     def get_by_friendly_name(
         self, friendly_name: str, is_in_splits=False
     ) -> pd.DataFrame:
@@ -469,32 +441,29 @@ class DataInterface:
         return dataset
 
     def get_split_friendly_names(self, cache_key: str) -> Tuple[str, str]:
-        split_dir = self.splits_dir / cache_key
-        train_params_path = split_dir / "train" / self.params_filename
-        test_params_path = split_dir / "test" / self.params_filename
-        if not train_params_path.exists():
-            raise FileNotFoundError(
-                f"No {self.params_filename} found for train split with cache_key `{cache_key}`"
-            )
-        if not test_params_path.exists():
-            raise FileNotFoundError(
-                f"No {self.params_filename} found for test split with cache_key `{cache_key}`"
-            )
-        train_friendly_name = load_yaml(train_params_path).get("friendly_name")
-        if not train_friendly_name:
-            raise RuntimeError(
-                f"No `friendly_name` found in train {self.params_filename} for split with cache_key `{cache_key}`"
-            )
-        test_friendly_name = load_yaml(test_params_path).get("friendly_name")
-        if not test_friendly_name:
-            raise RuntimeError(
-                f"No `friendly_name` found in test {self.params_filename} for split with cache_key `{cache_key}`"
-            )
-        return train_friendly_name, test_friendly_name
+        """Return the (train, test) friendly names of a cached split."""
+        params_paths = {
+            which: self.splits_dir / cache_key / which / self.params_filename
+            for which in ("train", "test")
+        }
+        for which, path in params_paths.items():
+            if not path.exists():
+                raise FileNotFoundError(
+                    f"No {self.params_filename} found for {which} split with cache_key `{cache_key}`"
+                )
+        names = []
+        for which, path in params_paths.items():
+            friendly_name = load_yaml(path).get("friendly_name")
+            if not friendly_name:
+                raise RuntimeError(
+                    f"No `friendly_name` found in {which} {self.params_filename} for split with cache_key `{cache_key}`"
+                )
+            names.append(friendly_name)
+        return names[0], names[1]
 
     def get_train_test_friendly_names(self, cache_key: str) -> str:
-        split_dir = self.splits_dir / cache_key
-        params_path = split_dir / "train" / self.params_filename
+        """Return the train-part friendly name of a cached split."""
+        params_path = self.splits_dir / cache_key / "train" / self.params_filename
         if not params_path.exists():
             raise FileNotFoundError(
                 f"No {self.params_filename} found for split with cache_key `{cache_key}`"
@@ -528,9 +497,8 @@ class DataInterface:
     ) -> None:
         """Write the split to a staging directory, then publish it with one rename.
 
-        Other processes therefore see either no split or the complete split, never a
-        partial one. If another process published the same split first, this call keeps
-        theirs (unless ``override_cache`` is set).
+        Other processes never see a partial split. If another process published it first,
+        theirs is kept unless `override_cache` is set.
         """
         final_dir = self.splits_dir / cache_key
         staging_dir = make_unique_dir(self.staging_dir, "split")
@@ -556,10 +524,10 @@ class DataInterface:
                 trash_parent=self.staging_dir,
                 is_complete=self._split_dir_is_complete,
                 overwrite=self.override_cache,
-                lock=self._locked(f"split:{cache_key}"),
+                lock=self.split_lock(cache_key),
             )
         finally:
-            # No-op after a successful publish (the directory was renamed away).
+            # No-op after a successful publish.
             shutil.rmtree(staging_dir, ignore_errors=True)
 
         if published:
@@ -569,11 +537,11 @@ class DataInterface:
     def check_train_test_split_exists(self, cache_key: str) -> bool:
         return self._split_dir_is_complete(self.splits_dir / cache_key)
 
-    # --- models saving/loading -------------------------------------------
-    # Each file below is written atomically, so a reader never loads a truncated
-    # artifact. To keep duplicate jobs from training the same model and to keep every
-    # artifact in a model directory from the same run, callers should hold
-    # `model_lock(model_cache_key, data_cache_key)` across training and saving.
+    # --- models saving/loading ---
+    # Files are written atomically. Callers should hold `model_lock` across training
+    # and saving.
+    def _model_dir(self, model_cache_key: str, data_cache_key: str) -> Path:
+        return self.models_dir / model_cache_key / data_cache_key
 
     def pickle_model(
         self,
@@ -582,12 +550,8 @@ class DataInterface:
         data_cache_key: str,
         save_as_refit: bool = False,
     ) -> None:
-        path = self.models_dir / model_cache_key / data_cache_key
-        path = (
-            path / self.model_refit_filename
-            if save_as_refit
-            else path / self.model_filename
-        )
+        filename = self.model_refit_filename if save_as_refit else self.model_filename
+        path = self._model_dir(model_cache_key, data_cache_key) / filename
         logging.info(f"Saving trained model to `{path}`")
         atomic_pickle_dump(model, path)
 
@@ -598,9 +562,7 @@ class DataInterface:
         data_cache_key: str,
     ) -> None:
         path = (
-            self.models_dir
-            / model_cache_key
-            / data_cache_key
+            self._model_dir(model_cache_key, data_cache_key)
             / self.model_metadata_filename
         )
         atomic_yaml_dump(metadata, path)
@@ -608,7 +570,7 @@ class DataInterface:
     def unpickle_model(
         self, model_cache_key: str, data_cache_key: str
     ) -> PredictorBase:
-        path = self.models_dir / model_cache_key / data_cache_key / self.model_filename
+        path = self._model_dir(model_cache_key, data_cache_key) / self.model_filename
         if not path.exists():
             raise FileNotFoundError(f"Model file not found at {path}")
         return load_pickle(path)
@@ -617,9 +579,7 @@ class DataInterface:
         self, metrics: Dict, model_cache_key: str, data_cache_key: str
     ) -> None:
         path = (
-            self.models_dir
-            / model_cache_key
-            / data_cache_key
+            self._model_dir(model_cache_key, data_cache_key)
             / self.model_metrics_filename
         )
         atomic_yaml_dump(metrics, path)
@@ -647,19 +607,16 @@ class DataInterface:
         return load_yaml(path)
 
     def dump_training_logs(self, model_cache_key: str, data_cache_key: str) -> None:
-        path = self.models_dir / model_cache_key / data_cache_key / "training_log"
+        path = self._model_dir(model_cache_key, data_cache_key) / "training_log"
         self.dump_logs(path)
 
     def dump_gin_config_to_model_dir(
         self, model_cache_key: str, data_cache_key: str
     ) -> None:
-        path = self.models_dir / model_cache_key / data_cache_key
-        self.dump_gin_config(path)
+        self.dump_gin_config(self._model_dir(model_cache_key, data_cache_key))
 
-    # --- registries ------------------------------------------------------
-    # Registries are derived from what is on disk. Each update holds a lock across both
-    # the scan and the write, so a slow process cannot overwrite a newer listing with
-    # an older one.
+    # --- registries ---
+    # The lock spans scan and write, so a slow process cannot write a stale listing.
     def update_registries(self) -> None:
         self.update_datasets_registry()
         self.update_splits_registry()
@@ -677,21 +634,20 @@ class DataInterface:
             )
 
     def update_splits_registry(self) -> None:
-        Split = namedtuple("Split", ["friendly_name", "timestamp"])
         with self._locked("registry:splits"):
-            splits: List[Tuple[str, str]] = []
+            splits: List[_Split] = []
             for yaml_path in iter_files(self.splits_dir, ".yaml"):
                 fname = safe_load_yaml(yaml_path).get("friendly_name")
                 ts = read_first_line(yaml_path.parent.parent / self.console_log_filename)
                 if fname:
-                    splits.append(Split(fname, ts))
+                    splits.append(_Split(fname, ts))
             splits.sort(key=lambda s: s.timestamp)
             atomic_write_text(
                 "".join(f"{s.timestamp} {s.friendly_name}\n" for s in splits),
                 self.splits_dir / self.registry_filename,
             )
 
-    # --- classification helpers -----------------------------------------
+    # --- classification helpers ---
     def _parse_classification_threshold(self, dataset_dir_path: Path) -> float:
         cfg = self._read_data_config(dataset_dir_path)
         if not cfg:
@@ -699,9 +655,7 @@ class DataInterface:
                 "No data config yaml found to parse threshold for classification task."
             )
         if cfg.get("threshold_source"):
-            # Runs while this dataset's "prepared" lock is held. It only takes the lock of
-            # the *source* dataset, so it cannot deadlock unless the configs form a cycle
-            # (which would recurse forever regardless of locking).
+            # Takes only the source dataset's lock; deadlocks only on cyclic configs.
             ds = self.get_by_friendly_name(cfg["threshold_source"])
             if "y_cont" not in ds.columns:
                 raise RuntimeError("threshold_source dataset must contain `y_cont`.")
@@ -712,14 +666,12 @@ class DataInterface:
 
     def _clean_relation_series(self, df: pd.DataFrame) -> pd.Series:
         if "Standard Relation" in df.columns:
-            cleaned = (
+            return (
                 df["Standard Relation"]
                 .astype(str)
                 .str.replace(r"^['\"]|['\"]$", "", regex=True)
                 .str.strip()
             )
-            return cleaned
-        # no column found -> return empty strings
         return pd.Series([""] * len(df), index=df.index)
 
     def _assign_binary_classes_based_on_continuous_labels(
@@ -761,10 +713,9 @@ class DataInterface:
         else:
             df["class"] = (df["y"] >= threshold_value).astype(int)
 
-        # keep continuous label in `y_cont`, classification in `y`
-        df = df.rename(columns={"y": "y_cont", "class": "y"})
-        return df
+        # Keep the continuous label in `y_cont`.
+        return df.rename(columns={"y": "y_cont", "class": "y"})
 
     def save_bootstrap_metrics(self, metrics_dict, predictor_key, split_key):
-        path = self.models_dir / predictor_key / split_key / "bootstrap_data.yaml"
+        path = self._model_dir(predictor_key, split_key) / "bootstrap_data.yaml"
         atomic_yaml_dump(metrics_dict, path)

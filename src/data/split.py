@@ -1,18 +1,18 @@
+import abc
+import hashlib
+import logging
+from collections import defaultdict
+
+import gin
+import numpy as np
 import pandas as pd
-from sklearn.model_selection import train_test_split
 from rdkit import Chem
 from rdkit.Chem.Scaffolds import MurckoScaffold
-import numpy as np
-import abc
-import gin
-import logging
-import hashlib
+from sklearn.model_selection import train_test_split
 
 
 class DataSplitterBase(abc.ABC):
-    """
-    Abstract base class for data splitters.
-    """
+    """Base class for train/test data splitters."""
 
     def __init__(self, test_size=0.2, random_state=42):
         self.test_size = test_size
@@ -20,55 +20,45 @@ class DataSplitterBase(abc.ABC):
 
     @abc.abstractmethod
     def split(self, X: pd.Series, y: pd.Series):
-        """
-        Split the dataset into training and testing sets.
-        """
+        """Split the dataset into `X_train, X_test, y_train, y_test`."""
         pass
 
     @abc.abstractmethod
     def get_hashable_params_values(self) -> list:
+        """Return parameters for hashing/caching purposes."""
         pass
 
     @property
     @abc.abstractmethod
     def name(self):
+        """Short splitter name."""
         pass
 
     @staticmethod
     def _get_number_of_classes(labels):
-        if not isinstance(labels, pd.Series):
-            labels = pd.Series(labels)
-        return len(labels.unique())
+        return pd.Series(labels).nunique()
 
-    def get_friendly_name(
-        self,
-        multiple_friendly_names: list[str],
-    ) -> str:
+    def get_friendly_name(self, multiple_friendly_names: list[str]) -> str:
+        """Build a compact name from dataset names plus the splitter cache key.
 
-        generated_name_chunks: list[str] = [
-            "_".join([part[:3] for part in name.split("_")[:3]])
+        Each name is shortened to the first 3 chars of its first 3 `_`-separated parts.
+        """
+        name_chunks = [
+            "_".join(part[:3] for part in name.split("_")[:3])
             for name in multiple_friendly_names
         ]
-        generated_name_chunks.append(self.get_cache_key())
+        name_chunks.append(self.get_cache_key())
+        return "_".join(name_chunks)
 
-        return "_".join(generated_name_chunks)
-
-    def get_cache_key(self):
-        """
-        Generate a 5-character cache key.
-        """
-        params_values = self.get_hashable_params_values()
-        params_values = str(params_values).encode("utf-8")
-        hash_string = hashlib.md5(params_values).hexdigest()
-        return f"{self.name}_{hash_string[:5]}"
+    def get_cache_key(self) -> str:
+        """Return `<name>_<5-char hash of params>`."""
+        params = str(self.get_hashable_params_values()).encode("utf-8")
+        return f"{self.name}_{hashlib.md5(params).hexdigest()[:5]}"
 
 
 @gin.configurable
 class RandomSplitter(DataSplitterBase):
-    """
-    Splits the dataset into training and testing sets using random sampling.
-    The split can be stratified based on the target variable if specified.
-    """
+    """Random train/test split, optionally stratified on the target."""
 
     def __init__(
         self,
@@ -89,33 +79,30 @@ class RandomSplitter(DataSplitterBase):
     def split(
         self, X: pd.Series, y: pd.Series
     ) -> tuple[pd.Series, pd.Series, pd.Series, pd.Series]:
-
+        labels_to_stratify = None
         if self.stratify:
-            if self._get_number_of_classes(y) >= 5:
+            n_classes = self._get_number_of_classes(y)
+            if n_classes >= 5:
                 logging.warning(
-                    f"Detected {self._get_number_of_classes(y)} unique classes of {len(y)} samples. "
+                    f"Detected {n_classes} unique classes of {len(y)} samples. "
                     "Make sure you are not stratifying on a continuous target variable!"
                 )
             labels_to_stratify = y
-        else:
-            labels_to_stratify = None
 
-        X_train, X_test, y_train, y_test = train_test_split(
+        return train_test_split(
             X,
             y,
             test_size=self.test_size,
             random_state=self.random_state,
             stratify=labels_to_stratify,
         )
-        return X_train, X_test, y_train, y_test
 
 
 @gin.configurable
 class ScaffoldSplitter(DataSplitterBase):
-    """
-    Splits the dataset into training and testing sets based on molecular (Murcko) scaffolds.
-    This ensures that molecules with similar scaffolds are not split between training and testing sets,
-    providing a more challenging and realistic task for model evaluation.
+    """Train/test split on Murcko scaffolds, so no scaffold spans both sets.
+
+    Gives a harder, more realistic evaluation than a random split.
     """
 
     def __init__(self, test_size=0.2, random_state=42):
@@ -131,24 +118,17 @@ class ScaffoldSplitter(DataSplitterBase):
     def split(
         self, X: pd.Series, y: pd.Series
     ) -> tuple[pd.Series, pd.Series, pd.Series, pd.Series]:
-        scaffolds = {}
-
-        # Group molecules by their scaffolds, storing indices of molecules with the same scaffold
-        # in a dictionary with scaffold SMILES as keys.
+        # Scaffold SMILES -> positional indices of its molecules.
+        scaffolds = defaultdict(list)
         for i, smi in enumerate(X):
-            mol = Chem.MolFromSmiles(smi)
-            scaffold = MurckoScaffold.GetScaffoldForMol(mol)
-            scaffold_smiles = Chem.MolToSmiles(scaffold)
-            if scaffold_smiles not in scaffolds:
-                scaffolds[scaffold_smiles] = []
-            scaffolds[scaffold_smiles].append(i)
+            scaffold = MurckoScaffold.GetScaffoldForMol(Chem.MolFromSmiles(smi))
+            scaffolds[Chem.MolToSmiles(scaffold)].append(i)
 
-        # Shuffle the scaffold sets to ensure randomness in the split
         scaffold_sets = list(scaffolds.values())
         np.random.seed(self.random_state)
         np.random.shuffle(scaffold_sets)
 
-        # Split the scaffold sets into training and testing sets
+        # Greedily fill the test set with whole scaffold groups that still fit.
         train_indices, test_indices = [], []
         n_test = int(len(X) * self.test_size)
         for scaffold_set in scaffold_sets:
@@ -156,6 +136,16 @@ class ScaffoldSplitter(DataSplitterBase):
                 test_indices.extend(scaffold_set)
             else:
                 train_indices.extend(scaffold_set)
+
+        # Every group exceeded `n_test`: fall back to the smallest one as test set.
+        if not test_indices:
+            if len(scaffold_sets) < 2:
+                raise ValueError("Scaffold split needs at least two distinct scaffolds.")
+            smallest = min(scaffold_sets, key=len)
+            test_indices = smallest
+            train_indices = [
+                i for group in scaffold_sets if group is not smallest for i in group
+            ]
 
         X_train, X_test = X.iloc[train_indices], X.iloc[test_indices]
         y_train, y_test = y.iloc[train_indices], y.iloc[test_indices]

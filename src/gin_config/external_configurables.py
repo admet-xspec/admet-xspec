@@ -1,3 +1,5 @@
+"""Register third-party classes and functions as gin configurables."""
+
 from chemprop import nn, featurizers
 import gin
 import numpy as np
