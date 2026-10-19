@@ -6,8 +6,8 @@ project = 'ADMET-Xspec'
 copyright = '2026, Rybka, Masztalerz'
 author = 'H. Rybka & K. Masztalerz'
 
-release = '1.0'
-version = '1.0.3'
+release = '1.1'
+version = '1.1.0'
 
 # -- General configuration
 
