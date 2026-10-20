@@ -105,6 +105,7 @@ experiment, are outlined below:
    │   ├── ecfp.gin                         # ECFP4
    │   ├── krfp.gin                         # Klekota-Roth fingerprint
    │   ├── maccs.gin                        # MACCS keys fingerprint
+   │   ├── minimol.gin                      # MiniMol pre-trained GNN embeddings (see external/minimol)
    │   ├── property.gin                     # RDKit physicochemical descriptors
    │   ├── none.gin                         # No featurizer
    │   └── proprietary                      # Internal fingerprints of the similarity filters

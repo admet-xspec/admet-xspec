@@ -237,7 +237,8 @@ In ``hyperparams.yaml``, the architecture is always saved as a ``hidden_layer_si
 
 **Featurizers.** The MLP does not scale its input features. ``property.gin`` features are already standardized, and
 bit fingerprints (``ecfp.gin``, ``maccs.gin``, ``krfp.gin``) are binary. ``ecfp_count.gin`` features are unscaled
-counts, which can slow down or destabilize training.
+counts, which can slow down or destabilize training. ``minimol.gin`` embeddings are unscaled too, but within a
+narrow range (roughly 0 to 8).
 
 **Convergence warnings.** scikit-learn emits a ``ConvergenceWarning`` when training reaches ``max_iter`` before
 converging. These warnings are not suppressed, and during hyperparameter optimization they can be expected for some

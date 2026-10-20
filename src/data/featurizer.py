@@ -1,5 +1,7 @@
 import abc
 import logging
+import os
+import subprocess
 import tempfile
 from typing import List, Hashable
 import hashlib
@@ -15,11 +17,23 @@ from rdkit.Chem import Descriptors, MACCSkeys
 from rdkit.Chem.rdFingerprintGenerator import GetMorganGenerator
 from sklearn.preprocessing import StandardScaler
 
+_DEFAULT_CACHE_DIR = pathlib.Path(tempfile.gettempdir()) / "admet_fp_cache"
+
+
+@gin.configurable
+def fp_cache_dir(path: str | None = None) -> pathlib.Path:
+    """Return the directory of the on-disk featurizer cache.
+
+    Taken from gin (`fp_cache_dir.path`), then `$ADMET_FP_CACHE_DIR`, then the system
+    temp dir. Point it at shared storage when the temp dir is node-local (e.g. SLURM).
+    """
+    path = path or os.environ.get("ADMET_FP_CACHE_DIR")
+    return pathlib.Path(path) if path else _DEFAULT_CACHE_DIR
+
 
 class FeaturizerBase(abc.ABC):
     """Base class for molecular featurizers."""
 
-    _DEFAULT_CACHE_DIR = pathlib.Path(tempfile.gettempdir()) / "admet_fp_cache"
     # False for featurizers with a fitted scaler, whose output varies between runs.
     _use_disk_cache: bool = True
     # Set False per instance to bypass caching entirely (e.g. in tests).
@@ -31,7 +45,7 @@ class FeaturizerBase(abc.ABC):
             return
         self._smiles_cache: dict[str, np.ndarray] = {}
         if self._use_disk_cache:
-            cache_file = self._DEFAULT_CACHE_DIR / f"{self.get_cache_key()}.pkl"
+            cache_file = fp_cache_dir() / f"{self.get_cache_key()}.pkl"
             self._disk_cache_path = cache_file
             cache_file.parent.mkdir(parents=True, exist_ok=True)
             if cache_file.exists():
@@ -306,3 +320,83 @@ class PropertyEcfpFeaturizer(FeaturizerBase):
             *self.ecfp.get_hashable_params_values(),
             *self.properties.get_hashable_params_values(),
         ]
+
+
+@gin.configurable
+class MinimolFeaturizer(FeaturizerBase):
+    """MiniMol pre-trained GNN embedding featurizer (512 dimensions).
+
+    MiniMol's dependencies clash with ours, so it runs in a subprocess inside the
+    isolated venv in `env_dir`; see `external/minimol/README.md` for setup.
+    Paper: https://arxiv.org/abs/2406.14986
+    """
+
+    def __init__(self, env_dir: str = "external/minimol", batch_size: int = 1000):
+        # Kept as given and resolved per call, so pickled predictors stay portable.
+        self.env_dir = env_dir
+        self.batch_size = batch_size
+
+    def _compute_features(self, smiles_list: List[str]) -> np.ndarray:
+        """Embed SMILES with the MiniMol worker, raising if any molecule fails."""
+        env_dir = pathlib.Path(self.env_dir)
+        python = env_dir / ".venv" / "bin" / "python"
+        if not python.exists():
+            raise FileNotFoundError(
+                f"MiniMol environment not found at {python}. "
+                f"Run `{env_dir / 'setup.sh'}` to create it."
+            )
+
+        logging.info(f"{self.name}: embedding {len(smiles_list)} molecules.")
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            input_path = pathlib.Path(tmp_dir) / "smiles.txt"
+            output_path = pathlib.Path(tmp_dir) / "embeddings.npy"
+            # One terminated line per SMILES, so empty entries keep their position.
+            input_path.write_text("".join(f"{smi}\n" for smi in smiles_list))
+            # Our venv must not leak into the worker's interpreter.
+            env = {
+                k: v
+                for k, v in os.environ.items()
+                if k not in ("PYTHONPATH", "VIRTUAL_ENV")
+            }
+            result = subprocess.run(
+                [
+                    str(python),
+                    "-I",
+                    str(env_dir / "embed.py"),
+                    "--input",
+                    str(input_path),
+                    "--output",
+                    str(output_path),
+                    "--batch-size",
+                    str(self.batch_size),
+                ],
+                capture_output=True,
+                text=True,
+                env=env,
+            )
+            if result.returncode != 0:
+                raise RuntimeError(
+                    f"{self.name}: MiniMol worker failed:\n{result.stderr[-5000:]}"
+                )
+            embeddings = np.load(output_path)
+
+        failed = [
+            smi for smi, row in zip(smiles_list, embeddings) if np.isnan(row).any()
+        ]
+        if failed:
+            raise ValueError(
+                f"{self.name}: MiniMol failed to embed {len(failed)} SMILES: {failed[:10]}"
+            )
+        return embeddings
+
+    @property
+    def feature_name(self) -> str:
+        return "emb_minimol"
+
+    @property
+    def name(self) -> str:
+        return "minimol_featurizer"
+
+    def get_hashable_params_values(self) -> List[Hashable]:
+        # Batch size and device don't change the embeddings, only the checkpoint does.
+        return ["minimol_v1"]

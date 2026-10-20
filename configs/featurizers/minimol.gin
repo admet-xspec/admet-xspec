@@ -1,0 +1,6 @@
+# Requires the isolated MiniMol environment: run `external/minimol/setup.sh` once.
+MinimolFeaturizer.env_dir = 'external/minimol'
+MinimolFeaturizer.batch_size = 1000
+
+featurizer/gin.singleton.constructor = @MinimolFeaturizer
+featurizer = @featurizer/gin.singleton()
