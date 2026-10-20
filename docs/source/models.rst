@@ -184,6 +184,73 @@ or minimizes them as appropriate.
 Optimization trials run in parallel. See ``n_optim_jobs``, ``n_threads_per_trial`` and ``n_cpus`` in :doc:`config`
 to control how the CPU budget is shared between trials.
 
+.. _mlp-predictors:
+
+MLP predictors
+--------------
+
+:class:`~src.predictor.scikit_predictors.MlpRegressor` (``MLP_reg``) and
+:class:`~src.predictor.scikit_predictors.MlpClassifier` (``MLP_clf``) wrap scikit-learn's
+``MLPRegressor`` and ``MLPClassifier``. They are configured in ``configs/predictors/{classifiers,regressors}/mlp.gin``
+(and ``mlp_attributed.gin``), and ``configs/examples/train_mlp_optimize.gin`` is a ready-to-run experiment that
+optimizes an MLP regressor:
+
+.. code-block:: text
+
+   MlpRegressor.params = {
+       'hidden_layer_sizes': [512, 256],
+       'activation': 'relu',
+       'alpha': 0.001,
+       'learning_rate_init': 0.001,
+       'batch_size': 64,
+       }
+
+Any keyword argument of the scikit-learn estimator can be set in ``params``. Unless overridden there, the predictor
+sets the following defaults:
+
+- ``random_state`` -- the predictor's ``random_state`` (default ``42``), so weight initialization, batch
+  shuffling and the early-stopping split are reproducible;
+- ``early_stopping = True`` -- training stops once the score on an internal validation split (10% of the train set,
+  stratified for the classifier) stops improving for 10 epochs;
+- ``max_iter = 500`` -- the maximum number of epochs.
+
+**Network architecture.** ``hidden_layer_sizes`` lists the widths of the hidden layers. Optuna cannot sample lists, so
+the search space describes the architecture with two scalar hyperparameters instead, which the predictor translates
+into ``hidden_layer_sizes = [hidden_layer_width] * n_hidden_layers``:
+
+.. code-block:: text
+
+   ProcessingPipeline.params_distribution = {
+       'n_hidden_layers': ('int', 1, 3),
+       'hidden_layer_width': ('int_log', 64, 1024),
+       'alpha': ('float_log', 1e-6, 1e-1),
+       'learning_rate_init': ('float_log', 1e-4, 1e-2),
+       'batch_size': ('categorical', [32, 64, 128, 256]),
+       'activation': ('categorical', ['relu', 'tanh'])
+       }
+
+``n_hidden_layers`` and ``hidden_layer_width`` must be given together and cannot be combined with
+``hidden_layer_sizes``. They can also be used in ``params``. The search space only covers networks whose hidden layers
+all have the same width; tapered networks (e.g. ``[512, 256]``) can only be set as fixed ``hidden_layer_sizes``.
+In ``hyperparams.yaml``, the architecture is always saved as a ``hidden_layer_sizes`` list, so
+``train_load_hyperparams.gin`` can reuse it.
+
+**Featurizers.** The MLP does not scale its input features. ``property.gin`` features are already standardized, and
+bit fingerprints (``ecfp.gin``, ``maccs.gin``, ``krfp.gin``) are binary. ``ecfp_count.gin`` features are unscaled
+counts, which can slow down or destabilize training.
+
+**Convergence warnings.** scikit-learn emits a ``ConvergenceWarning`` when training reaches ``max_iter`` before
+converging. These warnings are not suppressed, and during hyperparameter optimization they can be expected for some
+trials (e.g. with a low ``learning_rate_init``). Frequent warnings with the final hyperparameters suggest raising
+``max_iter`` in ``params``.
+
+**Threading.** scikit-learn MLPs have no ``n_jobs`` parameter, so the pipeline treats them as single-threaded models:
+during hyperparameter optimization, each trial gets one thread (its BLAS thread pool is limited accordingly) and the
+CPUs are used by running more trials concurrently. Outside of optimization, BLAS uses its default number of threads.
+
+Attributed learning (``mlp_attributed.gin``) works as for the other models: the endpoint one-hot vector is appended to
+the features.
+
 Where are the models saved?
 ---------------------------
 

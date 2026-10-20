@@ -90,6 +90,7 @@ experiment, are outlined below:
    │   ├── experiment_template.gin
    │   ├── predict.gin
    │   ├── train_lgbm.gin
+   │   ├── train_mlp_optimize.gin
    │   ├── train_rf_attributed.gin
    │   └── train_rf_optimize.gin
    ├── processing_plans
@@ -112,23 +113,29 @@ experiment, are outlined below:
    │   ├── classifiers                      # Classifiers hyperparams
    │   │   ├── lgbm_attributed.gin
    │   │   ├── lgbm.gin
+   │   │   ├── mlp_attributed.gin
+   │   │   ├── mlp.gin
    │   │   ├── rf_attributed.gin
    │   │   ├── rf.gin
    │   │   ├── svm_attributed.gin
    │   │   ├── svm.gin
    │   │   └── optimization                 # Optuna hyperparam distributions
    │   │       ├── lgbm_hyperparams.gin
+   │   │       ├── mlp_hyperparams.gin
    │   │       ├── rf_hyperparams.gin
    │   │       └── svm_hyperparams.gin
    │   └── regressors                       # Regressors hyperparams
    │       ├── lgbm_attributed.gin
    │       ├── lgbm.gin
+   │       ├── mlp_attributed.gin
+   │       ├── mlp.gin
    │       ├── rf_attributed.gin
    │       ├── rf.gin
    │       ├── svm_attributed.gin
    │       ├── svm.gin
    │       └── optimization                 # Optuna hyperparam distributions
    │           ├── lgbm_hyperparams.gin
+   │           ├── mlp_hyperparams.gin
    │           ├── rf_hyperparams.gin
    │           └── svm_hyperparams.gin
    ├── sim_filters
@@ -146,6 +153,9 @@ experiment, are outlined below:
 Each predictor config (e.g. ``configs/predictors/classifiers/lgbm.gin``) sets the fixed hyperparameters of the model
 and includes the matching file from ``optimization/``, which defines the search space used by ``train_optimize.gin``
 (see :doc:`models`). The ``*_attributed.gin`` variants additionally set ``do_attributed_learning = True``.
+
+The available predictor configs are LightGBM (``lgbm``), multi-layer perceptron (``mlp``), random forest (``rf``) and
+support vector machine (``svm``). The MLP has some specifics described in :ref:`mlp-predictors`.
 
 .. note::
 

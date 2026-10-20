@@ -1,0 +1,15 @@
+predictor/gin.singleton.constructor = @MlpRegressor
+predictor = @predictor/gin.singleton()
+
+MlpRegressor.params = {
+    'hidden_layer_sizes': [512, 256],
+    'activation': 'relu',
+    'alpha': 0.001,
+    'learning_rate_init': 0.001,
+    'batch_size': 64,
+    }
+
+MlpRegressor.do_attributed_learning = True
+
+# Include hyperparameter optimization config
+include 'configs/predictors/regressors/optimization/mlp_hyperparams.gin'

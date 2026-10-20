@@ -3,7 +3,9 @@ from typing import Any, Type
 
 import gin
 import lightgbm as lgb
+import numpy as np
 import sklearn
+import sklearn.neural_network
 import xgboost as xgb
 
 from src.predictor.predictor_base import BinaryClassifierBase, RegressorBase
@@ -150,6 +152,87 @@ class LightGbmRegressor(_ScikitRegressorBase):
     @property
     def name(self) -> str:
         return "LightGBM_reg"
+
+
+class _ScikitMlpBase(_ScikitEstimatorBase):
+    """Shared behavior for sklearn MLPs.
+
+    Optuna cannot sample tuples, and tuples do not survive the hyperparams YAML
+    round-trip, so the architecture can also be given as the scalars
+    `n_hidden_layers` and `hidden_layer_width`. `hidden_layer_sizes` is always
+    stored as a list of ints.
+    """
+
+    arch_params = ("n_hidden_layers", "hidden_layer_width")
+
+    def _base_estimator_kwargs(self) -> dict[str, Any]:
+        return {
+            "random_state": self.random_state,
+            "early_stopping": True,
+            "max_iter": 500,
+        }
+
+    def set_hyperparameters(self, params: dict[str, Any]) -> None:
+        """Translate architecture scalars into `hidden_layer_sizes`, then apply."""
+        params = dict(params)
+        given = [key for key in self.arch_params if key in params]
+        if given:
+            if len(given) != len(self.arch_params):
+                raise ValueError(
+                    f"Hyperparameters {list(self.arch_params)} must be given together, got only {given}."
+                )
+            if "hidden_layer_sizes" in params:
+                raise ValueError(
+                    f"Give either `hidden_layer_sizes` or {list(self.arch_params)}, not both."
+                )
+            n_layers = int(params.pop("n_hidden_layers"))
+            width = int(params.pop("hidden_layer_width"))
+            if n_layers < 1 or width < 1:
+                raise ValueError(
+                    f"`n_hidden_layers` and `hidden_layer_width` must be >= 1, got {n_layers} and {width}."
+                )
+            params["hidden_layer_sizes"] = [width] * n_layers
+        if "hidden_layer_sizes" in params:
+            params["hidden_layer_sizes"] = self._as_layer_list(
+                params["hidden_layer_sizes"]
+            )
+        super().set_hyperparameters(params)
+
+    def get_hyperparameters(self) -> dict[str, Any]:
+        """Return hyperparameters with `hidden_layer_sizes` as a list of ints."""
+        hyperparams = super().get_hyperparameters()
+        if "hidden_layer_sizes" in hyperparams:
+            hyperparams["hidden_layer_sizes"] = self._as_layer_list(
+                hyperparams["hidden_layer_sizes"]
+            )
+        return hyperparams
+
+    @staticmethod
+    def _as_layer_list(sizes: Any) -> list[int]:
+        """Return layer sizes (an int or a sequence) as a list of Python ints."""
+        return [int(size) for size in np.atleast_1d(sizes)]
+
+
+@gin.configurable()
+class MlpRegressor(_ScikitMlpBase, RegressorBase):
+    """Multi-layer perceptron regressor wrapper."""
+
+    estimator_cls = sklearn.neural_network.MLPRegressor
+
+    @property
+    def name(self) -> str:
+        return "MLP_reg"
+
+
+@gin.configurable()
+class MlpClassifier(_ScikitMlpBase, BinaryClassifierBase):
+    """Multi-layer perceptron classifier wrapper."""
+
+    estimator_cls = sklearn.neural_network.MLPClassifier
+
+    @property
+    def name(self) -> str:
+        return "MLP_clf"
 
 
 def validate_lgbm_specific_params(params: dict[str, Any] | None) -> None:
