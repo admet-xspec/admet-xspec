@@ -113,7 +113,16 @@ class ScaffoldSplitter(DataSplitterBase):
         return "scaffold"
 
     def get_hashable_params_values(self):
-        return [self.test_size, self.random_state]
+        # "v2": stereo-agnostic scaffolds; keeps v1 cached splits from being reused.
+        return [self.test_size, self.random_state, "v2"]
+
+    @staticmethod
+    def _scaffold(smi: str) -> str:
+        mol = Chem.MolFromSmiles(smi)
+        if mol is None:
+            raise ValueError(f"Invalid SMILES, cannot compute scaffold: {smi!r}")
+        # Ignore stereo, so stereoisomers of one ring system share a group.
+        return MurckoScaffold.MurckoScaffoldSmiles(mol=mol, includeChirality=False)
 
     def split(
         self, X: pd.Series, y: pd.Series
@@ -121,12 +130,13 @@ class ScaffoldSplitter(DataSplitterBase):
         # Scaffold SMILES -> positional indices of its molecules.
         scaffolds = defaultdict(list)
         for i, smi in enumerate(X):
-            scaffold = MurckoScaffold.GetScaffoldForMol(Chem.MolFromSmiles(smi))
-            scaffolds[Chem.MolToSmiles(scaffold)].append(i)
+            scaffolds[self._scaffold(smi)].append(i)
 
         scaffold_sets = list(scaffolds.values())
-        np.random.seed(self.random_state)
-        np.random.shuffle(scaffold_sets)
+        if len(scaffold_sets) < 2:
+            raise ValueError("Scaffold split needs at least two distinct scaffolds.")
+        rng = np.random.RandomState(self.random_state)
+        rng.shuffle(scaffold_sets)
 
         # Greedily fill the test set with whole scaffold groups that still fit.
         train_indices, test_indices = [], []
@@ -139,14 +149,18 @@ class ScaffoldSplitter(DataSplitterBase):
 
         # Every group exceeded `n_test`: fall back to the smallest one as test set.
         if not test_indices:
-            if len(scaffold_sets) < 2:
-                raise ValueError("Scaffold split needs at least two distinct scaffolds.")
             smallest = min(scaffold_sets, key=len)
             test_indices = smallest
             train_indices = [
                 i for group in scaffold_sets if group is not smallest for i in group
             ]
+            logging.warning(
+                f"No scaffold group fits test_size={self.test_size}; using the smallest "
+                f"group as test set ({len(test_indices) / len(X):.1%} of samples)."
+            )
 
+        # Keep the input order within each set.
+        train_indices, test_indices = sorted(train_indices), sorted(test_indices)
         X_train, X_test = X.iloc[train_indices], X.iloc[test_indices]
         y_train, y_test = y.iloc[train_indices], y.iloc[test_indices]
         return X_train, X_test, y_train, y_test
