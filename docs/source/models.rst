@@ -215,25 +215,39 @@ sets the following defaults:
 - ``max_iter = 500`` -- the maximum number of epochs.
 
 **Network architecture.** ``hidden_layer_sizes`` lists the widths of the hidden layers. Optuna cannot sample lists, so
-the search space describes the architecture with two scalar hyperparameters instead, which the predictor translates
-into ``hidden_layer_sizes = [hidden_layer_width] * n_hidden_layers``:
+the search space describes the architecture with scalar hyperparameters instead, which the predictor translates into
+``hidden_layer_sizes``:
 
 .. code-block:: text
 
    ProcessingPipeline.params_distribution = {
        'n_hidden_layers': ('int', 1, 3),
        'hidden_layer_width': ('int_log', 64, 1024),
+       'layer_shape': ('categorical', ['constant', 'funnel', 'free']),
        'alpha': ('float_log', 1e-6, 1e-1),
        'learning_rate_init': ('float_log', 1e-4, 1e-2),
        'batch_size': ('categorical', [32, 64, 128, 256]),
        'activation': ('categorical', ['relu', 'tanh'])
        }
 
-``n_hidden_layers`` and ``hidden_layer_width`` must be given together and cannot be combined with
-``hidden_layer_sizes``. They can also be used in ``params``. The search space only covers networks whose hidden layers
-all have the same width; tapered networks (e.g. ``[512, 256]``) can only be set as fixed ``hidden_layer_sizes``.
-In ``hyperparams.yaml``, the architecture is always saved as a ``hidden_layer_sizes`` list, so
-``train_load_hyperparams.gin`` can reuse it.
+``n_hidden_layers`` is the number of hidden layers and ``hidden_layer_width`` the width of the first one.
+``layer_shape`` sets the widths of the following layers:
+
+- ``constant`` -- every layer is ``hidden_layer_width`` wide, e.g. ``[512, 512, 512]``;
+- ``funnel`` -- each layer is half as wide as the previous one, e.g. ``[512, 256, 128]``;
+- ``free`` -- every layer gets its own width, e.g. ``[512, 96, 700]``. The widths of layers 2, 3, ... are sampled as
+  ``hidden_layer_width_2``, ``hidden_layer_width_3``, ... from the ``hidden_layer_width`` distribution. These are
+  conditional hyperparameters: a trial only samples the widths of the layers it has, and trials with another shape
+  sample none.
+
+Omitting ``layer_shape`` restricts the search to ``constant`` networks, and a shape can be excluded by leaving it out
+of the list. ``layer_shape`` can only be sampled together with ``n_hidden_layers`` and ``hidden_layer_width``.
+
+The same scalars can be used in ``params``, e.g. ``'n_hidden_layers': 3, 'hidden_layer_width': 512,
+'layer_shape': 'funnel'``. ``n_hidden_layers`` and ``hidden_layer_width`` must be given together and cannot be combined
+with ``hidden_layer_sizes``. ``layer_shape`` defaults to ``constant``, and the ``free`` shape needs exactly
+``hidden_layer_width_2`` to ``hidden_layer_width_<n_hidden_layers>``. In ``hyperparams.yaml``, the architecture is
+always saved as a ``hidden_layer_sizes`` list, so ``train_load_hyperparams.gin`` can reuse it.
 
 **Featurizers.** The MLP does not scale its input features. ``property.gin`` features are already standardized, and
 bit fingerprints (``ecfp.gin``, ``maccs.gin``, ``krfp.gin``) are binary. ``ecfp_count.gin`` features are unscaled

@@ -26,7 +26,6 @@ from src.utils import (
     get_available_cpus,
     log_markdown_table,
     plan_parallel_trials,
-    sample_optuna_params,
     parse_project_version
 )
 
@@ -722,7 +721,9 @@ class ProcessingPipeline:
                 memo[id(shared_featurizer)] = shared_featurizer
             trial_predictor = deepcopy(self.predictor, memo)
             trial_predictor.set_n_threads(threads_per_trial)
-            params = sample_optuna_params(trial, self.params_distribution)
+            params = trial_predictor.sample_hyperparameters(
+                trial, self.params_distribution
+            )
             logging.debug(f"Trial {trial.number}: {params}")
             trial_predictor.set_hyperparameters(params)
             scores = trial_predictor.cross_validate(

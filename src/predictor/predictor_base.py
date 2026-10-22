@@ -4,11 +4,12 @@ from collections import defaultdict
 from typing import Any, Iterator
 
 import numpy as np
+import optuna
 import pandas as pd
 from sklearn.model_selection import KFold, StratifiedKFold
 
 from src.data.featurizer import FeaturizerBase
-from src.utils import get_metric_callable
+from src.utils import get_metric_callable, sample_optuna_params
 
 
 HyperParams = dict[str, Any]
@@ -74,6 +75,16 @@ class PredictorBase(abc.ABC):
     def set_hyperparameters(self, hyperparams: HyperParams) -> None:
         """Set model hyperparameters."""
         raise NotImplementedError
+
+    def sample_hyperparameters(
+        self, trial: optuna.Trial, params_distribution: dict[str, Any]
+    ) -> HyperParams:
+        """Sample hyperparameters for an Optuna trial.
+
+        Predictors with conditional search spaces override this; the result must
+        be accepted by `set_hyperparameters`, as must the trial's `params`.
+        """
+        return sample_optuna_params(trial, params_distribution)
 
     @abc.abstractmethod
     def predict(self, df: pd.DataFrame) -> pd.Series:
