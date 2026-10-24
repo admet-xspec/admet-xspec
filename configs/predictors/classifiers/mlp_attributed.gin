@@ -9,6 +9,17 @@ MlpClassifier.params = {
     'batch_size': 64,
     }
 
+# Stopping criterion: with early stopping, training stops on the score of a
+# held-out validation_fraction of the training data (accuracy) and keeps the
+# best epoch's weights; without it, it stops on the training loss and keeps the
+# last epoch's weights. Stops after n_iter_no_change epochs without an
+# improvement > tol, or after max_iter epochs (logged as not converged).
+MlpClassifier.early_stopping = True
+MlpClassifier.validation_fraction = 0.1
+MlpClassifier.n_iter_no_change = 10
+MlpClassifier.tol = 1e-4
+MlpClassifier.max_iter = 1000
+
 MlpClassifier.do_attributed_learning = True
 
 # Include hyperparameter optimization config

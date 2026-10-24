@@ -7,7 +7,7 @@
 
 ProcessingPipeline.params_distribution = {
     'n_hidden_layers': ('int', 1, 3),
-    'hidden_layer_width': ('int_log', 64, 1024),
+    'hidden_layer_width': ('int_log', 64, 2048),
     'layer_shape': ('categorical', ['constant', 'funnel', 'free']),
     'alpha': ('float_log', 1e-6, 1e-1),
     'learning_rate_init': ('float_log', 1e-4, 1e-2),

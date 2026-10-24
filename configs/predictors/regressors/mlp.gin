@@ -9,5 +9,16 @@ MlpRegressor.params = {
     'batch_size': 64,
     }
 
+# Stopping criterion: with early stopping, training stops on the score of a
+# held-out validation_fraction of the training data (R²) and keeps the
+# best epoch's weights; without it, it stops on the training loss and keeps the
+# last epoch's weights. Stops after n_iter_no_change epochs without an
+# improvement > tol, or after max_iter epochs (logged as not converged).
+MlpRegressor.early_stopping = True
+MlpRegressor.validation_fraction = 0.1
+MlpRegressor.n_iter_no_change = 10
+MlpRegressor.tol = 1e-4
+MlpRegressor.max_iter = 1000
+
 # Include hyperparameter optimization config
 include 'configs/predictors/regressors/optimization/mlp_hyperparams.gin'

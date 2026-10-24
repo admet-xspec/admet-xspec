@@ -1,14 +1,17 @@
 import logging
 import re
+import warnings
 from typing import Any, Type
 
 import gin
 import lightgbm as lgb
 import numpy as np
 import optuna
+import pandas as pd
 import sklearn
 import sklearn.neural_network
 import xgboost as xgb
+from sklearn.exceptions import ConvergenceWarning
 
 from src.predictor.predictor_base import BinaryClassifierBase, RegressorBase
 from src.predictor.scikit_base import ScikitPredictorBase
@@ -170,18 +173,91 @@ class _ScikitMlpBase(_ScikitEstimatorBase):
     - `free`: layer `i` (from 2) is `hidden_layer_width_<i>` wide.
 
     `hidden_layer_sizes` is always stored as a list of ints.
+
+    The stopping criterion is set through the constructor (and so gin):
+    `early_stopping` stops on the score of a held-out `validation_fraction` of
+    the training data (R² for regressors, accuracy for classifiers) and keeps
+    the best epoch's weights; otherwise training stops on the training loss and
+    keeps the last epoch's weights. Either way, training stops after
+    `n_iter_no_change` epochs without an improvement greater than `tol`, or
+    after `max_iter` epochs, which is logged as a convergence failure. Values
+    in `params` take precedence.
     """
 
     arch_params = ("n_hidden_layers", "hidden_layer_width")
     layer_shapes = ("constant", "funnel", "free")
     _layer_width_re = re.compile(r"hidden_layer_width_\d+")
 
+    def __init__(
+        self,
+        params: dict[str, Any] | None = None,
+        random_state: int = 42,
+        do_attributed_learning: bool = False,
+        n_threads: int | None = None,
+        early_stopping: bool = True,
+        validation_fraction: float = 0.1,
+        n_iter_no_change: int = 10,
+        tol: float = 1e-4,
+        max_iter: int = 1000,
+    ) -> None:
+        super().__init__(
+            params=params,
+            random_state=random_state,
+            do_attributed_learning=do_attributed_learning,
+            n_threads=n_threads,
+        )
+        self.early_stopping = early_stopping
+        self.validation_fraction = validation_fraction
+        self.n_iter_no_change = n_iter_no_change
+        self.tol = tol
+        self.max_iter = max_iter
+
     def _base_estimator_kwargs(self) -> dict[str, Any]:
         return {
             "random_state": self.random_state,
-            "early_stopping": True,
-            "max_iter": 500,
+            "early_stopping": self.early_stopping,
+            "validation_fraction": self.validation_fraction,
+            "n_iter_no_change": self.n_iter_no_change,
+            "tol": self.tol,
+            "max_iter": self.max_iter,
         }
+
+    def train(self, df: pd.DataFrame) -> None:
+        """Fit a fresh estimator on `df`, logging a failure to converge.
+
+        Other warnings raised during fitting are re-emitted unchanged.
+        """
+        with warnings.catch_warnings(record=True) as caught:
+            warnings.simplefilter("always", ConvergenceWarning)
+            super().train(df)
+        for warning in caught:
+            if issubclass(warning.category, ConvergenceWarning):
+                self._log_convergence_error(warning.message)
+            else:
+                warnings.warn_explicit(
+                    warning.message, warning.category, warning.filename, warning.lineno
+                )
+
+    def _log_convergence_error(self, message: Warning | str) -> None:
+        """Log a convergence failure of the fitted model with its training state."""
+        model: Any = self.model
+        details = [
+            f"hidden_layer_sizes={self._as_layer_list(model.hidden_layer_sizes)}",
+            f"learning_rate_init={model.learning_rate_init}",
+            f"alpha={model.alpha}",
+        ]
+        loss = getattr(model, "loss_", None)
+        if loss is not None:
+            details.append(f"final loss={loss:.4g}")
+        # Recorded only with early stopping.
+        best_score = getattr(model, "best_validation_score_", None)
+        if best_score is not None:
+            details.append(f"best validation score={best_score:.4g}")
+        logging.warning(
+            f"{self.name} (task: {self.task}) did not converge after "
+            f"{getattr(model, 'n_iter_', '?')}/{model.max_iter} iterations "
+            f"({', '.join(details)}): {message}"
+        )
 
     def sample_hyperparameters(
         self, trial: optuna.Trial, params_distribution: dict[str, Any]
