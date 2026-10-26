@@ -15,6 +15,7 @@ import pathlib
 from rdkit import Chem
 from rdkit.Chem import Descriptors, MACCSkeys
 from rdkit.Chem.rdFingerprintGenerator import GetMorganGenerator
+from sklearn.base import BaseEstimator, TransformerMixin, clone
 from sklearn.preprocessing import StandardScaler
 
 _DEFAULT_CACHE_DIR = pathlib.Path(tempfile.gettempdir()) / "admet_fp_cache"
@@ -34,10 +35,37 @@ def fp_cache_dir(path: str | None = None) -> pathlib.Path:
 class FeaturizerBase(abc.ABC):
     """Base class for molecular featurizers."""
 
-    # False for featurizers with a fitted scaler, whose output varies between runs.
+    # False for featurizers whose output must not be cached on disk.
     _use_disk_cache: bool = True
     # Set False per instance to bypass caching entirely (e.g. in tests).
     cache_enabled: bool = True
+    # Rebuilt lazily, so never pickled: it would bloat every saved model.
+    _cache_attrs = ("_smiles_cache", "_cache_initialized", "_disk_cache_path")
+
+    def __getstate__(self):
+        """Drop the cache."""
+        state = self.__dict__.copy()
+        for attr in self._cache_attrs:
+            state.pop(attr, None)
+        return state
+
+    def __setstate__(self, state):
+        """Restore state, dropping the cache that older pickles still carry."""
+        for attr in self._cache_attrs:
+            state.pop(attr, None)
+        self.__dict__.update(state)
+
+    def make_scaler(self) -> TransformerMixin | None:
+        """Return an unfitted scaler for this featurizer's output, or None.
+
+        Featurizers stay stateless, so their output can be cached and shared;
+        the predictor fits the scaler on its training data.
+        """
+        return None
+
+    def pop_legacy_scaler(self) -> TransformerMixin | None:
+        """Return the fitted scaler of a model pickled when featurizers fitted it, or None."""
+        return None
 
     def _ensure_cache(self) -> None:
         """Lazily load the in-memory cache, seeded from disk if available."""
@@ -157,30 +185,59 @@ class EcfpFeaturizer(FeaturizerBase):
 
     def __getstate__(self):
         """Drop the unpicklable generator."""
-        state = self.__dict__.copy()
+        state = super().__getstate__()
         del state["generator"]
         return state
 
     def __setstate__(self, state):
         """Rebuild the generator after unpickling."""
-        self.__dict__.update(state)
+        super().__setstate__(state)
         self.generator = GetMorganGenerator(radius=self.radius, fpSize=self.n_bits)
+
+
+class _TailScaler(TransformerMixin, BaseEstimator):
+    """Scale the columns from `start` on, passing the leading ones through."""
+
+    def __init__(self, scaler, start: int):
+        self.scaler = scaler
+        self.start = start
+
+    def fit(self, X, y=None):
+        self.scaler_ = clone(self.scaler).fit(X[:, self.start :])
+        return self
+
+    def transform(self, X):
+        return np.hstack(
+            [X[:, : self.start], self.scaler_.transform(X[:, self.start :])]
+        )
 
 
 @gin.configurable
 class PropertyFeaturizer(FeaturizerBase):
-    """RDKit molecular property descriptor featurizer with normalization."""
+    """RDKit molecular property descriptor featurizer.
 
-    # Output depends on a fitted scaler, so disk cache would serve stale values.
-    _use_disk_cache = False
+    Returns raw descriptors, so they are disk-cached; `make_scaler` gives the
+    scaler that predictors fit on their training data.
+    """
 
     def __init__(self, scaler=None):
-        # Fresh default per instance; a shared one would be re-fit across instances.
+        # Unfitted template, cloned for every fit.
         self.scaler = scaler if scaler is not None else StandardScaler()
-        self.is_fitted = False
+
+    def __setstate__(self, state):
+        """Keep the fitted scaler of pickles from when this featurizer fitted it."""
+        if state.pop("is_fitted", False):
+            state["_legacy_scaler"] = state["scaler"]
+        super().__setstate__(state)
+
+    def make_scaler(self) -> TransformerMixin:
+        return clone(self.scaler)
+
+    def pop_legacy_scaler(self) -> TransformerMixin | None:
+        return self.__dict__.pop("_legacy_scaler", None)
 
     def _compute_features(self, smiles_list: List[str]) -> np.ndarray:
-        """Generate normalized molecular descriptors."""
+        """Generate raw molecular descriptors."""
         mols = [Chem.MolFromSmiles(smi) for smi in smiles_list]
         descriptor_dicts = [self._compute_descriptors(mol) for mol in mols]
         desc_array = pd.DataFrame(descriptor_dicts).fillna(0).to_numpy()
@@ -194,13 +251,7 @@ class PropertyFeaturizer(FeaturizerBase):
                 "Replacing with zeros."
             )
             desc_array = np.nan_to_num(desc_array, nan=0.0, posinf=0.0, neginf=0.0)
-
-        # Fit on the first call only, so later calls reuse training statistics.
-        if not self.is_fitted:
-            self.scaler.fit(desc_array)
-            self.is_fitted = True
-        desc_array = self.scaler.transform(desc_array)
-        return np.array(desc_array, dtype=np.float32)
+        return desc_array
 
     @staticmethod
     def _compute_descriptors(mol) -> dict:
@@ -293,9 +344,6 @@ class PropertyEcfpFeaturizer(FeaturizerBase):
 
     # TODO: replace with a union featurizer combining any n featurizers.
 
-    # Output depends on a fitted scaler, so disk cache would serve stale values.
-    _use_disk_cache = False
-
     def __init__(self, radius: int = 2, n_bits: int = 2048, count: bool = False):
         self.ecfp = EcfpFeaturizer(radius=radius, n_bits=n_bits, count=count)
         self.properties = PropertyFeaturizer()
@@ -305,6 +353,18 @@ class PropertyEcfpFeaturizer(FeaturizerBase):
         ecfp_features = self.ecfp.featurize(smiles_list)
         property_features = self.properties.featurize(smiles_list)
         return np.hstack((ecfp_features, property_features))
+
+    def make_scaler(self) -> TransformerMixin:
+        """Scale only the descriptors, which follow the `n_bits` ECFP columns."""
+        return _TailScaler(self.properties.make_scaler(), start=self.ecfp.n_bits)
+
+    def pop_legacy_scaler(self) -> TransformerMixin | None:
+        scaler = self.properties.pop_legacy_scaler()
+        if scaler is None:
+            return None
+        legacy = _TailScaler(clone(scaler), start=self.ecfp.n_bits)
+        legacy.scaler_ = scaler
+        return legacy
 
     @property
     def feature_name(self) -> str:

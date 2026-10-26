@@ -9,9 +9,11 @@ InferencePipeline.data_interface = %data_interface
 # Inference input dataset path (CSV with a SMILES column; replace with your own molecules)
 InferencePipeline.dataset_path = 'data/datasets/AChE/human/regression/prepared_data.csv'
 
-# Cache keys identifying the trained model in data/cache/models/<model_cache_key>/<data_cache_key>/model.pkl
+# Cache keys identifying the trained model in data/cache/models/<model_cache_key>/<data_cache_key>/
 InferencePipeline.model_cache_key = 'AChE_human_pIC50_RF_reg_ecfp_featurizer_4efda'
 InferencePipeline.data_cache_key = 'scaffold_e4737_nofilter_9a75c'
+# Use model_final_refit.pkl (refit on train + test, with its feature scaler) instead of model.pkl
+InferencePipeline.use_refit_model = True
 
 # Task/column settings
 InferencePipeline.task_setting = 'regression'

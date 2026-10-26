@@ -29,6 +29,7 @@ class InferencePipeline:
         smiles_col: str = "smiles",
         source_col: str = "source",
         target_col: str = "y",
+        use_refit_model: bool = True,
         do_evaluate: bool = True,
         do_append_to_input_file: bool = False,
         logfile: str | None = None,
@@ -43,6 +44,8 @@ class InferencePipeline:
         self.source_col = source_col
         self.target_col = target_col
         self.clean_smiles_col = f"{smiles_col}_clean"
+        # The refit model, with its feature scaler, was fit on train + test.
+        self.use_refit_model = use_refit_model
         self.do_evaluate = do_evaluate
         self.do_append_to_input_file = do_append_to_input_file
 
@@ -149,6 +152,7 @@ class InferencePipeline:
         predictor = self.data_interface.unpickle_model(
             model_cache_key=self.model_cache_key,
             data_cache_key=self.data_cache_key,
+            refit=self.use_refit_model,
         )
         if not isinstance(predictor, PredictorBase):
             raise TypeError(
@@ -253,5 +257,6 @@ class InferencePipeline:
         logging.info(f"* Dataset path: {self.dataset_path}")
         logging.info(f"* Model cache key: {self.model_cache_key}")
         logging.info(f"* Data cache key: {self.data_cache_key}")
+        logging.info(f"* Use refit model: {self.use_refit_model}")
         logging.info(f"* Task setting: {self.task_setting}")
         logging.info(f"* Output dir: {self.out_dir}")

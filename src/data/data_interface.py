@@ -572,9 +572,11 @@ class DataInterface:
         atomic_yaml_dump(metadata, path)
 
     def unpickle_model(
-        self, model_cache_key: str, data_cache_key: str
+        self, model_cache_key: str, data_cache_key: str, refit: bool = False
     ) -> PredictorBase:
-        path = self._model_dir(model_cache_key, data_cache_key) / self.model_filename
+        """Load the model trained on the train split, or with `refit` the one refit on train + test."""
+        filename = self.model_refit_filename if refit else self.model_filename
+        path = self._model_dir(model_cache_key, data_cache_key) / filename
         if not path.exists():
             raise FileNotFoundError(f"Model file not found at {path}")
         return load_pickle(path)

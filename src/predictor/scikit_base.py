@@ -4,7 +4,7 @@ from typing import Any, cast
 
 import numpy as np
 import pandas as pd
-from sklearn.base import BaseEstimator
+from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.utils.validation import check_array
 
 from src.data.featurizer import FeaturizerBase
@@ -38,8 +38,18 @@ class ScikitPredictorBase(abc.ABC):
         self.featurizer: FeaturizerBase | None = getattr(self, "featurizer", None)
         self.do_attributed_learning: bool = bool(do_attributed_learning)
         self.model: BaseEstimator | None = None
+        # Fitted in `train` on the training features; pickled with the model for inference.
+        self.feature_scaler: TransformerMixin | None = None
         self.params: dict[str, Any] = self._without_thread_param(params or {})
         self.n_threads: int | None = n_threads
+
+    def __setstate__(self, state: dict[str, Any]) -> None:
+        """Restore state, taking over the scaler that older featurizers fitted."""
+        self.__dict__.update(state)
+        if "feature_scaler" not in state:
+            self.feature_scaler = (
+                self.featurizer.pop_legacy_scaler() if self.featurizer else None
+            )
 
     @property
     def supports_threading(self) -> bool:
@@ -76,11 +86,12 @@ class ScikitPredictorBase(abc.ABC):
         """Return a fresh, untrained sklearn estimator."""
         ...
 
-    def _featurize(self, df: pd.DataFrame) -> np.ndarray:
+    def _featurize(self, df: pd.DataFrame, fit_scaler: bool = False) -> np.ndarray:
         """Convert `df` into a float32 feature matrix.
 
-        Attributed models get endpoint one-hot vectors appended, so one estimator
-        can tell endpoints apart.
+        Features are scaled with `feature_scaler`, which `fit_scaler` first refits
+        on `df` (from the featurizer's template). Attributed models get endpoint
+        one-hot vectors appended, so one estimator can tell endpoints apart.
         """
         if self.featurizer is None:
             raise ValueError(
@@ -92,6 +103,12 @@ class ScikitPredictorBase(abc.ABC):
             )
 
         X = self.featurizer.featurize(df[self.smiles_col].tolist())
+        if fit_scaler:
+            self.feature_scaler = self.featurizer.make_scaler()
+            if self.feature_scaler is not None:
+                self.feature_scaler.fit(X)
+        if self.feature_scaler is not None:
+            X = self.feature_scaler.transform(X)
         if self.is_attributed:
             X = np.hstack([X, self._endpoint_features(df)])
         return X.astype(np.float32)
@@ -130,7 +147,7 @@ class ScikitPredictorBase(abc.ABC):
             cast(Any, self)._create_endpoint_map(df[self.source_col])
         if self.params:
             self.set_hyperparameters(self.params)
-        X = self._featurize(df)
+        X = self._featurize(df, fit_scaler=True)
         y = np.array(df[self.target_col], dtype=np.float32)
         cast(Any, self.model).fit(X, y)
 
