@@ -321,6 +321,10 @@ def calibrate_domain(
     return {
         "domain": domain.get_cache_key(),
         "threshold": float(domain.threshold_),
+        # Leave-one-out scores of the training molecules, which set the threshold.
+        "reference_score_quantiles": getattr(
+            domain, "reference_score_quantiles_", None
+        ),
         "n_test": len(test_df),
         "fraction_in_domain": float(in_domain.mean()) if len(in_domain) else None,
         "in_domain": subset_metrics(predictor, y_true, preds, in_domain),

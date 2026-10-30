@@ -165,9 +165,8 @@ support vector machine (``svm``). The MLP has some specifics described in :ref:`
 
 .. note::
 
-   The ``src/predictor`` package also contains XGBoost (``XGBoostClassifier``, ``XGBoostRegressor``) and Chemprop
-   (``ChempropBinaryClassifier``, ``ChempropRegressor``) predictors. They are experimental and have no ready-made
-   config files yet.
+   The ``src/predictor`` package also contains XGBoost predictors (``XGBoostClassifier``, ``XGBoostRegressor``). They
+   are experimental and have no ready-made config files yet.
 
 Similarity filters
 ------------------

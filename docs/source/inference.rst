@@ -83,8 +83,15 @@ close the molecule is to the model's training data:
 
 The fitted domain is loaded from the cached split named by ``data_cache_key``, matching the loaded model:
 ``domain_refit.pkl`` for the refit model, ``domain.pkl`` for ``model.pkl``. If it is missing, it is fitted on the cached
-split and saved, unless ``fit_domain_if_missing = False``, in which case inference stops with an error. The log reports
-how many molecules are in the domain and, if the model was calibrated, its test metrics inside and outside the domain.
+split and saved. The log reports how many molecules are in the domain and, if the model was calibrated, its test metrics
+inside and outside the domain.
+
+The domain is resolved before predicting, so a missing domain never costs the predictions:
+
+- With ``fit_domain_if_missing = False``, a missing domain is treated as required: inference stops with an error before
+  predicting, and nothing is written. The error names the ``applicability_domain.py`` command that fits it.
+- Otherwise, a domain that cannot be loaded or fitted (e.g. because the model's split is no longer cached) is skipped
+  with a warning. The predictions are saved as usual, without the domain columns.
 
 Out-of-domain predictions are flagged, not dropped. Use the ``*_ad_similarity`` column to rank them, and the
 ``*_ad_nearest_smiles`` column to check what the model's judgement is based on.
@@ -117,7 +124,7 @@ Settings
      - Domain config to assess the predictions with (see above).
    * - ``fit_domain_if_missing``
      - ``True``
-     - Fit a missing domain on the cached split instead of stopping with an error.
+     - Fit a missing domain on the cached split. If ``False``, a missing domain stops inference before predicting.
 
 Output
 ------

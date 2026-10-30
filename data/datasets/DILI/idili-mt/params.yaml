@@ -1,0 +1,5 @@
+friendly_name: "iDILI-MT"
+raw_or_derived: "raw"
+category: "dili"
+is_chembl: false
+task_setting: "binary_classification"

@@ -42,19 +42,14 @@ templates_path = ['_templates']
 # (`@gin.configurable` must return the decorated class), and so do numpy, pandas
 # and rdkit, whose types appear in `X | None` annotations evaluated at import.
 autodoc_mock_imports = [
-    'chemprop',
     'filelock',
     'joblib',
     'lightgbm',
-    'lightning',
     'optuna',
-    'PIL',
-    'ray',
     'scipy',
     'sklearn',
     'threadpoolctl',
     'toml',
-    'torch',
     'tqdm',
     'xgboost',
 ]

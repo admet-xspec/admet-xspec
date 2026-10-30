@@ -61,59 +61,6 @@ def get_clean_smiles(smiles: str, remove_salt: bool = True) -> str | None:
         return None
 
 
-def get_nice_class_name(obj):
-    """Return the class name of `obj`."""
-    return type(obj).__name__
-
-
-def get_converted_unit(
-    val: float,
-    from_unit: str,
-    to_unit: str,
-    mol_weight: float | None = None,
-    tissue_density: float | None = 1,
-):
-    """Convert a measurement from one unit to another."""
-    aliases = {"ug ml-1": "ug/ml", "umol/L": "uM"}
-    from_unit = aliases.get(from_unit, from_unit)
-    to_unit = aliases.get(to_unit, to_unit)
-    assert to_unit == "uM", f"Conversion to unit {to_unit} not implemented yet."
-
-    assert mol_weight is not None, (
-        f"Molecular weight not provided for {from_unit}->{to_unit} conversion."
-    )
-
-    match from_unit:
-        case "ng/g":
-            return (val * tissue_density / mol_weight) / 1000
-        case "ug/g":
-            return val / mol_weight
-        case "ng/ml":
-            return (val / mol_weight) / 1000
-        case "ug/ml":
-            return val / mol_weight
-        case "ug/L":
-            return (val / mol_weight) / 1000
-        case "mg%":
-            mg_per_liter = val * 10
-            return (mg_per_liter * 1000) / mol_weight
-        case "nM":
-            return val / 1000
-        case "uM":
-            return val
-        case "nmol/g":
-            return val * tissue_density / 1000
-        case "pmol/g":
-            return val * tissue_density / 1_000_000
-        case "umol/Kg":
-            return val * tissue_density / 1000
-        case _:
-            logging.info(
-                f"Do not support conversion from {from_unit}, returning None."
-            )
-            return None
-
-
 def log_markdown_table(dictionary: dict):
     """Log a dictionary as a horizontal markdown table."""
     if not isinstance(dictionary, dict):
@@ -131,65 +78,11 @@ def log_markdown_table(dictionary: dict):
     logging.info("\n" + table + "\n")
 
 
-def parse_smiles_from_messy_csv(path: str | Path) -> pd.Series:
-    """Return the SMILES column of a CSV, accepting several common column names."""
-    SMILES_COLS = ["smiles", "SMILES", "Smiles", "molecule", "Molecule", "MOL"]
-    df = pd.read_csv(path)
-
-    smiles_cols_present = [col for col in SMILES_COLS if col in df.columns]
-    if len(smiles_cols_present) == 0:
-        raise ValueError(f"No SMILES column found. Expected one of: {SMILES_COLS}")
-    if len(smiles_cols_present) > 1:
-        raise ValueError(
-            f"Multiple SMILES columns found: {smiles_cols_present}. Expected only one of {SMILES_COLS}."
-        )
-    return df[smiles_cols_present[0]]
-
-
-def parse_targets_from_messy_csv(
-    path: str | Path, target_col_name: str = None
-) -> pd.Series | None:
-    """Return the target column of a CSV, accepting several common column names.
-
-    `target_col_name`, if given, must exist. Returns None if no target column is
-    found (e.g. inference datasets).
-    """
-    TARGET_COLS = ["y", "Y", "target", "Target", "label", "Label"]
-    df = pd.read_csv(path)
-
-    if target_col_name is not None:
-        if target_col_name not in df.columns:
-            raise ValueError(
-                f"Specified target column '{target_col_name}' not found in the data."
-            )
-        return df[target_col_name]
-
-    target_cols_present = [col for col in TARGET_COLS if col in df.columns]
-    if len(target_cols_present) == 0:
-        logging.debug(
-            f"No target column found in the dataset. Expected one of: {TARGET_COLS}"
-        )
-        return None
-    if len(target_cols_present) > 1:
-        raise ValueError(
-            f"Multiple target columns found: {target_cols_present}. Expected only one of {TARGET_COLS}."
-        )
-    return df[target_cols_present[0]]
-
-
 def detect_csv_delimiter(path: str | Path) -> str:
     """Detect the delimiter of a CSV file from its first 1024 characters."""
     with open(path, "r") as file:
         sample = file.read(1024)
     return csv.Sniffer().sniff(sample).delimiter
-
-
-def read_logfile(log_path) -> str | None:
-    """Return the log file contents, or None if it does not exist."""
-    if Path(log_path).exists():
-        with open(log_path, "r") as f:
-            return f.read()
-    return None
 
 
 def sample_optuna_params(

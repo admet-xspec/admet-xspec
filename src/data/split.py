@@ -38,18 +38,6 @@ class DataSplitterBase(abc.ABC):
     def _get_number_of_classes(labels):
         return pd.Series(labels).nunique()
 
-    def get_friendly_name(self, multiple_friendly_names: list[str]) -> str:
-        """Build a compact name from dataset names plus the splitter cache key.
-
-        Each name is shortened to the first 3 chars of its first 3 `_`-separated parts.
-        """
-        name_chunks = [
-            "_".join(part[:3] for part in name.split("_")[:3])
-            for name in multiple_friendly_names
-        ]
-        name_chunks.append(self.get_cache_key())
-        return "_".join(name_chunks)
-
     def get_cache_key(self) -> str:
         """Return `<name>_<5-char hash of params>`."""
         params = str(self.get_hashable_params_values()).encode("utf-8")

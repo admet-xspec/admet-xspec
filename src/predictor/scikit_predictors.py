@@ -389,15 +389,3 @@ class MlpClassifier(_ScikitMlpBase, BinaryClassifierBase):
     @property
     def name(self) -> str:
         return "MLP_clf"
-
-
-def validate_lgbm_specific_params(params: dict[str, Any] | None) -> None:
-    """Warn about potentially inconsistent LightGBM depth/leaf combinations."""
-    if params is None or "max_depth" not in params or "num_leaves" not in params:
-        return
-    max_depth = params["max_depth"]
-    num_leaves = params["num_leaves"]
-    if max_depth != -1 and num_leaves > 2**max_depth:
-        logging.warning(
-            f"num_leaves ({num_leaves}) should not be greater than 2^max_depth ({2 ** max_depth})."
-        )

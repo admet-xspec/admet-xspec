@@ -1,3 +1,7 @@
+# Keeps `TransformerMixin | None` annotations unevaluated, so the docs build, which
+# mocks sklearn, can import this module.
+from __future__ import annotations
+
 import abc
 import logging
 import os

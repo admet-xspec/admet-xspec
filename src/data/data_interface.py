@@ -8,13 +8,11 @@ import filelock
 import gin
 import numpy as np
 import pandas as pd
-from PIL.Image import Image
 
 from src.data.fs_utils import (
     atomic_copy_file,
     atomic_pickle_dump,
     atomic_to_csv,
-    atomic_write,
     atomic_write_text,
     atomic_yaml_dump,
     hold_lock,
@@ -144,13 +142,6 @@ class DataInterface:
                     data_interface.save_train_test_split(train_df, test_df, key, ...)
         """
         return self._locked(f"split:{cache_key}")
-
-    def model_lock(self, model_cache_key: str, data_cache_key: str) -> ContextManager[None]:
-        """Return the lock for one model dir; hold it across check, train and save.
-
-        Ensures duplicate jobs train once and all artifacts come from the same run.
-        """
-        return self._locked(f"model:{model_cache_key}/{data_cache_key}")
 
     def domain_lock(
         self, data_cache_key: str, domain_cache_key: str
@@ -476,25 +467,6 @@ class DataInterface:
             names.append(friendly_name)
         return names[0], names[1]
 
-    def get_train_test_friendly_names(self, cache_key: str) -> str:
-        """Return the train-part friendly name of a cached split."""
-        params_path = self.splits_dir / cache_key / "train" / self.params_filename
-        if not params_path.exists():
-            raise FileNotFoundError(
-                f"No {self.params_filename} found for split with cache_key `{cache_key}`"
-            )
-        friendly_name = load_yaml(params_path).get("friendly_name")
-        if not friendly_name:
-            raise RuntimeError(
-                f"No `friendly_name` found in {self.params_filename} for split with cache_key `{cache_key}`"
-            )
-        return friendly_name
-
-    def save_visualization(self, friendly_name: str, visualization: Image) -> None:
-        out = self.visualizations_dir / f"vis_{friendly_name}.png"
-        with atomic_write(out, "wb") as fh:
-            visualization.save(fh, format="PNG")
-
     def _split_dir_is_complete(self, split_dir: Path) -> bool:
         return all(
             (split_dir / which / name).exists()
@@ -566,8 +538,7 @@ class DataInterface:
         )
 
     # --- models saving/loading ---
-    # Files are written atomically. Callers should hold `model_lock` across training
-    # and saving.
+    # Files are written atomically.
     def _model_dir(self, model_cache_key: str, data_cache_key: str) -> Path:
         return self.models_dir / model_cache_key / data_cache_key
 

@@ -1,5 +1,4 @@
 import logging
-from pathlib import Path
 from typing import List
 
 import numpy as np
@@ -8,19 +7,6 @@ from rdkit import DataStructs
 from rdkit.DataStructs import ExplicitBitVect
 
 from src.data.featurizer import EcfpFeaturizer, FeaturizerBase
-
-
-def load_multiple_datasets(
-    dataset_paths: list[Path],
-) -> list[pd.DataFrame]:
-    return [pd.read_csv(ds_path) for ds_path in dataset_paths]
-
-
-def check_dataset_is_raw_chembl(dataset_path: Path) -> bool:
-    """Return True if the file looks like a raw ChEMBL export (`;`-separated)."""
-    with open(dataset_path, "r") as f:
-        first_two_lines = "".join(f.readlines()[:2])
-    return ";" in first_two_lines
 
 
 def get_label_counts(df: pd.DataFrame, column_name="source") -> dict:

@@ -1,4 +1,0 @@
-PcaReducer.n_dims = 2
-
-reducer/gin.singleton.constructor = @PcaReducer
-reducer = @explorer/gin.singleton()

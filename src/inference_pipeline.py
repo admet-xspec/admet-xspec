@@ -91,9 +91,13 @@ class InferencePipeline:
         self.predictor = self._load_predictor()
         self.task_setting = self._detect_task_setting(self.predictor)
         self.data = self._align_source_labels(self.data, self.predictor)
+        # Resolved before predicting: a required domain that is missing fails fast,
+        # and an optional one that cannot be fitted never costs the predictions.
+        if self.applicability_domain is not None:
+            self.domain = self._load_domain()
 
         predictions_df = self._predict_dataframe(self.data, self.predictor)
-        if self.applicability_domain is not None:
+        if self.domain is not None:
             predictions_df = self._assess_applicability_domain(predictions_df)
         self._save_predictions(predictions_df)
 
@@ -251,8 +255,13 @@ class InferencePipeline:
         """Return the output column of a domain column, e.g. `<label>_ad_similarity`."""
         return f"{self.label_name}_{domain_col}"
 
-    def _load_domain(self) -> ApplicabilityDomainBase:
-        """Load the fitted domain matching the model, fitting it if allowed and missing."""
+    def _load_domain(self) -> Optional[ApplicabilityDomainBase]:
+        """Load the fitted domain matching the model, fitting it if allowed and missing.
+
+        Raises if the domain is missing and `fit_domain_if_missing` is off. Otherwise a
+        domain that cannot be loaded or fitted (e.g. its split is no longer cached) is
+        skipped with a warning, and None is returned.
+        """
         domain_key = self.applicability_domain.get_cache_key()
         refit = self.use_refit_model
         if not self.data_interface.check_domain_exists(
@@ -269,13 +278,22 @@ class InferencePipeline:
                 f"Applicability domain `{domain_key}` is not fitted yet; "
                 f"fitting it on the cached split `{self.data_cache_key}`."
             )
-        return get_or_fit_domain(
-            self.applicability_domain, self.data_interface, self.data_cache_key, refit
-        )
+        try:
+            return get_or_fit_domain(
+                self.applicability_domain,
+                self.data_interface,
+                self.data_cache_key,
+                refit,
+            )
+        except Exception as exc:
+            logging.warning(
+                f"Could not load or fit applicability domain `{domain_key}`: {exc} "
+                "Continuing without it; predictions get no domain columns."
+            )
+            return None
 
     def _assess_applicability_domain(self, df: pd.DataFrame) -> pd.DataFrame:
         """Add domain score, in-domain flag and nearest training SMILES columns."""
-        self.domain = self._load_domain()
         model_input = self._get_model_input(df)
         scores = self.domain.score(model_input[self.smiles_col].tolist())
 
