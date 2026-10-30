@@ -131,6 +131,11 @@ The other processing plans are similar to the ones above, but with different com
    create train-test splits, add (and optionally similarity-filter) the augmenting non-human data, and save the
    train-test splits to ``data/cache/splits``.
 
+#. ``fit_applicability_domain.gin`` neither loads data nor trains. It fits the applicability domain of an already
+   trained model from the cached split and calibrates it against the cached ``model.pkl`` (see
+   :ref:`applicability-domain`). The optional ``do_fit_applicability_domain`` flag does the same at the end of
+   training in any plan.
+
 #. ``train_load_hyperparams.gin`` loads hyperparameters that were previously optimized on the
    **test-origin dataset alone**, for the same predictor / featurizer combination, and uses them to train a model on
    the current (possibly augmented) train set. The typical workflow is:

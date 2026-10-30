@@ -1,0 +1,15 @@
+# Fit the applicability domain of an already trained model and calibrate it.
+# Swap this plan into the experiment config the model was trained with, so that
+# the split and model cache keys match, and configure the domain, e.g.:
+#   include 'configs/applicability_domains/tanimoto_knn.gin'
+#   ProcessingPipeline.applicability_domain = %applicability_domain
+ProcessingPipeline.do_load_datasets = False
+ProcessingPipeline.do_load_train_test = False
+ProcessingPipeline.do_dump_train_test = False
+ProcessingPipeline.do_load_optimized_hyperparams = False
+ProcessingPipeline.do_optimize_hyperparams = False
+ProcessingPipeline.do_train_model = False
+ProcessingPipeline.do_get_metrics_confidence_interval = False
+ProcessingPipeline.do_save_trained_model = False
+ProcessingPipeline.do_refit_final_model = False
+ProcessingPipeline.do_fit_applicability_domain = True

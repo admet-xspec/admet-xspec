@@ -51,8 +51,9 @@ A trained model is identified by the two directory names under ``data/cache/mode
 - ``model_cache_key`` -- the model directory, e.g. ``AChE_human_pIC50_RF_reg_ecfp_featurizer_4efda``;
 - ``data_cache_key`` -- its data subdirectory, e.g. ``scaffold_e4737_nofilter_9a75c``.
 
-The ``model.pkl`` file (trained on the train set only) is loaded. The featurizer is stored inside the pickled model, so
-it does not have to be configured again.
+By default (``use_refit_model = True``), ``model_final_refit.pkl``, refit on train + test, is loaded; with
+``use_refit_model = False``, ``model.pkl``, trained on the train set only. The featurizer is stored inside the pickled
+model, so it does not have to be configured again.
 
 Input data
 ----------
@@ -68,6 +69,25 @@ cannot be cleaned are kept, with empty predictions, and their number is reported
 For **attributed models**, every row needs a ``source`` column with one of the friendly names the model was trained on
 (e.g. ``AChE_human_pIC50``), so that the right one-hot source vector is appended. If the model was trained on a single
 source, that source is used for all rows.
+
+Applicability domain
+--------------------
+
+With an applicability domain configured (see :ref:`applicability-domain`), every prediction is also scored for how
+close the molecule is to the model's training data:
+
+.. code-block:: text
+
+   include 'configs/applicability_domains/tanimoto_knn.gin'
+   InferencePipeline.applicability_domain = %applicability_domain
+
+The fitted domain is loaded from the cached split named by ``data_cache_key``, matching the loaded model:
+``domain_refit.pkl`` for the refit model, ``domain.pkl`` for ``model.pkl``. If it is missing, it is fitted on the cached
+split and saved, unless ``fit_domain_if_missing = False``, in which case inference stops with an error. The log reports
+how many molecules are in the domain and, if the model was calibrated, its test metrics inside and outside the domain.
+
+Out-of-domain predictions are flagged, not dropped. Use the ``*_ad_similarity`` column to rank them, and the
+``*_ad_nearest_smiles`` column to check what the model's judgement is based on.
 
 Settings
 --------
@@ -91,7 +111,13 @@ Settings
      - Also write the predictions back into the input ``.csv`` file.
    * - ``override_cache``
      - ``False``
-     - Passed on to :class:`~src.data.data_interface.DataInterface`.
+     - Passed on to :class:`~src.data.data_interface.DataInterface`. Also refits the applicability domain.
+   * - ``applicability_domain``
+     - ``None``
+     - Domain config to assess the predictions with (see above).
+   * - ``fit_domain_if_missing``
+     - ``True``
+     - Fit a missing domain on the cached split instead of stopping with an error.
 
 Output
 ------
@@ -102,5 +128,9 @@ The results are written to
 - ``predictions.csv`` -- the input data with the ``<smiles_col>_clean`` column and a prediction column named after
   the model's test-origin dataset (e.g. ``AChE_human_pIC50``). For classifiers, this column holds the predicted
   probability of class ``1``, and an additional ``<name>_class`` column holds the predicted class.
-- ``metrics.yaml`` -- only if the metrics were computed (see ``do_evaluate``).
+- With an applicability domain, three more columns per model: ``<name>_ad_similarity`` (the domain score),
+  ``<name>_ad_in_domain`` (``True`` if the score reaches the domain's threshold) and ``<name>_ad_nearest_smiles`` (the
+  most similar training molecule). They are empty for invalid SMILES.
+- ``metrics.yaml`` -- only if the metrics were computed (see ``do_evaluate``). With an applicability domain, an
+  ``applicability_domain`` section holds the metrics of the molecules inside and outside the domain.
 - ``operative_config.gin`` and the console log of the run.

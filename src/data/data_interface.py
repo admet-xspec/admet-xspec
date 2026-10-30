@@ -86,6 +86,11 @@ class DataInterface:
         self.model_metadata_filename = "model_metadata.yaml"
         self.console_log_filename = "console.log"
         self.operative_config_filename = "operative_config.gin"
+        # Fitted domains live in the split dir, calibrations in the model dir.
+        self.domain_dirname = "applicability_domain"
+        self.domain_filename = "domain.pkl"
+        self.domain_refit_filename = "domain_refit.pkl"
+        self.domain_calibration_filename = "calibration.yaml"
 
         self._init_create_dirs()
         self._cleanup_stale_artifacts()
@@ -146,6 +151,12 @@ class DataInterface:
         Ensures duplicate jobs train once and all artifacts come from the same run.
         """
         return self._locked(f"model:{model_cache_key}/{data_cache_key}")
+
+    def domain_lock(
+        self, data_cache_key: str, domain_cache_key: str
+    ) -> ContextManager[None]:
+        """Return the lock for one split's domain; hold it across check, fit and save."""
+        return self._locked(f"domain:{data_cache_key}/{domain_cache_key}")
 
     # --- setters / log dumping ---
     def set_logfile(self, logfile: str) -> None:
@@ -541,6 +552,19 @@ class DataInterface:
     def check_train_test_split_exists(self, cache_key: str) -> bool:
         return self._split_dir_is_complete(self.splits_dir / cache_key)
 
+    def load_train_test_split(
+        self, cache_key: str
+    ) -> Tuple[pd.DataFrame, pd.DataFrame]:
+        """Return the (train, test) data of the split saved under `cache_key`."""
+        if not self.check_train_test_split_exists(cache_key):
+            raise FileNotFoundError(
+                f"No complete split with cache_key `{cache_key}` in `{self.splits_dir}`"
+            )
+        return tuple(
+            self._load_split_component(self.splits_dir / cache_key / which)
+            for which in ("train", "test")
+        )
+
     # --- models saving/loading ---
     # Files are written atomically. Callers should hold `model_lock` across training
     # and saving.
@@ -570,6 +594,12 @@ class DataInterface:
             / self.model_metadata_filename
         )
         atomic_yaml_dump(metadata, path)
+
+    def check_model_exists(
+        self, model_cache_key: str, data_cache_key: str, refit: bool = False
+    ) -> bool:
+        filename = self.model_refit_filename if refit else self.model_filename
+        return (self._model_dir(model_cache_key, data_cache_key) / filename).exists()
 
     def unpickle_model(
         self, model_cache_key: str, data_cache_key: str, refit: bool = False
@@ -611,6 +641,70 @@ class DataInterface:
         if not path.exists():
             raise FileNotFoundError(f"Model params file not found at {path}")
         return load_yaml(path)
+
+    # --- applicability domains ---
+    # A fitted domain depends only on the split, so all its models share it.
+    def _domain_path(
+        self, data_cache_key: str, domain_cache_key: str, refit: bool
+    ) -> Path:
+        filename = self.domain_refit_filename if refit else self.domain_filename
+        return (
+            self.splits_dir
+            / data_cache_key
+            / self.domain_dirname
+            / domain_cache_key
+            / filename
+        )
+
+    def check_domain_exists(
+        self, data_cache_key: str, domain_cache_key: str, refit: bool = False
+    ) -> bool:
+        return self._domain_path(data_cache_key, domain_cache_key, refit).exists()
+
+    def save_domain(self, domain, data_cache_key: str, refit: bool = False) -> None:
+        """Save a fitted domain of `model.pkl`, or with `refit` of `model_final_refit.pkl`."""
+        path = self._domain_path(data_cache_key, domain.get_cache_key(), refit)
+        logging.info(f"Saving applicability domain to `{path}`")
+        atomic_pickle_dump(domain, path)
+
+    def load_domain(
+        self, data_cache_key: str, domain_cache_key: str, refit: bool = False
+    ):
+        path = self._domain_path(data_cache_key, domain_cache_key, refit)
+        if not path.exists():
+            raise FileNotFoundError(f"Applicability domain not found at {path}")
+        return load_pickle(path)
+
+    def _domain_calibration_path(
+        self, model_cache_key: str, data_cache_key: str, domain_cache_key: str
+    ) -> Path:
+        return (
+            self._model_dir(model_cache_key, data_cache_key)
+            / self.domain_dirname
+            / domain_cache_key
+            / self.domain_calibration_filename
+        )
+
+    def save_domain_calibration(
+        self,
+        calibration: Dict,
+        model_cache_key: str,
+        data_cache_key: str,
+        domain_cache_key: str,
+    ) -> None:
+        path = self._domain_calibration_path(
+            model_cache_key, data_cache_key, domain_cache_key
+        )
+        atomic_yaml_dump(calibration, path)
+
+    def load_domain_calibration(
+        self, model_cache_key: str, data_cache_key: str, domain_cache_key: str
+    ) -> Dict:
+        """Return the calibration report of a model's domain, or {} if there is none."""
+        path = self._domain_calibration_path(
+            model_cache_key, data_cache_key, domain_cache_key
+        )
+        return load_yaml(path, missing_ok=True)
 
     def dump_training_logs(self, model_cache_key: str, data_cache_key: str) -> None:
         path = self._model_dir(model_cache_key, data_cache_key) / "training_log"

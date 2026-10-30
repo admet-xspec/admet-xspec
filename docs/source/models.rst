@@ -249,10 +249,11 @@ with ``hidden_layer_sizes``. ``layer_shape`` defaults to ``constant``, and the `
 ``hidden_layer_width_2`` to ``hidden_layer_width_<n_hidden_layers>``. In ``hyperparams.yaml``, the architecture is
 always saved as a ``hidden_layer_sizes`` list, so ``train_load_hyperparams.gin`` can reuse it.
 
-**Featurizers.** The MLP does not scale its input features. ``property.gin`` features are already standardized, and
-bit fingerprints (``ecfp.gin``, ``maccs.gin``, ``krfp.gin``) are binary. ``ecfp_count.gin`` features are unscaled
-counts, which can slow down or destabilize training. ``minimol.gin`` embeddings are unscaled too, but within a
-narrow range (roughly 0 to 8).
+**Featurizers.** The MLP does not scale its input features itself. Descriptors (``property.gin`` and the descriptor
+block of ``maplight.gin``) are standardized by the predictor, with a scaler fitted on its training data, and bit
+fingerprints (``ecfp.gin``, ``maccs.gin``, ``krfp.gin``) are binary. ``ecfp_count.gin`` features and the count
+fingerprints of ``maplight.gin`` are unscaled counts, which can slow down or destabilize training. ``minimol.gin``
+embeddings are unscaled too, but within a narrow range (roughly 0 to 8).
 
 **Convergence warnings.** scikit-learn emits a ``ConvergenceWarning`` when training reaches ``max_iter`` before
 converging. These warnings are not suppressed, and during hyperparameter optimization they can be expected for some
@@ -265,6 +266,129 @@ CPUs are used by running more trials concurrently. Outside of optimization, BLAS
 
 Attributed learning (``mlp_attributed.gin``) works as for the other models: the endpoint one-hot vector is appended to
 the features.
+
+.. _maplight-featurizer:
+
+MapLight featurizer
+-------------------
+
+:class:`~src.data.featurizer.MapLightFeaturizer` (``configs/featurizers/maplight.gin``) reproduces the features of
+MapLight (`Notwell & Wood, 2023 <https://arxiv.org/abs/2310.00174>`_), a combination of molecular fingerprints and
+descriptors evaluated on the Therapeutics Data Commons ADMET benchmark (`reference implementation
+<https://github.com/maplightrx/MapLight-TDC/blob/main/maplight.py>`_). Each molecule gets four blocks of features,
+concatenated in this order:
+
+.. list-table::
+   :header-rows: 1
+
+   * - Block
+     - Columns
+     - Values
+   * - Morgan (ECFP4) counts
+     - ``morgan_n_bits`` (1024)
+     - integer counts
+   * - Avalon counts
+     - ``avalon_n_bits`` (1024)
+     - integer counts
+   * - ErG pharmacophore fingerprint
+     - 315
+     - non-negative floats
+   * - RDKit descriptors
+     - 200
+     - raw descriptor values
+
+With the defaults, that is 2563 columns. The parameters, set in ``maplight.gin``, are:
+
+.. code-block:: text
+
+   MapLightFeaturizer.morgan_radius = 2
+   MapLightFeaturizer.morgan_n_bits = 1024
+   MapLightFeaturizer.avalon_n_bits = 1024
+
+The defaults match the original implementation, and the features are tested against it. The 200 descriptors are the
+fixed list used by MapLight, not every descriptor of the installed RDKit, so new RDKit releases don't change the
+columns. They differ from ``property.gin``, which uses all RDKit descriptors.
+
+**Scaling.** Features are cached on disk unscaled. The predictor standardizes only the 200 descriptors, with a scaler
+fitted on its training data (and refitted in every cross-validation fold), and passes the fingerprint blocks through
+unchanged. This does not matter for tree models, but it does for the MLP and SVM (see :ref:`mlp-predictors`). The
+original MapLight trains CatBoost on unscaled features.
+
+**Invalid molecules.** SMILES that RDKit cannot parse raise an error naming them, instead of being featurized as
+zeros. Descriptors that fail or overflow ``float32`` (e.g. ``Ipc`` of very large molecules) are replaced with zeros,
+with a warning.
+
+**Not included.** MapLight also standardizes the regression targets (optionally log-transforming them first) and
+trains CatBoost models. Neither is part of the featurizer, and neither is done by this pipeline. The MapLight + GNN variant,
+which adds pre-trained GIN embeddings, is not implemented either.
+
+.. _applicability-domain:
+
+Applicability domain
+--------------------
+
+A model is only reliable for molecules that resemble its training data. The **applicability domain** (AD) measures
+that resemblance, so predictions for unfamiliar molecules can be flagged. It is configured in
+``configs/applicability_domains/`` and implemented in :mod:`src.data.applicability_domain`.
+
+**The measure.** :class:`~src.data.applicability_domain.TanimotoKnnDomain` (``tanimoto_knn.gin``) scores a molecule by
+its mean Tanimoto similarity (2048-bit ECFP4) to the ``k`` most similar training molecules (5 by default), and also
+reports the most similar training molecule. It does not depend on the model, so it works for every featurizer and
+predictor.
+
+**The threshold.** Each training molecule is scored against the rest of the training set (leave-one-out). A molecule is
+in the domain if its score is at least the ``threshold_percentile``-th percentile of these scores (5 by default), so
+95% of the training set is in the domain by construction. Duplicate training SMILES are counted once.
+
+.. code-block:: text
+
+   TanimotoKnnDomain.k = 5
+   TanimotoKnnDomain.threshold_percentile = 5.0
+   TanimotoKnnDomain.reference_sources = None   # e.g. ['AChE_human_pIC50'] to ignore augmenting data
+
+**Calibration.** A threshold alone does not show that the domain matters for a given model. Each model therefore gets a
+calibration report: its test-set metrics for molecules inside and outside the domain, and for each quartile of the
+domain score. If out-of-domain errors are not clearly worse, the domain is not informative for that model. The report
+is computed with ``model.pkl``, the model trained on the train split. Random splits leave few test molecules outside
+the domain, so scaffold splits give more informative calibrations.
+
+**Storage.** A fitted domain depends only on the training data, so it is saved once per split and shared by every model
+trained on it. Each model keeps only its calibration:
+
+.. code-block:: text
+
+   data/cache/splits/<data_cache_key>/applicability_domain/<domain_key>/
+       domain.pkl           # fitted on the train split; used with model.pkl
+       domain_refit.pkl     # fitted on train + test; used with model_final_refit.pkl
+   data/cache/models/<model_cache_key>/<data_cache_key>/applicability_domain/<domain_key>/
+       calibration.yaml
+
+**During training.** Set the flag and configure the domain in the experiment config:
+
+.. code-block:: text
+
+   include 'configs/applicability_domains/tanimoto_knn.gin'
+   ProcessingPipeline.applicability_domain = %applicability_domain
+   ProcessingPipeline.do_fit_applicability_domain = True
+
+The domains are fitted and the model calibrated right after evaluation, before the refit. The domain is saved with the
+split, so the split must be cached (``do_dump_train_test = True``).
+
+**For models trained earlier.** Domains need only the cached split, and calibration also needs ``model.pkl``. There are
+two ways to add them:
+
+- ``applicability_domain.py`` processes every cached model, or those matching glob patterns of their cache keys:
+
+  .. code-block:: bash
+
+     python applicability_domain.py --models 'AChE_human_pIC50_*' --splits 'scaffold_*'
+
+  Each split's domain is fitted once, then every model with a ``model.pkl`` is calibrated. ``--cfg`` selects another
+  domain config, ``--no-calibrate`` only fits the domains, and ``--override-cache`` refits and recalibrates.
+- To process a single experiment, swap its processing plan for ``configs/processing_plans/fit_applicability_domain.gin``
+  and add the three lines above. The plan neither loads data nor trains; it uses the cache keys of the experiment.
+
+Inference fits a missing domain on first use as well (see :doc:`inference`), but it cannot calibrate it.
 
 Where are the models saved?
 ---------------------------
@@ -283,6 +407,9 @@ model:
 
    AChE_human_pIC50_LightGBM_clf_ecfp_featurizer_4b52a
    └── scaffold_e4737_tanimoto_5p_filter_dfa1b_91da5
+       ├── applicability_domain
+       │   └── tanimoto_knn_domain_1f43c
+       │       └── calibration.yaml
        ├── bootstrap_data.yaml
        ├── hyperparams.yaml
        ├── metrics.yaml
@@ -294,6 +421,9 @@ model:
            └── console.log
 
 Let us now discuss the contents of each of these files:
+
+#. ``applicability_domain/<domain_key>/calibration.yaml`` contains the test metrics of ``model.pkl`` inside and outside
+   its applicability domain (only with ``do_fit_applicability_domain = True``; see :ref:`applicability-domain`).
 
 #. ``bootstrap_data.yaml`` contains the value of every metric for every bootstrap resample of the test set
    (only with ``do_get_metrics_confidence_interval = True``).

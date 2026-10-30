@@ -220,8 +220,12 @@ class BinaryClassifierBase(PredictorBase, abc.ABC):
     def evaluate(self, df: pd.DataFrame) -> MetricsDict:
         """Evaluate binary predictions on `evaluation_metrics`."""
         self._require_columns(df, [self.target_col])
-        y_true = self._as_binary_labels(df[self.target_col])
-        preds = self.predict(df)
+        return self.evaluate_predictions(df[self.target_col], self.predict(df))
+
+    def evaluate_predictions(self, y_true: Any, preds: Any) -> MetricsDict:
+        """Compute `evaluation_metrics` from labels and already computed predictions."""
+        y_true = self._as_binary_labels(y_true)
+        preds = np.asarray(preds)
         binary_preds = self.classify(preds)
         metrics_dict: MetricsDict = {}
         for m in self.evaluation_metrics:
@@ -314,8 +318,10 @@ class RegressorBase(PredictorBase, abc.ABC):
     def evaluate(self, df: pd.DataFrame) -> MetricsDict:
         """Evaluate regression predictions on `evaluation_metrics`."""
         self._require_columns(df, [self.target_col])
-        preds = self.predict(df)
+        return self.evaluate_predictions(df[self.target_col], self.predict(df))
+
+    def evaluate_predictions(self, y_true: Any, preds: Any) -> MetricsDict:
+        """Compute `evaluation_metrics` from labels and already computed predictions."""
         return {
-            m: get_metric_callable(m)(df[self.target_col], preds)
-            for m in self.evaluation_metrics
+            m: get_metric_callable(m)(y_true, preds) for m in self.evaluation_metrics
         }

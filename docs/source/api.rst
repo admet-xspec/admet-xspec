@@ -19,6 +19,8 @@ Data handling
 
 .. automodule:: src.data.sim_filter
 
+.. automodule:: src.data.applicability_domain
+
 Predictors
 ----------
 

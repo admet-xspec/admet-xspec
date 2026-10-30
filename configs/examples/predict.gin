@@ -24,3 +24,10 @@ InferencePipeline.target_col = 'y'
 # Runtime behavior
 InferencePipeline.do_evaluate = True            # the input has `y` labels, so metrics can be computed
 InferencePipeline.override_cache = False
+
+# Applicability domain: adds `<label>_ad_similarity`, `<label>_ad_in_domain` and
+# `<label>_ad_nearest_smiles` columns, and in/out-of-domain metrics when evaluating.
+# The domain of the model's split is fitted on first use if missing.
+include 'configs/applicability_domains/tanimoto_knn.gin'
+InferencePipeline.applicability_domain = %applicability_domain
+InferencePipeline.fit_domain_if_missing = True

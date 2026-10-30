@@ -12,8 +12,9 @@ import gin
 import numpy as np
 import pandas as pd
 import pathlib
-from rdkit import Chem
-from rdkit.Chem import Descriptors, MACCSkeys
+from rdkit import Chem, DataStructs
+from rdkit.Avalon.pyAvalonTools import GetAvalonCountFP
+from rdkit.Chem import Descriptors, MACCSkeys, rdReducedGraphs
 from rdkit.Chem.rdFingerprintGenerator import GetMorganGenerator
 from sklearn.base import BaseEstimator, TransformerMixin, clone
 from sklearn.preprocessing import StandardScaler
@@ -379,6 +380,158 @@ class PropertyEcfpFeaturizer(FeaturizerBase):
             self.feature_name,
             *self.ecfp.get_hashable_params_values(),
             *self.properties.get_hashable_params_values(),
+        ]
+
+
+# The 200 RDKit descriptors used by MapLight, fixed so new RDKit descriptors don't shift columns.
+# fmt: off
+_MAPLIGHT_DESCRIPTORS = (
+    "BalabanJ", "BertzCT", "Chi0", "Chi0n", "Chi0v", "Chi1", "Chi1n", "Chi1v", "Chi2n",
+    "Chi2v", "Chi3n", "Chi3v", "Chi4n", "Chi4v", "EState_VSA1", "EState_VSA10",
+    "EState_VSA11", "EState_VSA2", "EState_VSA3", "EState_VSA4", "EState_VSA5",
+    "EState_VSA6", "EState_VSA7", "EState_VSA8", "EState_VSA9", "ExactMolWt",
+    "FpDensityMorgan1", "FpDensityMorgan2", "FpDensityMorgan3", "FractionCSP3",
+    "HallKierAlpha", "HeavyAtomCount", "HeavyAtomMolWt", "Ipc", "Kappa1", "Kappa2",
+    "Kappa3", "LabuteASA", "MaxAbsEStateIndex", "MaxAbsPartialCharge", "MaxEStateIndex",
+    "MaxPartialCharge", "MinAbsEStateIndex", "MinAbsPartialCharge", "MinEStateIndex",
+    "MinPartialCharge", "MolLogP", "MolMR", "MolWt", "NHOHCount", "NOCount",
+    "NumAliphaticCarbocycles", "NumAliphaticHeterocycles", "NumAliphaticRings",
+    "NumAromaticCarbocycles", "NumAromaticHeterocycles", "NumAromaticRings",
+    "NumHAcceptors", "NumHDonors", "NumHeteroatoms", "NumRadicalElectrons",
+    "NumRotatableBonds", "NumSaturatedCarbocycles", "NumSaturatedHeterocycles",
+    "NumSaturatedRings", "NumValenceElectrons", "PEOE_VSA1", "PEOE_VSA10", "PEOE_VSA11",
+    "PEOE_VSA12", "PEOE_VSA13", "PEOE_VSA14", "PEOE_VSA2", "PEOE_VSA3", "PEOE_VSA4",
+    "PEOE_VSA5", "PEOE_VSA6", "PEOE_VSA7", "PEOE_VSA8", "PEOE_VSA9", "RingCount",
+    "SMR_VSA1", "SMR_VSA10", "SMR_VSA2", "SMR_VSA3", "SMR_VSA4", "SMR_VSA5", "SMR_VSA6",
+    "SMR_VSA7", "SMR_VSA8", "SMR_VSA9", "SlogP_VSA1", "SlogP_VSA10", "SlogP_VSA11",
+    "SlogP_VSA12", "SlogP_VSA2", "SlogP_VSA3", "SlogP_VSA4", "SlogP_VSA5", "SlogP_VSA6",
+    "SlogP_VSA7", "SlogP_VSA8", "SlogP_VSA9", "TPSA", "VSA_EState1", "VSA_EState10",
+    "VSA_EState2", "VSA_EState3", "VSA_EState4", "VSA_EState5", "VSA_EState6",
+    "VSA_EState7", "VSA_EState8", "VSA_EState9", "fr_Al_COO", "fr_Al_OH",
+    "fr_Al_OH_noTert", "fr_ArN", "fr_Ar_COO", "fr_Ar_N", "fr_Ar_NH", "fr_Ar_OH",
+    "fr_COO", "fr_COO2", "fr_C_O", "fr_C_O_noCOO", "fr_C_S", "fr_HOCCN", "fr_Imine",
+    "fr_NH0", "fr_NH1", "fr_NH2", "fr_N_O", "fr_Ndealkylation1", "fr_Ndealkylation2",
+    "fr_Nhpyrrole", "fr_SH", "fr_aldehyde", "fr_alkyl_carbamate", "fr_alkyl_halide",
+    "fr_allylic_oxid", "fr_amide", "fr_amidine", "fr_aniline", "fr_aryl_methyl",
+    "fr_azide", "fr_azo", "fr_barbitur", "fr_benzene", "fr_benzodiazepine",
+    "fr_bicyclic", "fr_diazo", "fr_dihydropyridine", "fr_epoxide", "fr_ester",
+    "fr_ether", "fr_furan", "fr_guanido", "fr_halogen", "fr_hdrzine", "fr_hdrzone",
+    "fr_imidazole", "fr_imide", "fr_isocyan", "fr_isothiocyan", "fr_ketone",
+    "fr_ketone_Topliss", "fr_lactam", "fr_lactone", "fr_methoxy", "fr_morpholine",
+    "fr_nitrile", "fr_nitro", "fr_nitro_arom", "fr_nitro_arom_nonortho", "fr_nitroso",
+    "fr_oxazole", "fr_oxime", "fr_para_hydroxylation", "fr_phenol",
+    "fr_phenol_noOrthoHbond", "fr_phos_acid", "fr_phos_ester", "fr_piperdine",
+    "fr_piperzine", "fr_priamide", "fr_prisulfonamd", "fr_pyridine", "fr_quatN",
+    "fr_sulfide", "fr_sulfonamd", "fr_sulfone", "fr_term_acetylene", "fr_tetrazole",
+    "fr_thiazole", "fr_thiocyan", "fr_thiophene", "fr_unbrch_alkane", "fr_urea", "qed",
+)
+# fmt: on
+
+_DESCRIPTOR_FUNCS = dict(Descriptors._descList)
+
+# Length of the ErG fingerprint, fixed by RDKit.
+_ERG_SIZE = 315
+
+
+@gin.configurable
+class MapLightFeaturizer(FeaturizerBase):
+    """MapLight features: Morgan counts, Avalon counts, ErG and 200 RDKit descriptors.
+
+    Columns are in that order, 2563 with the defaults. Values are raw, so they are
+    disk-cached; `make_scaler` standardizes only the trailing descriptors.
+    Paper: https://arxiv.org/abs/2310.00174
+    Reference: https://github.com/maplightrx/MapLight-TDC/blob/main/maplight.py
+    """
+
+    def __init__(
+        self,
+        morgan_radius: int = 2,
+        morgan_n_bits: int = 1024,
+        avalon_n_bits: int = 1024,
+        scaler=None,
+    ):
+        self.morgan_radius = morgan_radius
+        self.morgan_n_bits = morgan_n_bits
+        self.avalon_n_bits = avalon_n_bits
+        # Unfitted template, cloned for every fit.
+        self.scaler = scaler if scaler is not None else StandardScaler()
+
+    @property
+    def n_fingerprint_features(self) -> int:
+        """Number of leading fingerprint columns, which precede the descriptors."""
+        return self.morgan_n_bits + self.avalon_n_bits + _ERG_SIZE
+
+    def make_scaler(self) -> TransformerMixin:
+        """Scale only the descriptors, which follow the fingerprint columns."""
+        return _TailScaler(clone(self.scaler), start=self.n_fingerprint_features)
+
+    def _compute_features(self, smiles_list: List[str]) -> np.ndarray:
+        """Generate MapLight features, raising if any SMILES fails to parse."""
+        mols = self._to_mols(smiles_list)
+        failed = [smi for smi, mol in zip(smiles_list, mols) if mol is None]
+        if failed:
+            raise ValueError(
+                f"{self.name}: RDKit failed to parse {len(failed)} SMILES: {failed[:10]}"
+            )
+
+        morgan = GetMorganGenerator(
+            radius=self.morgan_radius, fpSize=self.morgan_n_bits
+        )
+        # float32 cast can overflow large descriptors (e.g. Ipc) to inf.
+        features = np.array(
+            [self._compute_molecule_features(mol, morgan) for mol in mols],
+            dtype=np.float32,
+        )
+        n_nan, n_inf = np.isnan(features).sum(), np.isinf(features).sum()
+        if n_nan or n_inf:
+            logging.warning(
+                f"{self.name}: Found {n_nan} NaNs and {n_inf} infinite values in "
+                "features. Replacing with zeros."
+            )
+            features = np.nan_to_num(features, nan=0.0, posinf=0.0, neginf=0.0)
+        return features
+
+    def _compute_molecule_features(self, mol: Chem.Mol, morgan) -> np.ndarray:
+        """Concatenate the four MapLight feature blocks of one molecule."""
+        avalon = np.zeros((self.avalon_n_bits,))
+        DataStructs.ConvertToNumpyArray(
+            GetAvalonCountFP(mol, nBits=self.avalon_n_bits), avalon
+        )
+        return np.concatenate(
+            [
+                morgan.GetCountFingerprintAsNumPy(mol),
+                avalon,
+                rdReducedGraphs.GetErGFingerprint(mol),
+                self._compute_descriptors(mol),
+            ]
+        )
+
+    @staticmethod
+    def _compute_descriptors(mol: Chem.Mol) -> np.ndarray:
+        """Compute the MapLight descriptors, with NaN for any that fail."""
+        values = []
+        for name in _MAPLIGHT_DESCRIPTORS:
+            try:
+                values.append(_DESCRIPTOR_FUNCS[name](mol))
+            except Exception:
+                values.append(np.nan)
+        return np.array(values, dtype=np.float64)
+
+    @property
+    def feature_name(self) -> str:
+        return "fp_maplight"
+
+    @property
+    def name(self) -> str:
+        return "maplight_featurizer"
+
+    def get_hashable_params_values(self) -> List[Hashable]:
+        # Bump the version if the descriptor list or the block order changes.
+        return [
+            "maplight_v1",
+            self.morgan_radius,
+            self.morgan_n_bits,
+            self.avalon_n_bits,
         ]
 
 

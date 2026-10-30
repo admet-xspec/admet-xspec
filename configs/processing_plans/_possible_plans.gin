@@ -7,3 +7,4 @@
 # ProcessingPipeline.do_get_metrics_confidence_interval : bool
 # ProcessingPipeline.do_save_trained_model: bool
 # ProcessingPipeline.do_refit_final_model: bool
+# ProcessingPipeline.do_fit_applicability_domain: bool (optional, default False)

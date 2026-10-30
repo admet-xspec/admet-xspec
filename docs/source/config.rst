@@ -84,6 +84,9 @@ experiment, are outlined below:
 .. code-block:: text
 
    configs
+   ├── applicability_domains
+   │   ├── none.gin                         # No applicability domain
+   │   └── tanimoto_knn.gin                 # kNN Tanimoto similarity to the training set
    ├── data_interface
    │   └── data_interface.gin               # Data/cache directory locations
    ├── examples                             # Ready-to-run experiments (see Quick start)
@@ -96,6 +99,7 @@ experiment, are outlined below:
    ├── processing_plans
    │   ├── _possible_plans.gin              # List of all available flags
    │   ├── normalize.gin                    # Pre-process the data only
+   │   ├── fit_applicability_domain.gin     # Fit the applicability domain of a trained model
    │   ├── split.gin                        # Perform train-test split
    │   ├── train.gin                        # Train on fixed hyperparams (parse from config)
    │   ├── train_load_hyperparams.gin       # Train on fixed hyperparams (parse from previous run)
@@ -105,11 +109,12 @@ experiment, are outlined below:
    │   ├── ecfp.gin                         # ECFP4
    │   ├── krfp.gin                         # Klekota-Roth fingerprint
    │   ├── maccs.gin                        # MACCS keys fingerprint
+   │   ├── maplight.gin                     # MapLight: Morgan + Avalon counts, ErG, RDKit descriptors
    │   ├── minimol.gin                      # MiniMol pre-trained GNN embeddings (see external/minimol)
    │   ├── property.gin                     # RDKit physicochemical descriptors
    │   ├── none.gin                         # No featurizer
    │   └── proprietary                      # Internal fingerprints of the similarity filters
-   │       └── tanimoto_*.gin               #   (included by configs/sim_filters/; do not include directly)
+   │       └── tanimoto_*.gin               #   (included by sim_filters/ and applicability_domains/; do not include directly)
    ├── predictors
    │   ├── classifiers                      # Classifiers hyperparams
    │   │   ├── lgbm_attributed.gin

@@ -14,6 +14,10 @@ import pandas as pd
 from threadpoolctl import threadpool_limits
 from tqdm import tqdm
 
+from src.data.applicability_domain import (
+    ApplicabilityDomainBase,
+    fit_domain_for_model,
+)
 from src.data.data_interface import DataInterface
 from src.data.featurizer import FeaturizerBase
 from src.data.sim_filter import SimilarityFilterBase
@@ -53,6 +57,9 @@ class ProcessingPipeline:
         splitter: DataSplitterBase | None = None,
         sim_filter: SimilarityFilterBase | None = None,
         hyperparams_source_sim_filter: SimilarityFilterBase | None = None,
+        applicability_domain: ApplicabilityDomainBase | None = None,
+        # Execution flag with a default, so existing processing plans need not set it
+        do_fit_applicability_domain: bool = False,
         # Dataset configuration
         datasets: List[str] | None = None,
         manual_train_splits: List[str] | None = None,
@@ -98,6 +105,8 @@ class ProcessingPipeline:
         self.splitter = splitter
         self.sim_filter = sim_filter
         self.hyperparams_source_sim_filter = hyperparams_source_sim_filter
+        self.applicability_domain = applicability_domain
+        self.do_fit_applicability_domain = do_fit_applicability_domain
 
         # Dataset & column config
         self.datasets = datasets or []
@@ -169,12 +178,18 @@ class ProcessingPipeline:
             self._optimize_hyperparams(train_df)
 
         if not self.do_train_model:
+            # Without training, the split and model are taken from the cache.
+            if self.do_fit_applicability_domain:
+                self._fit_applicability_domain()
             return
 
         self._train(train_df)
         self._evaluate(test_df, get_CIs=self.do_get_metrics_confidence_interval)
         if self.do_save_trained_model:
             self._pickle_trained_model(as_refit=False)
+        # Calibrated against the model trained on the train split, before the refit.
+        if self.do_fit_applicability_domain:
+            self._fit_applicability_domain(train_df, test_df, self.predictor)
 
         if self.do_refit_final_model:
             self._train_final_model(train_df, test_df)
@@ -399,6 +414,10 @@ class ProcessingPipeline:
         if self.predictor:
             logging.info(f"* Predictor: {self.predictor.name}")
             logging.info(f"* Predictor key: {self.predictor_key}")
+        if self.do_fit_applicability_domain:
+            logging.info(
+                f"* Applicability domain: {self.applicability_domain.get_cache_key()}"
+            )
         logging.info(f"* Available CPUs: {self.n_cpus}")
         if self.do_load_optimized_hyperparams:
             if self.hyperparams_source_sim_filter:
@@ -657,6 +676,37 @@ class ProcessingPipeline:
         )
         return ci_lower.to_dict(), ci_upper.to_dict()
 
+    def _fit_applicability_domain(
+        self,
+        train_df: Optional[pd.DataFrame] = None,
+        test_df: Optional[pd.DataFrame] = None,
+        predictor: Optional[PredictorBase] = None,
+    ) -> None:
+        """Fit the domains of the split and calibrate them against the model.
+
+        Without arguments, the split is loaded from the cache and the model from
+        `model.pkl`, which works for models trained earlier.
+        """
+        self.log_bar(w_text="Applicability domain")
+        if not self.data_interface.check_train_test_split_exists(self.split_key):
+            message = (
+                f"Split `{self.split_key}` is not cached, and its applicability domain "
+                "is saved with it."
+            )
+            if train_df is None:
+                raise FileNotFoundError(message)
+            logging.warning(f"{message} Skipping; set `do_dump_train_test = True`.")
+            return
+        fit_domain_for_model(
+            self.applicability_domain,
+            self.data_interface,
+            self.predictor_key,
+            self.split_key,
+            train_df,
+            test_df,
+            predictor,
+        )
+
     def _train_final_model(self, train_df: pd.DataFrame, test_df: pd.DataFrame) -> None:
         """Retrain the predictor on the combined train+test set and save as refit."""
         if not self.predictor:
@@ -791,6 +841,17 @@ class ProcessingPipeline:
 
         if self.do_train_model and not self.predictor:
             raise ValueError("do_train_model=True but no predictor provided")
+
+        if self.do_fit_applicability_domain and not self.applicability_domain:
+            raise ValueError(
+                "do_fit_applicability_domain=True but no applicability_domain provided"
+            )
+
+        if self.do_fit_applicability_domain and not self.predictor:
+            raise ValueError(
+                "do_fit_applicability_domain=True but no predictor provided "
+                "(it identifies the model in the cache)"
+            )
 
         if self.datasets and self.do_load_train_test and not self.test_origin_dataset:
             raise ValueError(
