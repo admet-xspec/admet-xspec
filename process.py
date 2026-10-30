@@ -1,3 +1,5 @@
+"""Run the training/processing pipeline from a gin configuration."""
+
 from src.processing_pipeline import ProcessingPipeline
 import logging
 import time
@@ -17,7 +19,7 @@ if __name__ == "__main__":
         "-c",
         type=str,
         help="Path to the config file",
-        default="configs/train.gin",
+        default="configs/examples/train_lgbm.gin",
     )
     parser.add_argument(
         "--log-level",
@@ -28,7 +30,6 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    # Configure logger
     temp_log = tempfile.NamedTemporaryFile(delete=False)
     logging.basicConfig(
         level=args.log_level,
@@ -41,7 +42,6 @@ if __name__ == "__main__":
 
     time_start = time.time()
 
-    # Load the gin configuration
     if not pathlib.Path(args.cfg).exists():
         raise FileNotFoundError(f"Config file {args.cfg} not found.")
     gin.parse_config_file(args.cfg)
@@ -49,7 +49,6 @@ if __name__ == "__main__":
     pipeline = ProcessingPipeline(logfile=temp_log.name)
     pipeline.run()
 
-    # Log time
     time_elapsed = time.time() - time_start
     logging.info(
         f"ProcessingPipeline finished in {round(time_elapsed, 2)} seconds."

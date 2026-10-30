@@ -3,7 +3,7 @@
 ___
 
 <p align="center">
-  <img src="imgs/logo_white_bg.png" alt="ADMET-Xspec logo" width="400"/>
+  <img src="imgs/logo_white_bg.png" alt="ADMET-XSpec logo" width="400"/>
 </p>
 
 ___
@@ -17,29 +17,31 @@ of human drug development.**
 ADMET-XSpec implements a comprehensive workflow that includes data preprocessing, feature engineering, model training,
 and evaluation. ADMET-XSpec allows for the evaluation of predictive models trained on human data augmented by non-human
 data points, leveraging a selection of machine learning algorithms, feature extraction techniques and additional
-data preprocessing steps. The repository is currently under active development.
+data preprocessing steps. Trained models can then be used to make predictions for new molecules.
+The repository is currently under active development.
 
-## ADMET-XSpec 1.0.1
+## Documentation
 
-For usage and examples see the [admet-xscpec documentation](https://admet-xspec-docs.readthedocs.io/en/latest/index.html)
+For usage and examples of ADMET-XSpec 1.1.0, see the
+[ADMET-XSpec documentation](https://admet-xspec-docs.readthedocs.io/en/latest/index.html).
 
 ## Quick start
 
-This is an extract from the [admet-xspec documentation](https://admet-xspec-docs.readthedocs.io/en/latest/quickstart.html).
+This is an extract from the [ADMET-XSpec documentation](https://admet-xspec-docs.readthedocs.io/en/latest/quickstart.html).
 
-ADMET-XSpec can be set up either using plain `uv` or by creating a conda environment.
+ADMET-XSpec requires Python 3.11.8 and can be set up either using plain `uv` or by creating a conda environment.
 First, clone the repository:
 
-```
-git clone https://github.com/hubertrybka/admet-prediction.git
-cd admet-prediction
+```bash
+git clone https://github.com/admet-xspec/admet-xspec.git
+cd admet-xspec
 ```
 
 ### 1. UV setup
-Follow the "Install uv" step at the [official uv docs](https://docs.astral.sh/uv/#__tabbed_1_1) to set up uv.
-Then, have uv register a .venv within the current directory and install packages from the lockfile:
+Follow the [official uv docs](https://docs.astral.sh/uv/getting-started/installation/) to install uv.
+Then, have uv create a `.venv` within the current directory and install packages from the lockfile
+(uv downloads Python 3.11.8 if it is not available on your system):
 ```bash
-uv init .
 uv sync
 ```
 #### Run example with uv
@@ -47,24 +49,37 @@ uv sync
 uv run process.py --cfg configs/examples/train_lgbm.gin
 ```
 
-Change the type to 'uv'. The uv path should be that of your system uv installation, the Environment path should be
-that of the `.venv` that uv created inside of `./admet_prediction`.
-
 ### 2. Conda setup
+The dependencies are declared in `pyproject.toml`, so they are installed with `uv pip` inside the conda environment:
 ```bash
 conda create -n xspec python=3.11.8
 conda activate xspec
-conda install rdkit seaborn conda-forge::py-xgboost conda-forge::ray-all
-   
-pip install -r requirements.txt
-
-# dev dependencies
-pre-commit install
+pip install uv
+uv pip install -r pyproject.toml
 ```
 #### Run example with conda
 ```bash
 # if you haven't already:
 conda activate xspec
 
-python -m process --cfg configs/examples/train_rf_optimize.gin
+python -m process --cfg configs/examples/train_lgbm.gin
 ```
+
+### Inference
+Models trained by `process.py` can be used to make predictions for new molecules with `predict.py`:
+```bash
+uv run predict.py --cfg configs/examples/predict.gin
+```
+See the [documentation](https://admet-xspec-docs.readthedocs.io/en/latest/inference.html) for details.
+
+### Development
+Contributors should install the `pre-commit` hooks:
+```bash
+uvx pre-commit install
+# or, inside the conda environment
+pip install pre-commit && pre-commit install
+```
+
+## License
+
+ADMET-XSpec is released under the [MIT License](LICENSE).

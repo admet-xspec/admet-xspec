@@ -1,33 +1,42 @@
 from __future__ import annotations
 
-import gin
-import pandas as pd
-from datetime import datetime
+import hashlib
 import logging
-from typing import List, Optional, Tuple
 import time
-import optuna
-from tqdm import tqdm
 from copy import deepcopy
-import numpy as np
+from datetime import datetime
+from typing import List, Optional, Tuple
 
+import gin
+import numpy as np
+import optuna
+import pandas as pd
+from threadpoolctl import threadpool_limits
+from tqdm import tqdm
+
+from src.data.applicability_domain import (
+    ApplicabilityDomainBase,
+    fit_domain_for_model,
+)
 from src.data.data_interface import DataInterface
 from src.data.featurizer import FeaturizerBase
-from src.utils import sample_optuna_params
-from src.data.split import DataSplitterBase
 from src.data.sim_filter import SimilarityFilterBase
-from src.predictor.predictor_base import PredictorBase
-from src.utils import log_markdown_table
+from src.data.split import DataSplitterBase
 from src.data.utils import get_label_counts
-import hashlib
+from src.predictor.predictor_base import PredictorBase
+from src.utils import (
+    format_cli_bar_chart,
+    format_cli_histogram,
+    get_available_cpus,
+    log_markdown_table,
+    plan_parallel_trials,
+    parse_project_version
+)
 
 
 @gin.configurable
 class ProcessingPipeline:
-    """
-    Orchestrates dataset loading, splitting, optional similarity filtering,
-    visualization, training and evaluation.
-    """
+    """Orchestrate dataset loading, splitting, similarity filtering, training and evaluation."""
 
     def __init__(
         self,
@@ -48,6 +57,9 @@ class ProcessingPipeline:
         splitter: DataSplitterBase | None = None,
         sim_filter: SimilarityFilterBase | None = None,
         hyperparams_source_sim_filter: SimilarityFilterBase | None = None,
+        applicability_domain: ApplicabilityDomainBase | None = None,
+        # Execution flag with a default, so existing processing plans need not set it
+        do_fit_applicability_domain: bool = False,
         # Dataset configuration
         datasets: List[str] | None = None,
         manual_train_splits: List[str] | None = None,
@@ -58,6 +70,7 @@ class ProcessingPipeline:
         n_optim_cv_folds: int | None = None,
         n_optim_iter: int | None = None,
         n_optim_jobs: int = -1,
+        n_threads_per_trial: int | None = None,
         target_metric: str | None = None,
         ci_n_bootstraps: int = 1000,
         ci_percentiles: float = 95.0,
@@ -69,6 +82,10 @@ class ProcessingPipeline:
         logfile: str | None = None,
         override_cache: bool = False,
         show_progress_bar: bool = False,
+        n_cpus: int | None = None,
+        # Label-distribution plots
+        label_hist_bins: int = 10,
+        ascii_plots: bool = False
     ):
         # Execution flags
         self.do_load_datasets = do_load_datasets
@@ -88,9 +105,8 @@ class ProcessingPipeline:
         self.splitter = splitter
         self.sim_filter = sim_filter
         self.hyperparams_source_sim_filter = hyperparams_source_sim_filter
-
-        self.predictor.set_column_ids(smiles_col, source_col, target_col)
-        self.predictor.set_task_name(test_origin_dataset)
+        self.applicability_domain = applicability_domain
+        self.do_fit_applicability_domain = do_fit_applicability_domain
 
         # Dataset & column config
         self.datasets = datasets or []
@@ -111,16 +127,24 @@ class ProcessingPipeline:
         self.n_optim_cv_folds = n_optim_cv_folds
         self.n_optim_iter = n_optim_iter
         self.n_optim_jobs = n_optim_jobs
+        self.n_threads_per_trial = n_threads_per_trial
         self.target_metric = target_metric
         self.optuna_sampler = optuna.samplers.TPESampler(seed=42)
 
-        # Let the data interface know global settings
+        self._validate_configuration()
+
         self.data_interface.set_task_setting(task_setting)
         self.data_interface.set_logfile(logfile)
         self.data_interface.set_override_cache(override_cache)
 
-        # Inject featurizer into the model
-        self.predictor.set_featurizer(self.featurizer)
+        # CPU budget allocated by SLURM/cgroups; the model uses all of it outside HPO.
+        self.n_cpus = n_cpus or get_available_cpus()
+
+        if self.predictor is not None:
+            self.predictor.set_column_ids(smiles_col, source_col, target_col)
+            self.predictor.set_task_name(test_origin_dataset)
+            self.predictor.set_featurizer(self.featurizer)
+            self.predictor.set_n_threads(self.n_cpus)
 
         # Derived identifiers / caches
         self.split_key = self._get_split_key(datasets=self.datasets, sim_filter=self.sim_filter)
@@ -129,59 +153,50 @@ class ProcessingPipeline:
 
         # Other
         self.show_progress_bar = show_progress_bar
-
-        # Validate configuration early
-        self._validate_configuration()
+        self.label_hist_bins = label_hist_bins
+        self.ascii_plots = ascii_plots
+        self._version = parse_project_version()
 
     def run(self) -> None:
-        # Log pipeline start
+        """Run the pipeline steps enabled by the `do_*` flags."""
         self._log_pipeline_start()
 
-        # Step 1: Load datasets
         augmentation_dfs, origin_df = self._load_all_datasets()
 
-        # Step 2: Create train/test splits if requested
         train_df, test_df = pd.DataFrame(), pd.DataFrame()
         if self.do_load_train_test:
             train_df, test_df = self._get_train_test_splits(augmentation_dfs, origin_df)
-
-            # Step 3: Save train/test splits if requested
             if self.do_dump_train_test:
                 self._save_splits(train_df, test_df)
 
-        # Update registries
         self._update_registries()
 
-        # Step 4: Load optimized hyperparameters if requested
         if self.do_load_optimized_hyperparams:
             self._load_hyperparams_optimized_on_test_origin()
 
-        # Step 5: Optimize hyperparameters if requested
         if self.do_optimize_hyperparams:
             self._optimize_hyperparams(train_df)
 
-        # Step 6: Train and evaluate the model if requested
-        if self.do_train_model:
-            self._train(train_df)
+        if not self.do_train_model:
+            # Without training, the split and model are taken from the cache.
+            if self.do_fit_applicability_domain:
+                self._fit_applicability_domain()
+            return
 
-            if self.do_get_metrics_confidence_interval:
-                self._evaluate(test_df, get_CIs=True)
-            else:
-                self._evaluate(test_df)
+        self._train(train_df)
+        self._evaluate(test_df, get_CIs=self.do_get_metrics_confidence_interval)
+        if self.do_save_trained_model:
+            self._pickle_trained_model(as_refit=False)
+        # Calibrated against the model trained on the train split, before the refit.
+        if self.do_fit_applicability_domain:
+            self._fit_applicability_domain(train_df, test_df, self.predictor)
 
-            # Pickle the trained model if requested
+        if self.do_refit_final_model:
+            self._train_final_model(train_df, test_df)
             if self.do_save_trained_model:
-                self._pickle_trained_model(as_refit=False)
+                self._pickle_trained_model(as_refit=True)
 
-            # Step 9: Refit final model on full dataset if requested
-            if self.do_refit_final_model:
-                self._train_final_model(train_df, test_df)
-
-                # Pickle the refitted model if requested
-                if self.do_save_trained_model:
-                    self._pickle_trained_model(as_refit=True)
-
-            self._dump_training_info()
+        self._dump_training_info()
 
     # --------------------- Dataset loading & visualization --------------------- #
 
@@ -195,11 +210,12 @@ class ProcessingPipeline:
             df = self.data_interface.get_by_friendly_name(name)
             df = df[[self.smiles_col, self.target_col]].copy()
             df[self.source_col] = name
+            self._log_label_distribution(df, f"Loaded dataset `{name}`")
             dfs.append(df)
         return dfs
 
     def _load_split_datasets(self, friendly_names: List[str]) -> List[pd.DataFrame]:
-        """Load datasets by friendly name for split datasets (no source column added)."""
+        """Load saved splits by friendly name; they already carry a `source` column."""
         if not friendly_names:
             return []
 
@@ -207,6 +223,7 @@ class ProcessingPipeline:
         for name in friendly_names:
             df = self.data_interface.get_by_friendly_name(name, is_in_splits=True)
             df = df[[self.smiles_col, self.target_col, self.source_col]].copy()
+            self._log_label_distribution(df, f"Loaded split `{name}`")
             dfs.append(df)
         return dfs
 
@@ -237,38 +254,30 @@ class ProcessingPipeline:
     def _get_train_test_splits(
         self, augmentation_dfs: List[pd.DataFrame], origin_df: Optional[pd.DataFrame]
     ) -> Tuple[pd.DataFrame, pd.DataFrame]:
-        """
-        Create train/test splits.
-        - If `datasets` is set the pipeline assumes automatic splitting from `test_origin_dataset`.
-        - Otherwise manual splits are used from `manual_train_splits` / `manual_test_splits`.
-        """
-        if self.datasets:
-            # Check for cached automatic splits and load if available
-            if (
-                self._check_if_already_splitted(self.split_key)
-                and not self.override_cache
-            ):
-                logging.info(
-                    f"Train/test split with key {self.split_key} already exists; loading from cache"
-                )
-                train_friendly_name, test_friendly_name = (
-                    self.data_interface.get_split_friendly_names(self.split_key)
-                )
-                return self._get_cached_splits(
-                    [train_friendly_name], [test_friendly_name]
-                )
-            # Create automatic splits
-            return self._create_automatic_splits(augmentation_dfs, origin_df)
+        """Create or load train/test splits.
 
-        # Read manual splits
-        return self._get_cached_splits(
-            self.manual_train_splits, self.manual_test_splits
-        )
+        With `datasets` set, split `test_origin_dataset` automatically (or load the
+        cached split). Otherwise load `manual_train_splits` / `manual_test_splits`.
+        """
+        if not self.datasets:
+            return self._get_cached_splits(
+                self.manual_train_splits, self.manual_test_splits
+            )
+
+        if self._check_if_already_splitted(self.split_key) and not self.override_cache:
+            logging.info(
+                f"Train/test split with key {self.split_key} already exists; loading from cache"
+            )
+            train_friendly_name, test_friendly_name = (
+                self.data_interface.get_split_friendly_names(self.split_key)
+            )
+            return self._get_cached_splits([train_friendly_name], [test_friendly_name])
+        return self._create_automatic_splits(augmentation_dfs, origin_df)
 
     def _create_automatic_splits(
         self, augmentation_dfs: List[pd.DataFrame], origin_df: Optional[pd.DataFrame]
     ) -> Tuple[pd.DataFrame, pd.DataFrame]:
-        """Automatic split: split origin, optionally filter augmentations, combine for training."""
+        """Split the origin, optionally filter augmentations, and combine them for training."""
         split_train_df, split_test_df = self._split_dataset(origin_df)
         logging.info(
             f"Split origin into train={len(split_train_df)}, test={len(split_test_df)}"
@@ -290,40 +299,38 @@ class ProcessingPipeline:
             post_counts = get_label_counts(train_df, self.source_col)
             for src, pre in pre_counts.items():
                 if src == self.test_origin_dataset:
-                    continue  # Skip origin dataset
+                    continue
                 post = post_counts.get(src, 0)
                 logging.info(f"Source {src}: {pre} -> {post} samples after filtering")
             logging.info(f"After filtering: train={len(train_df)}, test={len(test_df)}")
-            return train_df, test_df
+        else:
+            train_df = pd.concat([split_train_df, augmentation_df], ignore_index=True)
+            test_df = split_test_df
+            logging.info(f"No filtering applied. Combined train={len(train_df)}")
 
-        # No filtering: concatenate augmentation with split train
-        train_df = pd.concat([split_train_df, augmentation_df], ignore_index=True)
-        logging.info(f"No filtering applied. Combined train={len(train_df)}")
-        return train_df, split_test_df
+        self._log_label_distribution(train_df, "Train set (origin train + augmentation)")
+        self._log_label_distribution(test_df, "Test set")
+        return train_df, test_df
 
     def _get_cached_splits(
         self, train_friendly_names: List[str], test_friendly_names: List[str]
     ) -> Tuple[pd.DataFrame, pd.DataFrame]:
-        """Load and aggregate DataFrames listed in manual split lists."""
-        train_dfs = (
-            self._load_split_datasets(train_friendly_names)
-            if train_friendly_names
-            else []
-        )
-        test_dfs = (
-            self._load_split_datasets(test_friendly_names)
-            if test_friendly_names
-            else []
-        )
+        """Load and concatenate saved train/test splits."""
+        train_dfs = self._load_split_datasets(train_friendly_names)
+        test_dfs = self._load_split_datasets(test_friendly_names)
 
         train = self._aggregate_dataframes(train_dfs, empty_if_none=True)
         test = self._aggregate_dataframes(test_dfs, empty_if_none=True)
 
         logging.info(f"Cached split loaded: train={len(train)}, test={len(test)}")
+        if len(train_dfs) > 1:
+            self._log_label_distribution(train, f"Train set ({len(train_dfs)} splits combined)")
+        if len(test_dfs) > 1:
+            self._log_label_distribution(test, f"Test set ({len(test_dfs)} splits combined)")
         return train, test
 
     def _save_splits(self, train_df: pd.DataFrame, test_df: pd.DataFrame) -> None:
-        """Persist train/test split using the data interface."""
+        """Save the train/test split under `split_key`."""
         self.data_interface.save_train_test_split(
             train_df,
             test_df,
@@ -334,13 +341,13 @@ class ProcessingPipeline:
         logging.info(f"Saved split with cache key: {self.split_key}")
 
     def _check_if_already_splitted(self, split_key: str) -> bool:
-        """Check if a train/test split with the given key already exists."""
+        """Return whether a split with `split_key` is already saved."""
         return self.data_interface.check_train_test_split_exists(split_key)
 
     def _split_dataset(
         self, df: Optional[pd.DataFrame]
     ) -> Tuple[pd.DataFrame, pd.DataFrame]:
-        """Use configured splitter to split a single DataFrame; return empty frames for empty input."""
+        """Split `df` with the configured splitter; empty input gives empty frames."""
         if df is None or df.empty:
             empty = self._empty_dataframe()
             return empty, empty
@@ -373,7 +380,7 @@ class ProcessingPipeline:
     def _aggregate_dataframes(
         self, dfs: List[pd.DataFrame], empty_if_none: bool = False
     ) -> pd.DataFrame:
-        """Concatenate multiple DataFrames, return empty standardized frame if requested."""
+        """Concatenate `dfs`; with no input, return an empty (optionally typed) frame."""
         if not dfs:
             return self._empty_dataframe() if empty_if_none else pd.DataFrame()
         return pd.concat(dfs, ignore_index=True)
@@ -383,16 +390,16 @@ class ProcessingPipeline:
         return pd.DataFrame(columns=[self.smiles_col, self.target_col, self.source_col])
 
     def _update_registries(self) -> None:
-        """Attempt to update back-end registries; log exceptions rather than failing the whole run."""
+        """Update data registries; log failures instead of aborting the run."""
         try:
             self.data_interface.update_registries()
         except Exception as exc:
             logging.exception(f"Failed to update registries: {exc}")
 
     def _log_pipeline_start(self) -> None:
-        """Log initial pipeline configuration for easy debugging."""
+        """Log the pipeline configuration."""
         logging.info(datetime.now().strftime("%Y-%m-%d-%H-%M-%S"))
-        self.log_bar(w_text="ADMET-XSpec")
+        self.log_bar(w_text="ADMET-XSpec " + self._version)
         logging.info("Configuration summary:")
         logging.info(f"* Datasets: {self.datasets}")
         if self.splitter:
@@ -407,6 +414,11 @@ class ProcessingPipeline:
         if self.predictor:
             logging.info(f"* Predictor: {self.predictor.name}")
             logging.info(f"* Predictor key: {self.predictor_key}")
+        if self.do_fit_applicability_domain:
+            logging.info(
+                f"* Applicability domain: {self.applicability_domain.get_cache_key()}"
+            )
+        logging.info(f"* Available CPUs: {self.n_cpus}")
         if self.do_load_optimized_hyperparams:
             if self.hyperparams_source_sim_filter:
                 logging.info(
@@ -418,17 +430,119 @@ class ProcessingPipeline:
                 )
         logging.info(f"* Task setting: {self.task_setting}")
 
+    # --------------------- Label distribution logging --------------------- #
+
+    @property
+    def _is_classification(self) -> bool:
+        return self.task_setting in {"binary_classification", "multi_class_classification"}
+
+    def _log_label_distribution(self, df: pd.DataFrame, title: str) -> None:
+        """Log size and label distribution of `df` as one multi-line record.
+
+        Diagnostics only: failures are logged, never raised.
+        """
+        try:
+            report = self._format_label_report(df, title)
+        except Exception as exc:
+            logging.warning(f"Could not summarize label distribution of {title}: {exc}")
+            return
+        logging.info(report)
+
+    def _format_label_report(self, df: pd.DataFrame, title: str) -> str:
+        """Format label stats: class bar chart or histogram, plus per-source breakdown."""
+        if df is None or df.empty:
+            return f"{title}: 0 rows (empty)"
+        header = f"{title}: {len(df)} rows"
+        if self.target_col not in df.columns:
+            return header + f" (no `{self.target_col}` column)"
+
+        y = df[self.target_col]
+        lines = [header]
+        if self._is_classification:
+            class_counts = self._class_counts(y)
+            lines.append("Class distribution:")
+            lines.append(format_cli_bar_chart(class_counts, ascii_only=self.ascii_plots))
+            real_counts = [c for k, c in class_counts.items() if k != "NaN"]
+            if len(real_counts) >= 2:
+                lines.append(
+                    f"  majority/minority ratio: {max(real_counts) / min(real_counts):.2f}"
+                )
+            elif len(real_counts) == 1:
+                lines.append(
+                    "  Note: only one class present; ROC-AUC and PR-AUC are undefined on this set."
+                )
+        else:
+            y_num = pd.to_numeric(y, errors="coerce")
+            finite = y_num[np.isfinite(y_num)]
+            n_bad = len(y_num) - len(finite)
+            if len(finite):
+                q1, med, q3 = finite.quantile([0.25, 0.5, 0.75])
+                lines.append(
+                    f"  min={finite.min():.4g}  q1={q1:.4g}  median={med:.4g}  "
+                    f"q3={q3:.4g}  max={finite.max():.4g}  "
+                    f"mean={finite.mean():.4g}  std={finite.std():.4g}"
+                )
+            if n_bad:
+                lines.append(f"  {n_bad} non-numeric/NaN/inf label(s) excluded from the plot")
+            lines.append("Label distribution:")
+            lines.append(
+                format_cli_histogram(
+                    finite, n_bins=self.label_hist_bins, ascii_only=self.ascii_plots
+                )
+            )
+
+        if self.source_col in df.columns and df[self.source_col].nunique() > 1:
+            lines.append("By source:")
+            lines.extend(self._format_source_breakdown(df))
+        return "\n".join(lines)
+
+    @staticmethod
+    def _class_counts(y: pd.Series) -> dict:
+        """Return class -> count, sorted by class, with integral labels shown as ints.
+
+        Labels may be stored as floats or objects, e.g. after concat with an empty frame.
+        """
+        y_num = pd.to_numeric(y, errors="coerce")
+        if y_num.notna().all() and (y_num % 1 == 0).all():
+            y = y_num.astype(int)
+        counts = y.value_counts(dropna=False).sort_index()
+        return {("NaN" if pd.isna(k) else k): int(v) for k, v in counts.items()}
+
+    def _format_source_breakdown(self, df: pd.DataFrame) -> List[str]:
+        """Return one line per source: class counts or regression summary stats."""
+        groups = df.groupby(self.source_col, sort=True)
+        name_w = max(len(str(name)) for name, _ in groups)
+        lines = []
+        for name, group in groups:
+            y = group[self.target_col]
+            prefix = f"  {str(name):<{name_w}}  n={len(group):<6}"
+            if self._is_classification:
+                parts = [
+                    f"{label}: {count} ({100.0 * count / len(group):.1f}%)"
+                    for label, count in self._class_counts(y).items()
+                ]
+                lines.append(prefix + "  " + "  ".join(parts))
+            else:
+                y_num = pd.to_numeric(y, errors="coerce")
+                y_num = y_num[np.isfinite(y_num)]
+                if y_num.empty:
+                    lines.append(prefix + "  (no finite labels)")
+                    continue
+                lines.append(
+                    prefix
+                    + f"  mean={y_num.mean():.4g}  std={y_num.std():.4g}  "
+                    f"min={y_num.min():.4g}  max={y_num.max():.4g}"
+                )
+        return lines
+
     # --------------------- Identification / caching --------------------- #
 
     def _get_split_key(
         self, datasets: List[str], sim_filter: SimilarityFilterBase | None = None
     ) -> str:
-        """Generate a compact, deterministic identifier for the split configuration."""
+        """Return a compact, deterministic identifier of the split configuration."""
         splitter_key = self.splitter.get_cache_key() if self.splitter else "nosplit"
-        if sim_filter:
-            filter_key = sim_filter.get_cache_key()
-        else:
-            filter_key = "nofilter"
+        filter_key = sim_filter.get_cache_key() if sim_filter else "nofilter"
         datasets_params = (
             tuple(sorted(datasets)),
             self.test_origin_dataset,
@@ -438,13 +552,13 @@ class ProcessingPipeline:
         return f"{splitter_key}_{filter_key}_{datasets_hash}"
 
     def _get_predictor_key(self) -> str:
-        """Return predictor cache key or placeholder if missing."""
+        """Return the predictor cache key, or a placeholder if unset."""
         return self.predictor.get_cache_key() if self.predictor else "nopredictor"
 
     # --------------------- Model training / evaluation --------------------- #
 
     def _load_hyperparams_optimized_on_test_origin(self) -> None:
-
+        """Load hyperparams optimized on `test_origin_dataset` into the predictor."""
         test_origin_split_key = self._get_split_key(
             [self.test_origin_dataset], sim_filter=self.hyperparams_source_sim_filter
         )
@@ -461,12 +575,10 @@ class ProcessingPipeline:
         logging.warning(
             "This configuration will override hyperparameters provided in the predictor config file!"
         )
-        # Inject loaded hyperparameters into predictor
         self.predictor.set_hyperparameters(self.optimized_hyperparameters)
 
     def _train(self, train_df: pd.DataFrame) -> None:
-        """Train the predictor and persist model + hyperparams."""
-
+        """Train the predictor and save its hyperparams and metadata."""
         logging.info(f"* Training {self.predictor.__class__.__name__}")
         logging.info(f"* Dataset size: {len(train_df)}")
         logging.debug(f"* Hyperparameters: {self.predictor.get_hyperparameters()}")
@@ -474,17 +586,14 @@ class ProcessingPipeline:
         self.predictor.train(train_df)
 
         if self.predictor.is_attributed:
-            logging.info(f"* Endpoint OHE encoding:")
+            logging.info("* Endpoint OHE encoding:")
             for key, value in self.predictor.get_endpoint_OHE_map().items():
                 logging.info(f"  - {key}: {np.array2string(value.astype(int))}")
 
-        # Save hyperparameters
-        hyperparams = self.predictor.get_hyperparameters()
         self.data_interface.save_hyperparams(
-            hyperparams, self.predictor_key, self.split_key
+            self.predictor.get_hyperparameters(), self.predictor_key, self.split_key
         )
 
-        # Save model metadata
         metadata_dict = {
             "Datasets": self.datasets,
             "Test Origin Dataset": self.test_origin_dataset,
@@ -506,30 +615,29 @@ class ProcessingPipeline:
         )
 
     def _pickle_trained_model(self, as_refit=False) -> None:
+        """Pickle the current predictor, optionally as the refit model."""
         self.data_interface.pickle_model(
             self.predictor, self.predictor_key, self.split_key, save_as_refit=as_refit
         )
 
     def _evaluate(self, test_df: pd.DataFrame, get_CIs=False) -> None:
+        """Evaluate on the test set, optionally with bootstrap CIs, and save metrics."""
         self.log_bar(w_text="Evaluation")
 
-        # Evaluate the model on a holdout test set
         metrics = self.predictor.evaluate(test_df)
         logging.info("Metrics (markdown):")
         log_markdown_table(metrics)
 
         if get_CIs:
-            # Estimate confidence intervals for metrics using bootstrapping
-            logging.info(f"* Estimating confidence intervals")
+            logging.info("* Estimating confidence intervals")
             logging.info(
                 f"* Bootstrap parameters: n={self.ci_n_bootstraps}, percentiles={self.ci_percentiles}"
             )
             ci_lower, ci_upper = self._estimate_confidence_intervals(test_df)
             confidence_intervals = {
-                metric: [ci_lower[metric], ci_upper[metric]]
-                for metric, value in metrics.items()
+                metric: [ci_lower[metric], ci_upper[metric]] for metric in metrics
             }
-            logging.info(f"\nConfidence intervals (markdown):")
+            logging.info("\nConfidence intervals (markdown):")
             logging.info("* lower")
             log_markdown_table(ci_lower)
             logging.info("* upper")
@@ -537,7 +645,7 @@ class ProcessingPipeline:
 
             metrics_dict = {
                 "metrics": metrics,
-                "percentile_95_ci": confidence_intervals,
+                f"percentile_{self.ci_percentiles:g}_ci": confidence_intervals,
             }
         else:
             metrics_dict = {"metrics": metrics}
@@ -549,24 +657,55 @@ class ProcessingPipeline:
     def _estimate_confidence_intervals(
         self, test_df: pd.DataFrame
     ) -> Tuple[dict, dict]:
-        """Estimate confidence intervals for evaluation metrics using bootstrapping."""
-        # sample with replacement from test_df, evaluate on each bootstrap sample, compute statistics
-        metrics_list = []
-        for _ in tqdm(
-            range(self.ci_n_bootstraps), disable=(not self.show_progress_bar)
-        ):
-            bootstrap_sample = test_df.sample(frac=1.0, replace=True)
-            metrics = self.predictor.evaluate(bootstrap_sample)
-            metrics_list.append(metrics)
-        # Compute confidence intervals (percentile) for each metric
+        """Return percentile-bootstrap (lower, upper) bounds for each metric."""
+        rng = np.random.default_rng(self.predictor.random_state)
+        metrics_list = [
+            self.predictor.evaluate(
+                test_df.sample(frac=1.0, replace=True, random_state=rng)
+            )
+            for _ in tqdm(
+                range(self.ci_n_bootstraps), disable=not self.show_progress_bar
+            )
+        ]
         metrics = pd.DataFrame(metrics_list)
-        ci_lower = metrics.quantile((100 - self.ci_percentiles) / 200)
-        ci_upper = metrics.quantile(1 - (100 - self.ci_percentiles) / 200)
-        # Dump raw bootstrap metrics into a yaml
+        tail = (100 - self.ci_percentiles) / 200
+        ci_lower = metrics.quantile(tail)
+        ci_upper = metrics.quantile(1 - tail)
         self.data_interface.save_bootstrap_metrics(
             metrics.to_dict(orient="list"), self.predictor_key, self.split_key
         )
         return ci_lower.to_dict(), ci_upper.to_dict()
+
+    def _fit_applicability_domain(
+        self,
+        train_df: Optional[pd.DataFrame] = None,
+        test_df: Optional[pd.DataFrame] = None,
+        predictor: Optional[PredictorBase] = None,
+    ) -> None:
+        """Fit the domains of the split and calibrate them against the model.
+
+        Without arguments, the split is loaded from the cache and the model from
+        `model.pkl`, which works for models trained earlier.
+        """
+        self.log_bar(w_text="Applicability domain")
+        if not self.data_interface.check_train_test_split_exists(self.split_key):
+            message = (
+                f"Split `{self.split_key}` is not cached, and its applicability domain "
+                "is saved with it."
+            )
+            if train_df is None:
+                raise FileNotFoundError(message)
+            logging.warning(f"{message} Skipping; set `do_dump_train_test = True`.")
+            return
+        fit_domain_for_model(
+            self.applicability_domain,
+            self.data_interface,
+            self.predictor_key,
+            self.split_key,
+            train_df,
+            test_df,
+            predictor,
+        )
 
     def _train_final_model(self, train_df: pd.DataFrame, test_df: pd.DataFrame) -> None:
         """Retrain the predictor on the combined train+test set and save as refit."""
@@ -578,7 +717,7 @@ class ProcessingPipeline:
         self.predictor.train(full_df)
 
     def _optimize_hyperparams(self, train_df: pd.DataFrame) -> None:
-        """Optimize hyperparameters of the predictor."""
+        """Tune hyperparams with Optuna CV and set the best ones on the predictor."""
         self.log_bar()
         logging.info(
             f"\nOptimizing hyperparameters with Optuna for target metric: {self.target_metric}"
@@ -594,7 +733,9 @@ class ProcessingPipeline:
             "f1",
             "precision",
             "recall",
+            "pr_auc",
             "r2",
+            "spearman",
         }
         _METRICS_TO_MINIMIZE = {"rmse", "mae", "mse"}
         if self.target_metric in _METRICS_TO_MAXIMIZE:
@@ -606,53 +747,86 @@ class ProcessingPipeline:
                 f"Unknown target metric {self.target_metric} for optimization"
             )
 
-        # Define an objective function for the optimization process
-        # Here it is a k-fold cross-validation on some target metric
+        # Split the CPU budget between concurrent trials and threads per model.
+        n_workers, threads_per_trial = plan_parallel_trials(
+            n_cpus=self.n_cpus,
+            n_trials=self.n_optim_iter,
+            n_workers=self.n_optim_jobs,
+            threads_per_trial=self.n_threads_per_trial,
+            model_is_threaded=self.predictor.supports_threading,
+        )
+        logging.info(
+            f"* Parallelism: {n_workers} concurrent trial(s) x {threads_per_trial} "
+            f"thread(s) per model ({self.n_cpus} CPUs available)"
+        )
+
+        # Featurize once up front so concurrent trials read the cache.
+        shared_featurizer = self._warm_shared_featurizer(train_df)
+
         def objective(trial: optuna.Trial) -> float:
-            # Instantiate a fresh predictor for the trial
-            trial_predictor = deepcopy(self.predictor)
-            # Inject hyperparams
-            params = sample_optuna_params(trial, self.params_distribution)
+            """Return the mean CV score of a fresh predictor with sampled params."""
+            # Memo maps the shared featurizer to itself, so deepcopy doesn't copy its cache.
+            memo = {}
+            if shared_featurizer is not None:
+                memo[id(shared_featurizer)] = shared_featurizer
+            trial_predictor = deepcopy(self.predictor, memo)
+            trial_predictor.set_n_threads(threads_per_trial)
+            params = trial_predictor.sample_hyperparameters(
+                trial, self.params_distribution
+            )
             logging.debug(f"Trial {trial.number}: {params}")
             trial_predictor.set_hyperparameters(params)
-            trial_predictor.train(train_df)
-            # Evaluate with cross-validation
             scores = trial_predictor.cross_validate(
                 train_df, n_folds=self.n_optim_cv_folds
             )
-            mean_score = scores[self.target_metric].mean()
+            mean_score = float(scores[self.target_metric])
             logging.debug(
                 f"Trial {trial.number} {self.target_metric} score: {mean_score}"
             )
             return mean_score
 
         start_time = time.time()
-
-        # Set up optuna study and run optimization
         study = optuna.create_study(
             direction=direction,
             study_name="_".join([self.predictor_key, self.split_key]),
             sampler=self.optuna_sampler,
         )
-        study.optimize(objective, n_trials=self.n_optim_iter, n_jobs=self.n_optim_jobs)
+        # Cap BLAS pools, which would otherwise spawn a thread per core in every trial.
+        with threadpool_limits(limits=threads_per_trial, user_api="blas"):
+            study.optimize(objective, n_trials=self.n_optim_iter, n_jobs=n_workers)
         elapsed_time = time.time() - start_time
         logging.info(
             f"Hyperparameter optimization completed in {elapsed_time/60:.2f} minutes"
         )
-        logging.info(f"* Retaining best hyperparams:")
+        logging.info("* Retaining best hyperparams:")
         logging.info(study.best_params)
-
-        # Retain best hyperparameters
         self.predictor.set_hyperparameters(study.best_params)
 
+    def _warm_shared_featurizer(self, train_df: pd.DataFrame):
+        """Featurize `train_df` once and return the featurizer if trials may share it.
+
+        Only disk-cached featurizers (no fitted state) are shared; after warming, trials
+        only read their cache, so sharing across threads is safe.
+        """
+        featurizer = self.predictor.get_featurizer()
+        if (
+            featurizer is None
+            or not featurizer.cache_enabled
+            or not getattr(featurizer, "_use_disk_cache", False)
+        ):
+            return None
+        featurizer.featurize(train_df[self.smiles_col].tolist())
+        return featurizer
+
     def _dump_training_info(self) -> None:
+        """Copy training logs and the gin config into the model directory."""
         self.data_interface.dump_training_logs(self.predictor_key, self.split_key)
         self.data_interface.dump_gin_config_to_model_dir(
             self.predictor_key, self.split_key
         )
 
     def log_bar(self, w_text: str = "") -> None:
-        """Log a horizontal bar with optional centered text for visual separation."""
+        """Log a separator bar with optional centered text."""
         if w_text:
             w_text = " " + w_text + " "
         bar = f"\n# ================================{w_text}================================ #\n"
@@ -661,17 +835,25 @@ class ProcessingPipeline:
     # --------------------- Configuration validation --------------------- #
 
     def _validate_configuration(self) -> None:
-        """
-        Basic sanity checks to fail early on common misconfigurations.
-        - predictor must be present for training/evaluation
-        - splitter must be present for automatic splitting
-        - if do_load_train_test is True ensure either automatic or manual splits exist
-        """
+        """Fail early on common misconfigurations."""
+        if not self.data_interface:
+            raise ValueError("ProcessingPipeline requires a valid data_interface")
+
         if self.do_train_model and not self.predictor:
             raise ValueError("do_train_model=True but no predictor provided")
 
+        if self.do_fit_applicability_domain and not self.applicability_domain:
+            raise ValueError(
+                "do_fit_applicability_domain=True but no applicability_domain provided"
+            )
+
+        if self.do_fit_applicability_domain and not self.predictor:
+            raise ValueError(
+                "do_fit_applicability_domain=True but no predictor provided "
+                "(it identifies the model in the cache)"
+            )
+
         if self.datasets and self.do_load_train_test and not self.test_origin_dataset:
-            # If datasets is present and we're creating train/test automatically, require a test_origin_dataset
             raise ValueError(
                 "Automatic splitting requested but `test_origin_dataset` is not set"
             )
@@ -683,12 +865,7 @@ class ProcessingPipeline:
                 "do_load_train_test=True but no datasets or manual splits are configured"
             )
 
-        # splitter requirement only when automatic splitting will actually be used
         if self.datasets and self.do_load_train_test and not self.splitter:
             raise ValueError(
                 "Automatic splitting requested but no splitter is configured"
             )
-
-        # Ensure data_interface is present
-        if not self.data_interface:
-            raise ValueError("ProcessingPipeline requires a valid data_interface")

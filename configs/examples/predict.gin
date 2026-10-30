@@ -1,13 +1,19 @@
+#=====================[ADMET-XSpec]=====================#
+# Run `configs/examples/train_rf_optimize.gin` first: it trains the model used here
+# (human AChE pIC50 RF regressor on ECFP4 counts) and prepares the input dataset.
+
 include 'configs/data_interface/data_interface.gin'
 
 InferencePipeline.data_interface = %data_interface
 
-# Inference input dataset path (CSV)
-InferencePipeline.dataset_path = 'data/datasets/MAO-A/human/property_ic50/binary_classification/prepared_data.csv'
+# Inference input dataset path (CSV with a SMILES column; replace with your own molecules)
+InferencePipeline.dataset_path = 'data/datasets/AChE/human/regression/prepared_data.csv'
 
-# Cache keys identifying the trained model in data/cache/models/<model_cache_key>/<data_cache_key>/model.pkl
-InferencePipeline.model_cache_key = 'AChE_human_pIC50_RF_reg_ecfp_featurizer_4b52a'
-InferencePipeline.data_cache_key = 'scaffold_e4737_tanimoto_5p_filter_c2805_44323'
+# Cache keys identifying the trained model in data/cache/models/<model_cache_key>/<data_cache_key>/
+InferencePipeline.model_cache_key = 'AChE_human_pIC50_RF_reg_ecfp_featurizer_4efda'
+InferencePipeline.data_cache_key = 'scaffold_e4737_nofilter_9a75c'
+# Use model_final_refit.pkl (refit on train + test, with its feature scaler) instead of model.pkl
+InferencePipeline.use_refit_model = True
 
 # Task/column settings
 InferencePipeline.task_setting = 'regression'
@@ -16,6 +22,12 @@ InferencePipeline.source_col = 'source'
 InferencePipeline.target_col = 'y'
 
 # Runtime behavior
-InferencePipeline.do_evaluate = False
+InferencePipeline.do_evaluate = True            # the input has `y` labels, so metrics can be computed
 InferencePipeline.override_cache = False
 
+# Applicability domain: adds `<label>_ad_similarity`, `<label>_ad_in_domain` and
+# `<label>_ad_nearest_smiles` columns, and in/out-of-domain metrics when evaluating.
+# The domain of the model's split is fitted on first use if missing.
+include 'configs/applicability_domains/tanimoto_knn.gin'
+InferencePipeline.applicability_domain = %applicability_domain
+InferencePipeline.fit_domain_if_missing = True

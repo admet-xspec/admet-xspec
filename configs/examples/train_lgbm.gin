@@ -1,11 +1,11 @@
 #=====================[ADMET-XSpec]=====================#
 #----------------------[pipeline]-----------------------#
 
-include 'configs/processing_plans/train.gin'			    # we are training on set hyperaparameters
+include 'configs/processing_plans/train.gin'			    # we are training on fixed hyperparameters
 								                            #   (see other processing plans)
 include 'configs/splitters/scaffold.gin'			        # scaffold split
 include 'configs/featurizers/ecfp.gin'				        # ECFP4 featurization
-include 'configs/sim_filters/none.gin'				        # no filter applied for augumenting datasets
+include 'configs/sim_filters/none.gin'				        # no filter applied for augmenting datasets
 include 'configs/predictors/classifiers/lgbm.gin'		    # LightGBM model
 
 #------------------------[data]-------------------------#

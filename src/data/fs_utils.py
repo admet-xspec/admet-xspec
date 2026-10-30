@@ -24,11 +24,7 @@ def _tmp_path_for(path: Path) -> Path:
 
 
 def _replace(src: Path, dst: Path, retries: int = 8, base_delay: float = 0.05) -> None:
-    """``os.replace`` with a retry loop for Windows.
-
-    POSIX never needs the retry. Windows refuses to replace a file that another process
-    has open, which is a transient condition when that process is only reading it.
-    """
+    """Call `os.replace`, retrying on Windows while another process holds `dst` open."""
     for attempt in range(retries):
         try:
             os.replace(src, dst)
@@ -41,9 +37,9 @@ def _replace(src: Path, dst: Path, retries: int = 8, base_delay: float = 0.05) -
 
 @contextlib.contextmanager
 def atomic_write(path: Path, mode: str = "w", **open_kwargs: Any) -> Iterator[IO]:
-    """Open a temporary file for writing and atomically move it to ``path`` on success.
+    """Write to a temporary file and atomically move it to `path` on success.
 
-    If the body raises, the temporary file is removed and ``path`` is left untouched.
+    On error the temporary file is removed and `path` is left untouched.
     """
     path = Path(path)
     path.parent.mkdir(parents=True, exist_ok=True)
@@ -82,7 +78,7 @@ def atomic_pickle_dump(obj: Any, path: Path) -> None:
 
 
 def atomic_copy_file(src: Path, dst: Path) -> None:
-    """Copy ``src`` to ``dst`` so that readers of ``dst`` never see a partial copy."""
+    """Copy `src` to `dst` so readers never see a partial copy."""
     with open(src, "rb") as fin, atomic_write(dst, "wb") as fout:
         shutil.copyfileobj(fin, fout)
 
@@ -93,11 +89,9 @@ def load_pickle(path: Path) -> Any:
 
 
 def load_yaml(path: Path, missing_ok: bool = False) -> Dict:
-    """Load a YAML file strictly: invalid YAML raises ``yaml.YAMLError``.
+    """Load a YAML file the caller depends on; invalid YAML raises `yaml.YAMLError`.
 
-    Use this for a file whose content the caller depends on (a config, saved params), so
-    corruption fails loudly. For scans over many files, use ``safe_load_yaml`` instead.
-    With ``missing_ok``, a missing file yields ``{}`` instead of ``FileNotFoundError``.
+    With `missing_ok`, a missing file yields `{}`. For scans, use `safe_load_yaml`.
     """
     try:
         with open(path, "r") as fh:
@@ -109,7 +103,7 @@ def load_yaml(path: Path, missing_ok: bool = False) -> Dict:
 
 
 def read_first_line(path: Path, default: str = "") -> str:
-    """Return the stripped first line of ``path``, or ``default`` if the file is missing."""
+    """Return the stripped first line of `path`, or `default` if the file is missing."""
     try:
         with open(path, "r") as fh:
             return fh.readline().strip()
@@ -118,12 +112,10 @@ def read_first_line(path: Path, default: str = "") -> str:
 
 
 def safe_load_yaml(path: Path) -> Dict:
-    """Load a YAML mapping for directory scans, tolerating files that vanish or are invalid.
+    """Load a YAML mapping during a scan, returning `{}` for vanished or invalid files.
 
-    A file can disappear between being listed and being opened (another process may be
-    replacing the directory that holds it). That is expected under concurrency and is
-    logged at debug level. Invalid YAML is a real problem with the file, so it is logged
-    as a warning, but it still should not abort a scan over many unrelated files.
+    Vanished files are expected under concurrency (debug log); invalid YAML is logged as
+    a warning but does not abort the scan.
     """
     try:
         with open(path, "r") as fh:
@@ -138,11 +130,9 @@ def safe_load_yaml(path: Path) -> Dict:
 
 
 def iter_files(root: Path, suffix: str) -> Iterator[Path]:
-    """Yield files under ``root`` whose names end in ``suffix``.
+    """Yield files under `root` whose names end in `suffix`.
 
-    Uses ``os.walk``, which silently skips directories that disappear mid-scan (for
-    example a split being replaced by another process) instead of raising, as
-    ``Path.rglob`` can.
+    Uses `os.walk`, which skips directories removed mid-scan; `Path.rglob` can raise.
     """
     for dirpath, _dirnames, filenames in os.walk(root, followlinks=True):
         for name in filenames:
@@ -151,7 +141,7 @@ def iter_files(root: Path, suffix: str) -> Iterator[Path]:
 
 
 def make_unique_dir(parent: Path, prefix: str) -> Path:
-    """Create and return a new directory under ``parent`` whose name no other process uses."""
+    """Create and return a uniquely named directory under `parent`."""
     path = Path(parent) / f"{prefix}.{os.getpid()}.{uuid.uuid4().hex}"
     path.mkdir(parents=True)
     return path
@@ -165,16 +155,13 @@ def publish_dir(
     overwrite: bool = False,
     lock: Optional[ContextManager] = None,
 ) -> bool:
-    """Atomically move a fully written ``staging`` directory to ``final``.
+    """Atomically move a fully written `staging` directory to `final`.
 
-    Returns False, leaving ``staging`` for the caller to discard, if a complete ``final``
-    already exists and ``overwrite`` is off. An existing ``final`` that ``is_complete``
-    rejects is always replaced (by default every existing ``final`` counts as complete).
-
-    ``trash_parent`` receives the replaced directory before it is deleted and, like
-    ``staging``, must be on the same filesystem as ``final`` for the renames to be atomic.
-    If ``lock`` is given, the check and the swap happen while holding it, so concurrent
-    publishers cannot interleave. Deleting the old tree happens after the lock is released.
+    Return False, leaving `staging` to the caller, if a complete `final` exists
+    and `overwrite` is off. A `final` rejected by `is_complete` is always replaced.
+    `staging` and `trash_parent` must be on the filesystem of `final`, so renames
+    are atomic. `lock`, if given, is held across check and swap; the old tree is
+    deleted after its release.
     """
     staging, final = Path(staging), Path(final)
     trash: Optional[Path] = None
@@ -201,14 +188,10 @@ def publish_dir(
 def make_file_lock(
     locks_dir: Path, name: str, timeout: float, soft: bool = False
 ) -> filelock.BaseFileLock:
-    """Create an inter-process lock identified by an arbitrary string ``name``.
+    """Create an inter-process lock in `locks_dir` keyed by an arbitrary string `name`.
 
-    The name is hashed into a safe file name inside ``locks_dir``, so all processes that
-    use the same directory and name share the lock. ``soft`` selects ``SoftFileLock``,
-    for network filesystems where OS-level file locks are unreliable.
-
-    Keep and reuse the returned object: reacquiring the same object in one thread is
-    reentrant, whereas two separate objects on the same file deadlock against each other.
+    `soft` selects `SoftFileLock`, for network filesystems with unreliable OS locks.
+    Reuse the returned object: it is reentrant, but two objects on one file deadlock.
     """
     digest = hashlib.sha1(name.encode("utf-8")).hexdigest()[:16]
     lock_cls = filelock.SoftFileLock if soft else filelock.FileLock
@@ -217,7 +200,7 @@ def make_file_lock(
 
 @contextlib.contextmanager
 def hold_lock(lock: filelock.BaseFileLock, name: str = "") -> Iterator[None]:
-    """Hold ``lock`` for the body, turning a timeout into a descriptive ``TimeoutError``."""
+    """Hold `lock` for the body, raising a descriptive `TimeoutError` on timeout."""
     try:
         lock.acquire()
     except filelock.Timeout as exc:
@@ -240,10 +223,9 @@ def _older_than(path: Path, max_age_seconds: float, now: float) -> bool:
 
 
 def remove_stale_tmp_files(root: Path, max_age_seconds: float) -> int:
-    """Delete temporary files left behind by crashed writers. Returns the number removed.
+    """Delete temp files of crashed writers older than `max_age_seconds`; return the count.
 
-    Only files older than ``max_age_seconds`` are touched, so writes that are still in
-    progress in other processes are left alone.
+    The age threshold leaves writes still in progress in other processes alone.
     """
     if not Path(root).exists():
         return 0
@@ -262,7 +244,7 @@ def remove_stale_tmp_files(root: Path, max_age_seconds: float) -> int:
 
 
 def remove_stale_entries(directory: Path, max_age_seconds: float) -> int:
-    """Delete direct children of ``directory`` (files or trees) older than the threshold."""
+    """Delete direct children of `directory` older than `max_age_seconds`; return the count."""
     directory = Path(directory)
     if not directory.exists():
         return 0

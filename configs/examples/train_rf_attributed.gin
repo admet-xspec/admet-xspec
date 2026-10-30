@@ -1,12 +1,12 @@
 #=====================[ADMET-XSpec]=====================#
 #----------------------[pipeline]-----------------------#
 
-include 'configs/processing_plans/train.gin'			    # we are training on set hyperparams
+include 'configs/processing_plans/train.gin'			    # we are training on fixed hyperparams
 include 'configs/splitters/scaffold.gin'			        # scaffold split
 include 'configs/featurizers/krfp.gin'				        # KRFP (Klekota & Roth FP) featurization
-include 'configs/sim_filters/tanimoto_5p_to_whole.gin'      # drop all augmenting set (rat) molecular scaffolds
-                                                            #   with Tanimoto similarity > 0.95 to human data
-include 'configs/predictors/regressors/rf_attributed.gin'	# RandomForest attributed classifier
+include 'configs/sim_filters/tanimoto_5p_to_whole.gin'      # drop all augmenting set (rat) molecules
+                                                            #   with Tanimoto similarity >= 0.95 to any human molecule
+include 'configs/predictors/regressors/rf_attributed.gin'	# RandomForest attributed regressor
 
 #------------------------[data]-------------------------#
 

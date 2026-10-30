@@ -1,0 +1,6 @@
+MapLightFeaturizer.morgan_radius = 2
+MapLightFeaturizer.morgan_n_bits = 1024
+MapLightFeaturizer.avalon_n_bits = 1024
+
+featurizer/gin.singleton.constructor = @MapLightFeaturizer
+featurizer = @featurizer/gin.singleton()

@@ -1,0 +1,12 @@
+# Mean Tanimoto similarity (2048-bit ECFP4) to the k most similar training molecules.
+# Molecules scoring below the `threshold_percentile`-th percentile of the training
+# molecules' own leave-one-out scores are out of the domain.
+include "configs/featurizers/proprietary/tanimoto_ecfp.gin"
+TanimotoKnnDomain.featurizer = %tanimoto_featurizer
+TanimotoKnnDomain.k = 5
+TanimotoKnnDomain.threshold_percentile = 5.0
+# Restrict the reference set to some sources, e.g. ['AChE_human_pIC50']; None uses all.
+TanimotoKnnDomain.reference_sources = None
+
+applicability_domain/gin.singleton.constructor = @TanimotoKnnDomain
+applicability_domain = @applicability_domain/gin.singleton()

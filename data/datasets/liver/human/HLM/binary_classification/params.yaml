@@ -1,0 +1,7 @@
+friendly_name: "hlm"
+raw_or_derived: "raw"
+category: "liver_T12"
+is_chembl: false
+task_setting: "binary_classification"
+
+# https://pubs.acs.org/crtoec/article-abstract/35/9/1614/494879/In-Silico-Prediction-of-Human-and-Rat-Liver?redirectedFrom=fulltext

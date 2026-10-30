@@ -3,9 +3,12 @@
 #   featurizer of the Tanimoto similarity calculator!   #
 #=======================================================#
 
-EcfpFeaturizer.radius = 2
-EcfpFeaturizer.n_bits = 2048
-EcfpFeaturizer.count = False
+# Bindings are scoped to `tanimoto_featurizer/` so that they neither leak into nor
+# inherit from the model featurizer configured in configs/featurizers/.
+
+tanimoto_featurizer/EcfpFeaturizer.radius = 2
+tanimoto_featurizer/EcfpFeaturizer.n_bits = 2048
+tanimoto_featurizer/EcfpFeaturizer.count = False
 
 tanimoto_featurizer/gin.singleton.constructor = @EcfpFeaturizer
-tanimoto_featurizer = @featurizer/gin.singleton()
+tanimoto_featurizer = @tanimoto_featurizer/gin.singleton()

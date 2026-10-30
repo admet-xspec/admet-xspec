@@ -1,0 +1,28 @@
+#=====================[ADMET-XSpec]=====================#
+#----------------------[pipeline]-----------------------#
+
+include 'configs/processing_plans/train_optimize.gin'		# we are performing hyperparameter optimization
+								                            #   and will train models on the best hyperparams
+include 'configs/splitters/scaffold.gin'			        # scaffold split
+include 'configs/featurizers/ecfp.gin'				        # ECFP4 featurization
+include 'configs/sim_filters/none.gin'				        # no filter applied for augmenting datasets
+include 'configs/predictors/regressors/mlp.gin'			    # multi-layer perceptron regressor model
+
+#------------------------[data]-------------------------#
+
+ProcessingPipeline.datasets = [					            # listing datasets by friendly names
+    'AChE_human_pIC50'						                # (see data/datasets/registry.txt)
+]
+
+ProcessingPipeline.test_origin_dataset = 'AChE_human_pIC50'	# only human data to populate the test set
+ProcessingPipeline.task_setting = 'regression'
+
+#========================================================#
+# Advanced gin config settings
+include 'configs/data_interface/data_interface.gin'
+ProcessingPipeline.hyperparams_source_sim_filter = None
+ProcessingPipeline.data_interface = %data_interface
+ProcessingPipeline.splitter = %splitter
+ProcessingPipeline.featurizer = %featurizer
+ProcessingPipeline.sim_filter = %sim_filter
+ProcessingPipeline.predictor = %predictor
